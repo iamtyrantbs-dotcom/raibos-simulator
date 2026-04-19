@@ -1,0 +1,4 @@
+node_modules/
+rankings.json
+.DS_Store
+*.log
