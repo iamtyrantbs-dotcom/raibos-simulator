@@ -1,7 +1,6 @@
-// Game State
 let gameState = {
     raibos: 0,
-    totalRaibos: 0, // lifetime raibos earned (for achievements)
+    totalRaibos: 0, 
     totalClicks: 0,
     clickPower: 1,
     idlePower: 0,
@@ -9,96 +8,1141 @@ let gameState = {
     rebirthPoints: 0,
     achievements: [],
     timeSkipsUsed: 0,
-    invasionPerks: { sectors: 0, coreFragments: 0, mindControl: 0, annihilations: 0 },
-    invasionCount: 0,
-    gamepasses: [],
-    migratedInvasionPasses: false,
-    username: null, // Global Leaderboard Username
+    invasion: {
+        energy: 100,
+        energyMax: 100,
+        energyRegen: 1,
+        currentPlanet: 0,
+        regionProgress: {}, // regionId -> 0-100
+        conqueredRegions: [] // list of regionIds
+    },
+    username: null,
     lastSaveTime: Date.now()
 };
+
+const planetsData = [
+    {
+        id: 'earth',
+        name: 'Earth',
+        color: '#00f2ff',
+        regions: [
+            { id: 'asia', name: 'Asia', buff: 'Click Power +50%', type: 'click', value: 0.5, cost: 20 },
+            { id: 'europe', name: 'Europe', buff: 'Upgrade Cost -5%', type: 'cost', value: 0.05, cost: 25 },
+            { id: 'na', name: 'North America', buff: 'Idle Power +50%', type: 'idle', value: 0.5, cost: 30 },
+            { id: 'sa', name: 'South America', buff: 'RP Gain +20%', type: 'rp', value: 0.2, cost: 35 },
+            { id: 'africa', name: 'Africa', buff: 'Energy Regen +50%', type: 'energy', value: 0.5, cost: 40 },
+            { id: 'oceania', name: 'Oceania', buff: 'Global Multiplier +50%', type: 'mult', value: 0.5, cost: 50 }
+        ]
+    },
+    {
+        id: 'mars',
+        name: 'Mars',
+        color: '#ff4d4d',
+        regions: [
+            { id: 'valles', name: 'Valles Marineris', buff: 'Global Multiplier x2', type: 'mult_total', value: 2, cost: 100 },
+            { id: 'olympus', name: 'Olympus Mons', buff: 'Click Power +200%', type: 'click', value: 2.0, cost: 150 },
+            { id: 'utopia', name: 'Utopia Planitia', buff: 'Idle Power +200%', type: 'idle', value: 2.0, cost: 200 },
+            { id: 'hellas', name: 'Hellas Planitia', buff: 'Rebirth Points +100%', type: 'rp', value: 1.0, cost: 250 }
+        ]
+    },
+    {
+        id: 'jupiter',
+        name: 'Jupiter',
+        color: '#ffcc99',
+        regions: [
+            { id: 'grs', name: 'Great Red Spot', buff: 'Global Multiplier x10', type: 'mult_total', value: 10, cost: 500 },
+            { id: 'europa', name: 'Europa', buff: 'All Production x5', type: 'all_prod', value: 5, cost: 750 }
+        ]
+    }
+];
 
 const SAVE_KEY = 'raibosSimulatorSave';
 
 // Upgrade Definitions
 const clickUpgrades = [
-    { id: 'c1', name: 'Strong Finger', desc: '+1 Raibos/click', baseCost: 10, costMul: 1.20, value: 1 },
-    { id: 'c2', name: 'Focused Mind', desc: '+5 Raibos/click', baseCost: 100, costMul: 1.22, value: 5 },
-    { id: 'c3', name: 'Raibos Synergy', desc: '+30 Raibos/click', baseCost: 1000, costMul: 1.25, value: 30 },
-    { id: 'c4', name: 'Quantum Click', desc: '+200 Raibos/click', baseCost: 15000, costMul: 1.28, value: 200 },
-    { id: 'c5', name: 'Auto-Tapper', desc: '+1,500 Raibos/click', baseCost: 200000, costMul: 1.30, value: 1500 },
-    { id: 'c6', name: 'Neural Link', desc: '+10,000 Raibos/click', baseCost: 2500000, costMul: 1.35, value: 10000 },
-    { id: 'c7', name: 'Raibos Essence', desc: '+80,000 Raibos/click', baseCost: 50000000, costMul: 1.40, value: 80000 },
-    { id: 'c8', name: 'Click Dimension', desc: '+500k Raibos/click', baseCost: 1000000000, costMul: 1.45, value: 500000 },
-    { id: 'c9', name: 'Multiverse Tap', desc: '+5M Raibos/click', baseCost: 50000000000, costMul: 1.50, value: 5000000 },
-    { id: 'c10', name: 'Timeline Collapse', desc: '+80M Raibos/click', baseCost: 5000000000000, costMul: 1.55, value: 80000000 },
-    { id: 'c11', name: 'Alpha Shift', desc: '+2B Raibos/click', baseCost: 500000000000000, costMul: 1.60, value: 2000000000 },
-    { id: 'c12', name: 'Omega End', desc: '+100B Raibos/click', baseCost: 100000000000000000, costMul: 1.65, value: 100000000000 },
-    { id: 'c13', name: 'Cyber Pulse', desc: '+2T Raibos/click', baseCost: 1e19, costMul: 1.62, value: 2e12 },
-    { id: 'c14', name: 'Electron Burst', desc: '+50T Raibos/click', baseCost: 8e20, costMul: 1.60, value: 5e13 },
-    { id: 'c15', name: 'Vector Force', desc: '+1Qd Raibos/click', baseCost: 5e22, costMul: 1.58, value: 1e15 },
-    { id: 'c16', name: 'Kinetic Warp', desc: '+25Qd Raibos/click', baseCost: 4e24, costMul: 1.56, value: 2.5e16 },
-    { id: 'c17', name: 'Ion Striker', desc: '+600Qd Raibos/click', baseCost: 3e26, costMul: 1.54, value: 6e17 },
-    { id: 'c18', name: 'Molecular Split', desc: '+15Qi Raibos/click', baseCost: 2e28, costMul: 1.52, value: 1.5e19 },
-    { id: 'c19', name: 'Atomic Tap', desc: '+400Qi Raibos/click', baseCost: 1e30, costMul: 1.50, value: 4e20 },
-    { id: 'c20', name: 'Subatomic Click', desc: '+10Sx Raibos/click', baseCost: 8e31, costMul: 1.48, value: 1e22 },
-    { id: 'c21', name: 'Quark Force', desc: '+250Sx Raibos/click', baseCost: 6e33, costMul: 1.46, value: 2.5e23 },
-    { id: 'c22', name: 'Neutron Smasher', desc: '+6Sp Raibos/click', baseCost: 5e35, costMul: 1.44, value: 6e24 },
-    { id: 'c23', name: 'Hadron Collider', desc: '+150Sp Raibos/click', baseCost: 4e37, costMul: 1.42, value: 1.5e26 },
-    { id: 'c24', name: 'Gluon Bond', desc: '+4Oc Raibos/click', baseCost: 3e39, costMul: 1.40, value: 4e27 },
-    { id: 'c25', name: 'Gravity Well', desc: '+100Oc Raibos/click', baseCost: 2e41, costMul: 1.38, value: 1e29 },
-    { id: 'c26', name: 'Event Horizon', desc: '+2No Raibos/click', baseCost: 1e43, costMul: 1.36, value: 2e30 },
-    { id: 'c27', name: 'Singularity Tap', desc: '+50No Raibos/click', baseCost: 8e44, costMul: 1.35, value: 5e31 },
-    { id: 'c28', name: 'Black Hole Click', desc: '+1Dc Raibos/click', baseCost: 6e46, costMul: 1.34, value: 1e33 },
-    { id: 'c29', name: 'White Hole Pulse', desc: '+25Dc Raibos/click', baseCost: 5e48, costMul: 1.33, value: 2.5e34 },
-    { id: 'c30', name: 'Anti-Matter Strike', desc: '+600Dc Raibos/click', baseCost: 4e50, costMul: 1.32, value: 6e35 },
-    { id: 'c31', name: 'Dark Energy Tap', desc: '+15aa Raibos/click', baseCost: 3e52, costMul: 1.31, value: 1.5e37 },
-    { id: 'c32', name: 'Vacuum Energy', desc: '+400aa Raibos/click', baseCost: 2e54, costMul: 1.30, value: 4e38 },
-    { id: 'c33', name: 'Higgs Field Tap', desc: '+10ab Raibos/click', baseCost: 1e56, costMul: 1.29, value: 1e40 },
-    { id: 'c34', name: 'Superstring Vibration', desc: '+250ab Raibos/click', baseCost: 8e57, costMul: 1.28, value: 2.5e41 },
-    { id: 'c35', name: 'Universal Origin', desc: '+6ac Raibos/click', baseCost: 6e59, costMul: 1.27, value: 6e42 }
+    {
+        "id": "c1",
+        "name": "Raibos Finger",
+        "desc": "+10 Raibos/click",
+        "baseCost": 10,
+        "costMul": 1.2,
+        "value": 10
+    },
+    {
+        "id": "c2",
+        "name": "Raibos Focus",
+        "desc": "+100 Raibos/click",
+        "baseCost": 100,
+        "costMul": 1.22,
+        "value": 100
+    },
+    {
+        "id": "c3",
+        "name": "Raibos Synergy",
+        "desc": "+1,000 Raibos/click",
+        "baseCost": 1000,
+        "costMul": 1.25,
+        "value": 1000
+    },
+    {
+        "id": "c4",
+        "name": "Raibos Quantum Click",
+        "desc": "+10k Raibos/click",
+        "baseCost": 15000,
+        "costMul": 1.28,
+        "value": 10000
+    },
+    {
+        "id": "c5",
+        "name": "Raibos Auto-Tapper",
+        "desc": "+100k Raibos/click",
+        "baseCost": 200000,
+        "costMul": 1.3,
+        "value": 100000
+    },
+    {
+        "id": "c6",
+        "name": "Raibos Neural Link",
+        "desc": "+1M Raibos/click",
+        "baseCost": 2500000,
+        "costMul": 1.35,
+        "value": 1000000
+    },
+    {
+        "id": "c7",
+        "name": "Raibos Essence",
+        "desc": "+8M Raibos/click",
+        "baseCost": 50000000,
+        "costMul": 1.4,
+        "value": 8000000
+    },
+    {
+        "id": "c8",
+        "name": "Raibos Click Dimension",
+        "desc": "+100M Raibos/click",
+        "baseCost": 1000000000,
+        "costMul": 1.45,
+        "value": 100000000
+    },
+    {
+        "id": "c9",
+        "name": "Raibos Multiverse Tap",
+        "desc": "+1B Raibos/click",
+        "baseCost": 50000000000,
+        "costMul": 1.5,
+        "value": 1000000000
+    },
+    {
+        "id": "c10",
+        "name": "Raibos Timeline Collapse",
+        "desc": "+20B Raibos/click",
+        "baseCost": 5000000000000,
+        "costMul": 1.55,
+        "value": 20000000000
+    },
+    {
+        "id": "c11",
+        "name": "Raibos Alpha Shift",
+        "desc": "+500B Raibos/click",
+        "baseCost": 500000000000000,
+        "costMul": 1.6,
+        "value": 500000000000
+    },
+    {
+        "id": "c12",
+        "name": "Raibos Omega End",
+        "desc": "+25T Raibos/click",
+        "baseCost": 100000000000000000,
+        "costMul": 1.65,
+        "value": 25000000000000
+    },
+    {
+        "id": "c13",
+        "name": "Raibos Divine Pulse 13",
+        "desc": "+2.5e+16 Raibos/click",
+        "baseCost": 1e+21,
+        "costMul": 1.5459999999999998,
+        "value": 2.5e+16
+    },
+    {
+        "id": "c14",
+        "name": "Raibos Absolute Pulse 14",
+        "desc": "+1.3e+18 Raibos/click",
+        "baseCost": 1e+23,
+        "costMul": 1.5379999999999998,
+        "value": 1.25e+18
+    },
+    {
+        "id": "c15",
+        "name": "Raibos Eternal Pulse 15",
+        "desc": "+6.3e+19 Raibos/click",
+        "baseCost": 9.999999999999999e+24,
+        "costMul": 1.5299999999999998,
+        "value": 6.25e+19
+    },
+    {
+        "id": "c16",
+        "name": "Raibos Primal Pulse 16",
+        "desc": "+3.1e+21 Raibos/click",
+        "baseCost": 9.999999999999999e+26,
+        "costMul": 1.5219999999999998,
+        "value": 3.125e+21
+    },
+    {
+        "id": "c17",
+        "name": "Raibos Ancient Pulse 17",
+        "desc": "+1.6e+23 Raibos/click",
+        "baseCost": 1e+29,
+        "costMul": 1.5139999999999998,
+        "value": 1.5625e+23
+    },
+    {
+        "id": "c18",
+        "name": "Raibos Transcendent Pulse 18",
+        "desc": "+7.8e+24 Raibos/click",
+        "baseCost": 1e+31,
+        "costMul": 1.5059999999999998,
+        "value": 7.8125e+24
+    },
+    {
+        "id": "c19",
+        "name": "Raibos Final Pulse 19",
+        "desc": "+3.9e+26 Raibos/click",
+        "baseCost": 1e+33,
+        "costMul": 1.498,
+        "value": 3.90625e+26
+    },
+    {
+        "id": "c20",
+        "name": "Raibos Nebula Pulse 20",
+        "desc": "+2.0e+28 Raibos/click",
+        "baseCost": 1e+35,
+        "costMul": 1.49,
+        "value": 1.953125e+28
+    },
+    {
+        "id": "c21",
+        "name": "Raibos Star Pulse 21",
+        "desc": "+9.8e+29 Raibos/click",
+        "baseCost": 1e+37,
+        "costMul": 1.482,
+        "value": 9.765625e+29
+    },
+    {
+        "id": "c22",
+        "name": "Raibos Galaxy Pulse 22",
+        "desc": "+4.9e+31 Raibos/click",
+        "baseCost": 1e+39,
+        "costMul": 1.474,
+        "value": 4.8828125e+31
+    },
+    {
+        "id": "c23",
+        "name": "Raibos Universe Pulse 23",
+        "desc": "+2.4e+33 Raibos/click",
+        "baseCost": 1e+41,
+        "costMul": 1.466,
+        "value": 2.44140625e+33
+    },
+    {
+        "id": "c24",
+        "name": "Raibos Multiverse Pulse 24",
+        "desc": "+1.2e+35 Raibos/click",
+        "baseCost": 1e+43,
+        "costMul": 1.458,
+        "value": 1.220703125e+35
+    },
+    {
+        "id": "c25",
+        "name": "Raibos Dimension Pulse 25",
+        "desc": "+6.1e+36 Raibos/click",
+        "baseCost": 1.0000000000000001e+45,
+        "costMul": 1.45,
+        "value": 6.103515625e+36
+    },
+    {
+        "id": "c26",
+        "name": "Raibos Chrono Pulse 26",
+        "desc": "+3.1e+38 Raibos/click",
+        "baseCost": 1e+47,
+        "costMul": 1.442,
+        "value": 3.0517578125e+38
+    },
+    {
+        "id": "c27",
+        "name": "Raibos Void Pulse 27",
+        "desc": "+1.5e+40 Raibos/click",
+        "baseCost": 1.0000000000000001e+49,
+        "costMul": 1.434,
+        "value": 1.52587890625e+40
+    },
+    {
+        "id": "c28",
+        "name": "Raibos Infinity Pulse 28",
+        "desc": "+7.6e+41 Raibos/click",
+        "baseCost": 1e+51,
+        "costMul": 1.426,
+        "value": 7.62939453125e+41
+    },
+    {
+        "id": "c29",
+        "name": "Raibos Singularity Pulse 29",
+        "desc": "+3.8e+43 Raibos/click",
+        "baseCost": 1e+53,
+        "costMul": 1.418,
+        "value": 3.814697265625e+43
+    },
+    {
+        "id": "c30",
+        "name": "Raibos Cosmic Pulse 30",
+        "desc": "+7.6e+45 Raibos/click",
+        "baseCost": 5e+55,
+        "costMul": 1.41,
+        "value": 7.62939453125e+45
+    },
+    {
+        "id": "c31",
+        "name": "Raibos Astral Pulse 31",
+        "desc": "+1.5e+48 Raibos/click",
+        "baseCost": 2.5000000000000002e+58,
+        "costMul": 1.402,
+        "value": 1.52587890625e+48
+    },
+    {
+        "id": "c32",
+        "name": "Raibos Ethereal Pulse 32",
+        "desc": "+3.1e+50 Raibos/click",
+        "baseCost": 1.25e+61,
+        "costMul": 1.394,
+        "value": 3.0517578125e+50
+    },
+    {
+        "id": "c33",
+        "name": "Raibos Divine Pulse 33",
+        "desc": "+6.1e+52 Raibos/click",
+        "baseCost": 6.25e+63,
+        "costMul": 1.386,
+        "value": 6.103515625e+52
+    },
+    {
+        "id": "c34",
+        "name": "Raibos Absolute Pulse 34",
+        "desc": "+1.2e+55 Raibos/click",
+        "baseCost": 3.125e+66,
+        "costMul": 1.378,
+        "value": 1.220703125e+55
+    },
+    {
+        "id": "c35",
+        "name": "Raibos Eternal Pulse 35",
+        "desc": "+2.4e+57 Raibos/click",
+        "baseCost": 1.5624999999999999e+69,
+        "costMul": 1.37,
+        "value": 2.44140625e+57
+    },
+    {
+        "id": "c36",
+        "name": "Raibos Primal Pulse 36",
+        "desc": "+4.9e+59 Raibos/click",
+        "baseCost": 7.8125e+71,
+        "costMul": 1.362,
+        "value": 4.8828125e+59
+    },
+    {
+        "id": "c37",
+        "name": "Raibos Ancient Pulse 37",
+        "desc": "+9.8e+61 Raibos/click",
+        "baseCost": 3.90625e+74,
+        "costMul": 1.354,
+        "value": 9.765625e+61
+    },
+    {
+        "id": "c38",
+        "name": "Raibos Transcendent Pulse 38",
+        "desc": "+2.0e+64 Raibos/click",
+        "baseCost": 1.953125e+77,
+        "costMul": 1.346,
+        "value": 1.953125e+64
+    },
+    {
+        "id": "c39",
+        "name": "Raibos Final Pulse 39",
+        "desc": "+3.9e+66 Raibos/click",
+        "baseCost": 9.765625e+79,
+        "costMul": 1.338,
+        "value": 3.90625e+66
+    },
+    {
+        "id": "c40",
+        "name": "Raibos Nebula Pulse 40",
+        "desc": "+7.8e+68 Raibos/click",
+        "baseCost": 4.8828125e+82,
+        "costMul": 1.33,
+        "value": 7.8125e+68
+    },
+    {
+        "id": "c41",
+        "name": "Raibos Star Pulse 41",
+        "desc": "+1.6e+71 Raibos/click",
+        "baseCost": 2.44140625e+85,
+        "costMul": 1.322,
+        "value": 1.5625e+71
+    },
+    {
+        "id": "c42",
+        "name": "Raibos Galaxy Pulse 42",
+        "desc": "+3.1e+73 Raibos/click",
+        "baseCost": 1.220703125e+88,
+        "costMul": 1.314,
+        "value": 3.125e+73
+    },
+    {
+        "id": "c43",
+        "name": "Raibos Universe Pulse 43",
+        "desc": "+6.2e+75 Raibos/click",
+        "baseCost": 6.103515625e+90,
+        "costMul": 1.306,
+        "value": 6.25e+75
+    },
+    {
+        "id": "c44",
+        "name": "Raibos Multiverse Pulse 44",
+        "desc": "+1.2e+78 Raibos/click",
+        "baseCost": 3.0517578125e+93,
+        "costMul": 1.298,
+        "value": 1.25e+78
+    },
+    {
+        "id": "c45",
+        "name": "Raibos Dimension Pulse 45",
+        "desc": "+6.2e+80 Raibos/click",
+        "baseCost": 3.0517578125e+96,
+        "costMul": 1.29,
+        "value": 6.25e+80
+    },
+    {
+        "id": "c46",
+        "name": "Raibos Chrono Pulse 46",
+        "desc": "+3.1e+83 Raibos/click",
+        "baseCost": 3.0517578125e+99,
+        "costMul": 1.282,
+        "value": 3.125e+83
+    },
+    {
+        "id": "c47",
+        "name": "Raibos Void Pulse 47",
+        "desc": "+1.6e+86 Raibos/click",
+        "baseCost": 3.0517578125e+102,
+        "costMul": 1.274,
+        "value": 1.5625e+86
+    },
+    {
+        "id": "c48",
+        "name": "Raibos Infinity Pulse 48",
+        "desc": "+7.8e+88 Raibos/click",
+        "baseCost": 3.0517578125e+105,
+        "costMul": 1.266,
+        "value": 7.8125e+88
+    },
+    {
+        "id": "c49",
+        "name": "Raibos Singularity Pulse 49",
+        "desc": "+3.9e+91 Raibos/click",
+        "baseCost": 3.0517578125e+108,
+        "costMul": 1.258,
+        "value": 3.90625e+91
+    },
+    {
+        "id": "c50",
+        "name": "Raibos Cosmic Pulse 50",
+        "desc": "+2.0e+94 Raibos/click",
+        "baseCost": 3.0517578125e+111,
+        "costMul": 1.25,
+        "value": 1.953125e+94
+    },
+    {
+        "id": "c51",
+        "name": "Raibos Astral Pulse 51",
+        "desc": "+9.8e+96 Raibos/click",
+        "baseCost": 3.0517578125e+114,
+        "costMul": 1.242,
+        "value": 9.765625e+96
+    },
+    {
+        "id": "c52",
+        "name": "Raibos Ethereal Pulse 52",
+        "desc": "+4.9e+99 Raibos/click",
+        "baseCost": 3.0517578125e+117,
+        "costMul": 1.234,
+        "value": 4.8828125e+99
+    },
+    {
+        "id": "c53",
+        "name": "Raibos Divine Pulse 53",
+        "desc": "+2.4e+102 Raibos/click",
+        "baseCost": 3.0517578125e+120,
+        "costMul": 1.226,
+        "value": 2.44140625e+102
+    },
+    {
+        "id": "c54",
+        "name": "Raibos Absolute Pulse 54",
+        "desc": "+1.2e+105 Raibos/click",
+        "baseCost": 3.0517578125e+123,
+        "costMul": 1.218,
+        "value": 1.220703125e+105
+    },
+    {
+        "id": "c55",
+        "name": "Raibos Eternal Pulse 55",
+        "desc": "+6.1e+107 Raibos/click",
+        "baseCost": 3.0517578125e+126,
+        "costMul": 1.21,
+        "value": 6.103515625e+107
+    },
+    {
+        "id": "c56",
+        "name": "Raibos Primal Pulse 56",
+        "desc": "+3.1e+110 Raibos/click",
+        "baseCost": 3.0517578125e+129,
+        "costMul": 1.202,
+        "value": 3.0517578125e+110
+    },
+    {
+        "id": "c57",
+        "name": "Raibos Ancient Pulse 57",
+        "desc": "+1.5e+113 Raibos/click",
+        "baseCost": 3.0517578125e+132,
+        "costMul": 1.194,
+        "value": 1.52587890625e+113
+    },
+    {
+        "id": "c58",
+        "name": "Raibos Transcendent Pulse 58",
+        "desc": "+7.6e+115 Raibos/click",
+        "baseCost": 3.0517578125e+135,
+        "costMul": 1.186,
+        "value": 7.62939453125e+115
+    },
+    {
+        "id": "c59",
+        "name": "Raibos Final Pulse 59",
+        "desc": "+3.8e+118 Raibos/click",
+        "baseCost": 3.0517578125e+138,
+        "costMul": 1.178,
+        "value": 3.814697265625e+118
+    },
+    {
+        "id": "c60",
+        "name": "Raibos Nebula Pulse 60",
+        "desc": "+1.9e+121 Raibos/click",
+        "baseCost": 3.0517578125e+141,
+        "costMul": 1.17,
+        "value": 1.9073486328125e+121
+    },
+    {
+        "id": "c61",
+        "name": "Raibos Star Pulse 61",
+        "desc": "+9.5e+123 Raibos/click",
+        "baseCost": 3.0517578125e+144,
+        "costMul": 1.162,
+        "value": 9.5367431640625e+123
+    },
+    {
+        "id": "c62",
+        "name": "Raibos Galaxy Pulse 62",
+        "desc": "+4.8e+126 Raibos/click",
+        "baseCost": 3.0517578125e+147,
+        "costMul": 1.154,
+        "value": 4.76837158203125e+126
+    },
+    {
+        "id": "c63",
+        "name": "Raibos Universe Pulse 63",
+        "desc": "+2.4e+129 Raibos/click",
+        "baseCost": 3.0517578125e+150,
+        "costMul": 1.15,
+        "value": 2.384185791015625e+129
+    },
+    {
+        "id": "c64",
+        "name": "Raibos Multiverse Pulse 64",
+        "desc": "+1.2e+132 Raibos/click",
+        "baseCost": 3.0517578125e+153,
+        "costMul": 1.15,
+        "value": 1.1920928955078125e+132
+    },
+    {
+        "id": "c65",
+        "name": "Raibos Dimension Pulse 65",
+        "desc": "+6.0e+134 Raibos/click",
+        "baseCost": 3.0517578125e+156,
+        "costMul": 1.15,
+        "value": 5.960464477539062e+134
+    }
 ];
 
 const idleUpgrades = [
-    { id: 'i1', name: 'Raibos Worker', desc: '+1 Raibos/sec', baseCost: 15, costMul: 1.20, value: 1 },
-    { id: 'i2', name: 'Raibos Generator', desc: '+10 Raibos/sec', baseCost: 150, costMul: 1.22, value: 10 },
-    { id: 'i3', name: 'Raibos Farm', desc: '+50 Raibos/sec', baseCost: 1200, costMul: 1.25, value: 50 },
-    { id: 'i4', name: 'Raibos Factory', desc: '+250 Raibos/sec', baseCost: 8000, costMul: 1.25, value: 250 },
-    { id: 'i5', name: 'Raibos Mine', desc: '+1,500 Raibos/sec', baseCost: 50000, costMul: 1.28, value: 1500 },
-    { id: 'i6', name: 'Raibos Bank', desc: '+8,000 Raibos/sec', baseCost: 400000, costMul: 1.30, value: 8000 },
-    { id: 'i7', name: 'Raibos Temple', desc: '+50,000 Raibos/sec', baseCost: 3500000, costMul: 1.32, value: 50000 },
-    { id: 'i8', name: 'Raibos Portal', desc: '+300k Raibos/sec', baseCost: 25000000, costMul: 1.35, value: 300000 },
-    { id: 'i9', name: 'Raibos Planet', desc: '+2M Raibos/sec', baseCost: 200000000, costMul: 1.38, value: 2000000 },
-    { id: 'i10', name: 'Raibos Galaxy', desc: '+15M Raibos/sec', baseCost: 2500000000, costMul: 1.40, value: 15000000 },
-    { id: 'i11', name: 'Raibos Universe', desc: '+100M Raibos/sec', baseCost: 30000000000, costMul: 1.45, value: 100000000 },
-    { id: 'i12', name: 'Raibos Multiverse', desc: '+2B Raibos/sec', baseCost: 100000000000, costMul: 1.50, value: 2000000000 },
-    { id: 'i13', name: 'Dimensional Rift', desc: '+50B Raibos/sec', baseCost: 10000000000000, costMul: 1.55, value: 50000000000 },
-    { id: 'i14', name: 'Singularity', desc: '+1T Raibos/sec', baseCost: 1000000000000000, costMul: 1.60, value: 1000000000000 },
-    { id: 'i15', name: 'Omega Core', desc: '+50T Raibos/sec', baseCost: 500000000000000000, costMul: 1.65, value: 50000000000000 },
-    { id: 'i16', name: 'Satellite Network', desc: '+1Qd Raibos/sec', baseCost: 1e20, costMul: 1.62, value: 1e15 },
-    { id: 'i17', name: 'Moon Colony', desc: '+25Qd Raibos/sec', baseCost: 8e21, costMul: 1.60, value: 2.5e16 },
-    { id: 'i18', name: 'Solar Swarm', desc: '+600Qd Raibos/sec', baseCost: 5e23, costMul: 1.58, value: 6e17 },
-    { id: 'i19', name: 'Dyson Sphere', desc: '+15Qi Raibos/sec', baseCost: 4e25, costMul: 1.56, value: 1.5e19 },
-    { id: 'i20', name: 'Star Forge', desc: '+400Qi Raibos/sec', baseCost: 3e27, costMul: 1.54, value: 4e20 },
-    { id: 'i21', name: 'Pulsar Battery', desc: '+10Sx Raibos/sec', baseCost: 2e29, costMul: 1.52, value: 1e22 },
-    { id: 'i22', name: 'Neutron Star Mine', desc: '+250Sx Raibos/sec', baseCost: 1e31, costMul: 1.50, value: 2.5e23 },
-    { id: 'i23', name: 'Quasar Engine', desc: '+6Sp Raibos/sec', baseCost: 8e32, costMul: 1.48, value: 6e24 },
-    { id: 'i24', name: 'Galactic Core', desc: '+150Sp Raibos/sec', baseCost: 6e34, costMul: 1.46, value: 1.5e26 },
-    { id: 'i25', name: 'Supercluster Hub', desc: '+4Oc Raibos/sec', baseCost: 5e36, costMul: 1.44, value: 4e27 },
-    { id: 'i26', name: 'Great Attractor', desc: '+100Oc Raibos/sec', baseCost: 4e38, costMul: 1.42, value: 1e29 },
-    { id: 'i27', name: 'Cosmic Web', desc: '+2No Raibos/sec', baseCost: 3e40, costMul: 1.40, value: 2e30 },
-    { id: 'i28', name: 'Dimension Breach', desc: '+50No Raibos/sec', baseCost: 2e42, costMul: 1.38, value: 5e31 },
-    { id: 'i29', name: 'Parallel Reality', desc: '+1Dc Raibos/sec', baseCost: 1e44, costMul: 1.36, value: 1e33 },
-    { id: 'i30', name: 'Multiverse Bridge', desc: '+25Dc Raibos/sec', baseCost: 8e45, costMul: 1.35, value: 2.5e34 },
-    { id: 'i31', name: 'Infinite Library', desc: '+600Dc Raibos/sec', baseCost: 6e47, costMul: 1.34, value: 6e35 },
-    { id: 'i32', name: 'Timeless Archive', desc: '+15aa Raibos/sec', baseCost: 5e49, costMul: 1.33, value: 1.5e37 },
-    { id: 'i33', name: 'Laws of Physics', desc: '+400aa Raibos/sec', baseCost: 4e51, costMul: 1.32, value: 4e38 },
-    { id: 'i34', name: 'Void Construction', desc: '+10ab Raibos/sec', baseCost: 3e53, costMul: 1.31, value: 1e40 },
-    { id: 'i35', name: 'Entropy Siphon', desc: '+250ab Raibos/sec', baseCost: 2e55, costMul: 1.30, value: 2.5e41 },
-    { id: 'i36', name: 'Conceptual Engine', desc: '+6ac Raibos/sec', baseCost: 1e57, costMul: 1.29, value: 6e42 },
-    { id: 'i37', name: 'Final Theorem', desc: '+150ac Raibos/sec', baseCost: 8e58, costMul: 1.28, value: 1.5e44 },
-    { id: 'i38', name: 'The Great Design', desc: '+4ad Raibos/sec', baseCost: 6e60, costMul: 1.27, value: 4e45 },
-    { id: 'i39', name: 'Eternal Cycle', desc: '+100ad Raibos/sec', baseCost: 5e62, costMul: 1.26, value: 1e47 },
-    { id: 'i40', name: 'Absolute End', desc: '+2ae Raibos/sec', baseCost: 4e64, costMul: 1.25, value: 2e48 }
+    {
+        "id": "i1",
+        "name": "Raibos Worker",
+        "desc": "+1 Raibos/sec",
+        "baseCost": 15,
+        "costMul": 1.2,
+        "value": 1
+    },
+    {
+        "id": "i2",
+        "name": "Raibos Generator",
+        "desc": "+15 Raibos/sec",
+        "baseCost": 150,
+        "costMul": 1.22,
+        "value": 15
+    },
+    {
+        "id": "i3",
+        "name": "Raibos Farm",
+        "desc": "+80 Raibos/sec",
+        "baseCost": 1200,
+        "costMul": 1.25,
+        "value": 80
+    },
+    {
+        "id": "i4",
+        "name": "Raibos Factory",
+        "desc": "+400 Raibos/sec",
+        "baseCost": 8000,
+        "costMul": 1.25,
+        "value": 400
+    },
+    {
+        "id": "i5",
+        "name": "Raibos Mine",
+        "desc": "+2.5k Raibos/sec",
+        "baseCost": 50000,
+        "costMul": 1.28,
+        "value": 2500
+    },
+    {
+        "id": "i6",
+        "name": "Raibos Chrono Reactor 6",
+        "desc": "+6.0e+5 Raibos/sec",
+        "baseCost": 32000000,
+        "costMul": 1.37,
+        "value": 600000
+    },
+    {
+        "id": "i7",
+        "name": "Raibos Void Reactor 7",
+        "desc": "+2.4e+7 Raibos/sec",
+        "baseCost": 2560000000,
+        "costMul": 1.365,
+        "value": 24000000
+    },
+    {
+        "id": "i8",
+        "name": "Raibos Infinity Reactor 8",
+        "desc": "+9.6e+8 Raibos/sec",
+        "baseCost": 204800000000,
+        "costMul": 1.36,
+        "value": 960000000
+    },
+    {
+        "id": "i9",
+        "name": "Raibos Singularity Reactor 9",
+        "desc": "+3.8e+10 Raibos/sec",
+        "baseCost": 16384000000000,
+        "costMul": 1.355,
+        "value": 38400000000
+    },
+    {
+        "id": "i10",
+        "name": "Raibos Cosmic Reactor 10",
+        "desc": "+1.5e+12 Raibos/sec",
+        "baseCost": 1310720000000000,
+        "costMul": 1.35,
+        "value": 1536000000000
+    },
+    {
+        "id": "i11",
+        "name": "Raibos Astral Reactor 11",
+        "desc": "+6.1e+13 Raibos/sec",
+        "baseCost": 104857600000000000,
+        "costMul": 1.345,
+        "value": 61440000000000
+    },
+    {
+        "id": "i12",
+        "name": "Raibos Ethereal Reactor 12",
+        "desc": "+2.5e+15 Raibos/sec",
+        "baseCost": 8388608000000000000,
+        "costMul": 1.34,
+        "value": 2457600000000000
+    },
+    {
+        "id": "i13",
+        "name": "Raibos Divine Reactor 13",
+        "desc": "+9.8e+16 Raibos/sec",
+        "baseCost": 671088640000000000000,
+        "costMul": 1.335,
+        "value": 98304000000000000
+    },
+    {
+        "id": "i14",
+        "name": "Raibos Absolute Reactor 14",
+        "desc": "+3.9e+18 Raibos/sec",
+        "baseCost": 5.36870912e+22,
+        "costMul": 1.33,
+        "value": 3932160000000000000
+    },
+    {
+        "id": "i15",
+        "name": "Raibos Eternal Reactor 15",
+        "desc": "+1.6e+20 Raibos/sec",
+        "baseCost": 4.294967296e+24,
+        "costMul": 1.325,
+        "value": 157286400000000000000
+    },
+    {
+        "id": "i16",
+        "name": "Raibos Primal Reactor 16",
+        "desc": "+6.3e+21 Raibos/sec",
+        "baseCost": 3.4359738368e+26,
+        "costMul": 1.32,
+        "value": 6.291456e+21
+    },
+    {
+        "id": "i17",
+        "name": "Raibos Ancient Reactor 17",
+        "desc": "+2.5e+23 Raibos/sec",
+        "baseCost": 2.74877906944e+28,
+        "costMul": 1.315,
+        "value": 2.5165824e+23
+    },
+    {
+        "id": "i18",
+        "name": "Raibos Transcendent Reactor 18",
+        "desc": "+1.0e+25 Raibos/sec",
+        "baseCost": 2.199023255552e+30,
+        "costMul": 1.31,
+        "value": 1.00663296e+25
+    },
+    {
+        "id": "i19",
+        "name": "Raibos Final Reactor 19",
+        "desc": "+4.0e+26 Raibos/sec",
+        "baseCost": 1.7592186044416e+32,
+        "costMul": 1.305,
+        "value": 4.02653184e+26
+    },
+    {
+        "id": "i20",
+        "name": "Raibos Nebula Reactor 20",
+        "desc": "+4.0e+28 Raibos/sec",
+        "baseCost": 3.5184372088832e+34,
+        "costMul": 1.3,
+        "value": 4.02653184e+28
+    },
+    {
+        "id": "i21",
+        "name": "Raibos Star Reactor 21",
+        "desc": "+4.0e+30 Raibos/sec",
+        "baseCost": 7.0368744177664e+36,
+        "costMul": 1.295,
+        "value": 4.02653184e+30
+    },
+    {
+        "id": "i22",
+        "name": "Raibos Galaxy Reactor 22",
+        "desc": "+4.0e+32 Raibos/sec",
+        "baseCost": 1.40737488355328e+39,
+        "costMul": 1.29,
+        "value": 4.02653184e+32
+    },
+    {
+        "id": "i23",
+        "name": "Raibos Universe Reactor 23",
+        "desc": "+4.0e+34 Raibos/sec",
+        "baseCost": 2.81474976710656e+41,
+        "costMul": 1.285,
+        "value": 4.02653184e+34
+    },
+    {
+        "id": "i24",
+        "name": "Raibos Multiverse Reactor 24",
+        "desc": "+4.0e+36 Raibos/sec",
+        "baseCost": 5.62949953421312e+43,
+        "costMul": 1.28,
+        "value": 4.02653184e+36
+    },
+    {
+        "id": "i25",
+        "name": "Raibos Dimension Reactor 25",
+        "desc": "+4.0e+38 Raibos/sec",
+        "baseCost": 1.125899906842624e+46,
+        "costMul": 1.275,
+        "value": 4.02653184e+38
+    },
+    {
+        "id": "i26",
+        "name": "Raibos Chrono Reactor 26",
+        "desc": "+4.0e+40 Raibos/sec",
+        "baseCost": 2.251799813685248e+48,
+        "costMul": 1.27,
+        "value": 4.02653184e+40
+    },
+    {
+        "id": "i27",
+        "name": "Raibos Void Reactor 27",
+        "desc": "+4.0e+42 Raibos/sec",
+        "baseCost": 4.503599627370496e+50,
+        "costMul": 1.265,
+        "value": 4.02653184e+42
+    },
+    {
+        "id": "i28",
+        "name": "Raibos Infinity Reactor 28",
+        "desc": "+4.0e+44 Raibos/sec",
+        "baseCost": 9.007199254740992e+52,
+        "costMul": 1.26,
+        "value": 4.02653184e+44
+    },
+    {
+        "id": "i29",
+        "name": "Raibos Singularity Reactor 29",
+        "desc": "+4.0e+46 Raibos/sec",
+        "baseCost": 1.8014398509481983e+55,
+        "costMul": 1.255,
+        "value": 4.02653184e+46
+    },
+    {
+        "id": "i30",
+        "name": "Raibos Cosmic Reactor 30",
+        "desc": "+4.0e+48 Raibos/sec",
+        "baseCost": 3.602879701896397e+57,
+        "costMul": 1.25,
+        "value": 4.02653184e+48
+    },
+    {
+        "id": "i31",
+        "name": "Raibos Astral Reactor 31",
+        "desc": "+4.0e+50 Raibos/sec",
+        "baseCost": 7.205759403792794e+59,
+        "costMul": 1.245,
+        "value": 4.02653184e+50
+    },
+    {
+        "id": "i32",
+        "name": "Raibos Ethereal Reactor 32",
+        "desc": "+4.0e+52 Raibos/sec",
+        "baseCost": 1.4411518807585588e+62,
+        "costMul": 1.24,
+        "value": 4.02653184e+52
+    },
+    {
+        "id": "i33",
+        "name": "Raibos Divine Reactor 33",
+        "desc": "+4.0e+54 Raibos/sec",
+        "baseCost": 2.8823037615171176e+64,
+        "costMul": 1.235,
+        "value": 4.02653184e+54
+    },
+    {
+        "id": "i34",
+        "name": "Raibos Absolute Reactor 34",
+        "desc": "+4.0e+56 Raibos/sec",
+        "baseCost": 5.764607523034235e+66,
+        "costMul": 1.23,
+        "value": 4.02653184e+56
+    },
+    {
+        "id": "i35",
+        "name": "Raibos Eternal Reactor 35",
+        "desc": "+4.0e+58 Raibos/sec",
+        "baseCost": 1.152921504606847e+69,
+        "costMul": 1.225,
+        "value": 4.02653184e+58
+    },
+    {
+        "id": "i36",
+        "name": "Raibos Primal Reactor 36",
+        "desc": "+4.0e+60 Raibos/sec",
+        "baseCost": 2.305843009213694e+71,
+        "costMul": 1.22,
+        "value": 4.02653184e+60
+    },
+    {
+        "id": "i37",
+        "name": "Raibos Ancient Reactor 37",
+        "desc": "+4.0e+62 Raibos/sec",
+        "baseCost": 4.611686018427388e+73,
+        "costMul": 1.215,
+        "value": 4.02653184e+62
+    },
+    {
+        "id": "i38",
+        "name": "Raibos Transcendent Reactor 38",
+        "desc": "+4.0e+64 Raibos/sec",
+        "baseCost": 9.223372036854776e+75,
+        "costMul": 1.21,
+        "value": 4.02653184e+64
+    },
+    {
+        "id": "i39",
+        "name": "Raibos Final Reactor 39",
+        "desc": "+4.0e+66 Raibos/sec",
+        "baseCost": 1.8446744073709553e+78,
+        "costMul": 1.205,
+        "value": 4.02653184e+66
+    },
+    {
+        "id": "i40",
+        "name": "Raibos Nebula Reactor 40",
+        "desc": "+1.6e+69 Raibos/sec",
+        "baseCost": 1.4757395258967643e+81,
+        "costMul": 1.2,
+        "value": 1.610612736e+69
+    },
+    {
+        "id": "i41",
+        "name": "Raibos Star Reactor 41",
+        "desc": "+6.4e+71 Raibos/sec",
+        "baseCost": 1.1805916207174114e+84,
+        "costMul": 1.195,
+        "value": 6.442450944e+71
+    },
+    {
+        "id": "i42",
+        "name": "Raibos Galaxy Reactor 42",
+        "desc": "+2.6e+74 Raibos/sec",
+        "baseCost": 9.444732965739291e+86,
+        "costMul": 1.19,
+        "value": 2.5769803776e+74
+    },
+    {
+        "id": "i43",
+        "name": "Raibos Universe Reactor 43",
+        "desc": "+1.0e+77 Raibos/sec",
+        "baseCost": 7.555786372591433e+89,
+        "costMul": 1.185,
+        "value": 1.03079215104e+77
+    },
+    {
+        "id": "i44",
+        "name": "Raibos Multiverse Reactor 44",
+        "desc": "+4.1e+79 Raibos/sec",
+        "baseCost": 6.044629098073146e+92,
+        "costMul": 1.18,
+        "value": 4.12316860416e+79
+    },
+    {
+        "id": "i45",
+        "name": "Raibos Dimension Reactor 45",
+        "desc": "+1.6e+82 Raibos/sec",
+        "baseCost": 4.835703278458517e+95,
+        "costMul": 1.175,
+        "value": 1.649267441664e+82
+    },
+    {
+        "id": "i46",
+        "name": "Raibos Chrono Reactor 46",
+        "desc": "+6.6e+84 Raibos/sec",
+        "baseCost": 3.868562622766813e+98,
+        "costMul": 1.17,
+        "value": 6.597069766656e+84
+    },
+    {
+        "id": "i47",
+        "name": "Raibos Void Reactor 47",
+        "desc": "+2.6e+87 Raibos/sec",
+        "baseCost": 3.0948500982134505e+101,
+        "costMul": 1.165,
+        "value": 2.6388279066624e+87
+    },
+    {
+        "id": "i48",
+        "name": "Raibos Infinity Reactor 48",
+        "desc": "+1.1e+90 Raibos/sec",
+        "baseCost": 2.4758800785707605e+104,
+        "costMul": 1.16,
+        "value": 1.0555311626649602e+90
+    },
+    {
+        "id": "i49",
+        "name": "Raibos Singularity Reactor 49",
+        "desc": "+4.2e+92 Raibos/sec",
+        "baseCost": 1.9807040628566084e+107,
+        "costMul": 1.155,
+        "value": 4.222124650659841e+92
+    },
+    {
+        "id": "i50",
+        "name": "Raibos Cosmic Reactor 50",
+        "desc": "+1.7e+95 Raibos/sec",
+        "baseCost": 1.5845632502852866e+110,
+        "costMul": 1.15,
+        "value": 1.6888498602639362e+95
+    },
+    {
+        "id": "i51",
+        "name": "Raibos Astral Reactor 51",
+        "desc": "+6.8e+97 Raibos/sec",
+        "baseCost": 1.2676506002282293e+113,
+        "costMul": 1.15,
+        "value": 6.755399441055745e+97
+    },
+    {
+        "id": "i52",
+        "name": "Raibos Ethereal Reactor 52",
+        "desc": "+2.7e+100 Raibos/sec",
+        "baseCost": 1.0141204801825834e+116,
+        "costMul": 1.15,
+        "value": 2.702159776422298e+100
+    },
+    {
+        "id": "i53",
+        "name": "Raibos Divine Reactor 53",
+        "desc": "+1.1e+103 Raibos/sec",
+        "baseCost": 8.112963841460666e+118,
+        "costMul": 1.15,
+        "value": 1.0808639105689192e+103
+    },
+    {
+        "id": "i54",
+        "name": "Raibos Absolute Reactor 54",
+        "desc": "+4.3e+105 Raibos/sec",
+        "baseCost": 6.490371073168533e+121,
+        "costMul": 1.15,
+        "value": 4.323455642275677e+105
+    },
+    {
+        "id": "i55",
+        "name": "Raibos Eternal Reactor 55",
+        "desc": "+1.7e+108 Raibos/sec",
+        "baseCost": 5.192296858534826e+124,
+        "costMul": 1.15,
+        "value": 1.7293822569102706e+108
+    },
+    {
+        "id": "i56",
+        "name": "Raibos Primal Reactor 56",
+        "desc": "+6.9e+110 Raibos/sec",
+        "baseCost": 4.153837486827861e+127,
+        "costMul": 1.15,
+        "value": 6.917529027641082e+110
+    },
+    {
+        "id": "i57",
+        "name": "Raibos Ancient Reactor 57",
+        "desc": "+2.8e+113 Raibos/sec",
+        "baseCost": 3.323069989462289e+130,
+        "costMul": 1.15,
+        "value": 2.767011611056433e+113
+    },
+    {
+        "id": "i58",
+        "name": "Raibos Transcendent Reactor 58",
+        "desc": "+1.1e+116 Raibos/sec",
+        "baseCost": 2.658455991569831e+133,
+        "costMul": 1.15,
+        "value": 1.1068046444225731e+116
+    },
+    {
+        "id": "i59",
+        "name": "Raibos Final Reactor 59",
+        "desc": "+4.4e+118 Raibos/sec",
+        "baseCost": 2.1267647932558648e+136,
+        "costMul": 1.15,
+        "value": 4.427218577690293e+118
+    },
+    {
+        "id": "i60",
+        "name": "Raibos Nebula Reactor 60",
+        "desc": "+1.8e+121 Raibos/sec",
+        "baseCost": 1.7014118346046917e+139,
+        "costMul": 1.15,
+        "value": 1.770887431076117e+121
+    },
+    {
+        "id": "i61",
+        "name": "Raibos Star Reactor 61",
+        "desc": "+7.1e+123 Raibos/sec",
+        "baseCost": 1.3611294676837533e+142,
+        "costMul": 1.15,
+        "value": 7.083549724304469e+123
+    },
+    {
+        "id": "i62",
+        "name": "Raibos Galaxy Reactor 62",
+        "desc": "+2.8e+126 Raibos/sec",
+        "baseCost": 1.0889035741470026e+145,
+        "costMul": 1.15,
+        "value": 2.8334198897217874e+126
+    },
+    {
+        "id": "i63",
+        "name": "Raibos Universe Reactor 63",
+        "desc": "+1.1e+129 Raibos/sec",
+        "baseCost": 8.71122859317602e+147,
+        "costMul": 1.15,
+        "value": 1.133367955888715e+129
+    },
+    {
+        "id": "i64",
+        "name": "Raibos Multiverse Reactor 64",
+        "desc": "+4.5e+131 Raibos/sec",
+        "baseCost": 6.968982874540817e+150,
+        "costMul": 1.15,
+        "value": 4.53347182355486e+131
+    },
+    {
+        "id": "i65",
+        "name": "Raibos Dimension Reactor 65",
+        "desc": "+1.8e+134 Raibos/sec",
+        "baseCost": 5.575186299632653e+153,
+        "costMul": 1.15,
+        "value": 1.813388729421944e+134
+    },
+    {
+        "id": "i66",
+        "name": "Raibos Chrono Reactor 66",
+        "desc": "+7.3e+136 Raibos/sec",
+        "baseCost": 4.4601490397061224e+156,
+        "costMul": 1.15,
+        "value": 7.253554917687776e+136
+    },
+    {
+        "id": "i67",
+        "name": "Raibos Void Reactor 67",
+        "desc": "+2.9e+139 Raibos/sec",
+        "baseCost": 3.568119231764898e+159,
+        "costMul": 1.15,
+        "value": 2.90142196707511e+139
+    },
+    {
+        "id": "i68",
+        "name": "Raibos Infinity Reactor 68",
+        "desc": "+1.2e+142 Raibos/sec",
+        "baseCost": 2.8544953854119187e+162,
+        "costMul": 1.15,
+        "value": 1.160568786830044e+142
+    },
+    {
+        "id": "i69",
+        "name": "Raibos Singularity Reactor 69",
+        "desc": "+4.6e+144 Raibos/sec",
+        "baseCost": 2.283596308329535e+165,
+        "costMul": 1.15,
+        "value": 4.642275147320176e+144
+    },
+    {
+        "id": "i70",
+        "name": "Raibos Cosmic Reactor 70",
+        "desc": "+1.9e+147 Raibos/sec",
+        "baseCost": 1.8268770466636279e+168,
+        "costMul": 1.15,
+        "value": 1.8569100589280706e+147
+    }
 ];
 
 const gamepassData = [
@@ -175,15 +1219,22 @@ const elements = {
 // Utility
 function getUpgradeCost(upg) {
     const level = gameState.upgradeLevels[upg.id] || 0;
-    // 밸런스 조정: 기본 가격 상승폭을 약 15% 상향 (1.2 -> 1.38 등)
     let scaling = upg.costMul * 1.15;
     
-    // gp8: 무한한 지혜 (가격 상승폭 50% 완화)
-    if (gameState.gamepasses && gameState.gamepasses.includes('gp8')) {
-        scaling = 1 + (scaling - 1) * 0.5;
-    }
+    // Global Cost Reduction from Regions
+    let costReduction = 0;
+    gameState.invasion.conqueredRegions.forEach(regionId => {
+        const region = getAllRegions().find(r => r.id === regionId);
+        if (region && region.type === 'cost') costReduction += region.value;
+    });
+    
+    scaling = Math.max(1.05, scaling - costReduction);
     
     return Math.floor(upg.baseCost * Math.pow(scaling, level));
+}
+
+function getAllRegions() {
+    return planetsData.flatMap(p => p.regions);
 }
 
 function formatNumber(num) {
@@ -223,33 +1274,24 @@ function getPointsToEarn(total) {
 // Core Logic
 function getGlobalMultiplier() {
     let mult = 1.0;
-    // 1 Rebirth Point = +5% (0.05) [너프 적용됨]
     mult += gameState.rebirthPoints * 0.05;
     
-    // Achievements bonus
     gameState.achievements.forEach(achId => {
         const ach = achievementsData.find(a => a.id === achId);
         if (ach) mult += ach.bonus;
     });
 
-    if (gameState.invasionPerks && gameState.invasionPerks.mindControl > 0) {
-        mult += gameState.invasionPerks.mindControl * 50.0; // +5000%
-    }
+    // Regional Multipliers
+    const allConquered = gameState.invasion.conqueredRegions;
+    const allRegions = getAllRegions();
 
-    if (gameState.invasionPerks && gameState.invasionPerks.annihilations > 0) {
-        mult *= (100 * gameState.invasionPerks.annihilations);
-    }
-    
-    // Absolute Ruler Gamepass
-    if (gameState.gamepasses && gameState.gamepasses.includes('gp5')) {
-        mult *= 50.0;
-    }
-
-    // gp10: 엠페러 오브 라이보스 (총 레벨 100당 +1x)
-    const totalLevels = Object.values(gameState.upgradeLevels).reduce((a, b) => a + b, 0);
-    if (gameState.gamepasses && gameState.gamepasses.includes('gp10')) {
-        mult += Math.floor(totalLevels / 100) * 1.0;
-    }
+    allConquered.forEach(regionId => {
+        const region = allRegions.find(r => r.id === regionId);
+        if (region) {
+            if (region.type === 'mult') mult += region.value;
+            if (region.type === 'mult_total') mult *= region.value;
+        }
+    });
 
     return mult;
 }
@@ -261,10 +1303,17 @@ function recalculatePowers() {
     clickUpgrades.forEach(u => { cp += u.value * (gameState.upgradeLevels[u.id] || 0); });
     idleUpgrades.forEach(u => { ip += u.value * (gameState.upgradeLevels[u.id] || 0); });
     
-    if (gameState.invasionPerks) {
-        if (gameState.invasionPerks.sectors) cp *= (1 + 0.2 * gameState.invasionPerks.sectors);
-        if (gameState.invasionPerks.coreFragments) ip *= (1 + 10 * gameState.invasionPerks.coreFragments);
-    }
+    const allConquered = gameState.invasion.conqueredRegions;
+    const allRegions = getAllRegions();
+
+    allConquered.forEach(regionId => {
+        const region = allRegions.find(r => r.id === regionId);
+        if (region) {
+            if (region.type === 'click') cp *= (1 + region.value);
+            if (region.type === 'idle') ip *= (1 + region.value);
+            if (region.type === 'all_prod') { cp *= region.value; ip *= region.value; }
+        }
+    });
 
     const mult = getGlobalMultiplier();
     
@@ -287,14 +1336,6 @@ function updateUI() {
         elements.rebirthBadge.style.display = 'none';
     }
 
-    if (gameState.gamepasses && gameState.gamepasses.includes('gp5')) {
-        elements.btn.style.background = 'linear-gradient(45deg, gold, yellow)';
-        elements.btn.style.boxShadow = '0 0 50px gold';
-        elements.btn.style.color = '#fff';
-        document.querySelector('.title').style.color = 'gold';
-        document.querySelector('.title').style.textShadow = '0 0 10px gold';
-    }
-
     [...clickUpgrades, ...idleUpgrades].forEach(upg => {
         const itemEl = document.getElementById(`upg-${upg.id}`);
         if (itemEl) {
@@ -307,17 +1348,17 @@ function updateUI() {
 
     updateRebirthUI();
     renderAchievements();
-    renderInvasionUI();
-    renderGamepasses();
+    updateInvasionUI();
 }
 
 function createUpgradeElement(upg, isClick) {
     const div = document.createElement('div');
     div.id = `upg-${upg.id}`;
+    div.className = 'upgrade-item';
     div.innerHTML = `
         <div class="upgrade-info">
             <span class="upgrade-name">${upg.name}</span>
-            <span class="upgrade-desc">${upg.desc} (base)</span>
+            <span class="upgrade-desc">${upg.desc}</span>
             <span class="upgrade-level">Lv. 0</span>
         </div>
         <div class="upgrade-cost-area">
@@ -333,28 +1374,6 @@ function renderLists() {
     elements.idleList.innerHTML = '';
     clickUpgrades.forEach(u => createUpgradeElement(u, true));
     idleUpgrades.forEach(u => createUpgradeElement(u, false));
-    renderGamepasses();
-}
-
-function renderGamepasses() {
-    const cont = document.getElementById('gamepass-container');
-    if(!cont) return;
-    cont.innerHTML = '';
-    gamepassData.forEach(gp => {
-        const isOwned = gameState.gamepasses && gameState.gamepasses.includes(gp.id);
-        const div = document.createElement('div');
-        div.className = `gamepass-item ${isOwned ? 'owned' : ''}`;
-        div.innerHTML = `
-            <div class="gamepass-info">
-                <span class="gamepass-title">${gp.title}</span>
-                <span class="gamepass-desc">${gp.desc}</span>
-            </div>
-            <button class="action-btn" style="padding: 5px 15px; font-size: 0.9rem;" disabled>
-                ${isOwned ? 'OWNED' : 'LOCKED (Invasion)'}
-            </button>
-        `;
-        cont.appendChild(div);
-    });
 }
 
 // Actions
@@ -372,25 +1391,6 @@ function buyUpgrade(upg) {
 elements.btn.addEventListener('mousedown', (e) => {
     let earned = gameState.clickPower;
     
-    // gp9: 라이보스 자석 (10% 확률로 10배)
-    if (gameState.gamepasses && gameState.gamepasses.includes('gp9')) {
-        if (Math.random() < 0.10) {
-            earned *= 10;
-            showToast('LUCKY!', 'Raibos Magnet triggered! x10 Luck!');
-        }
-    }
-
-    // gp7: 퀀텀 크런치 (2% 확률로 1분치 생산량)
-    if (gameState.gamepasses && gameState.gamepasses.includes('gp7')) {
-        if (Math.random() < 0.02) {
-            const bonus = gameState.idlePower * 60;
-            gameState.raibos += bonus;
-            gameState.totalRaibos += bonus;
-            showToast('QUANTUM CRUNCH!', '+1 Minute of Production!');
-            createFloatingText(e, bonus);
-        }
-    }
-
     gameState.raibos += earned;
     gameState.totalRaibos += earned;
     gameState.totalClicks += 1;
@@ -480,12 +1480,9 @@ function showToast(title, body) {
 
 // Rebirth
 function updateRebirthUI() {
-    // 밸런스 조정: RP 획득량 하향
     let pointsToEarn = getPointsToEarn(gameState.totalRaibos);
-    if(gameState.gamepasses && gameState.gamepasses.includes('gp3')) pointsToEarn *= 2;
     document.getElementById('current-rp').innerText = formatNumber(gameState.rebirthPoints);
     document.getElementById('earn-rp').innerText = "+" + formatNumber(pointsToEarn);
-    if (elements.rbMinReq) elements.rbMinReq.innerText = "1,000,000,000 Raibos";
     
     const btn = document.getElementById('rebirth-btn');
     if (pointsToEarn > 0) {
@@ -499,10 +1496,9 @@ function updateRebirthUI() {
 
 document.getElementById('rebirth-btn').addEventListener('click', () => {
     let earned = getPointsToEarn(gameState.totalRaibos);
-    if(gameState.gamepasses && gameState.gamepasses.includes('gp3')) earned *= 2;
     if (earned <= 0) return;
     
-    if (confirm(`환생하시겠습니까? 모든 진행 상황이 초기화되고 ${formatNumber(earned)} RP를 얻습니다.`)) {
+    if (confirm(`Do you want to rebirth? All progress will be reset and you will receive ${formatNumber(earned)} RP.`)) {
         gameState.rebirthPoints += earned;
         
         // Reset everything else
@@ -510,7 +1506,7 @@ document.getElementById('rebirth-btn').addEventListener('click', () => {
         gameState.totalRaibos = 0;
         gameState.upgradeLevels = {};
         
-        syncRaibosRankings(); // RP 업데이트 즉시 동기화
+        syncRaibosRankings(); 
         recalculatePowers();
         updateUI();
         saveGame();
@@ -531,46 +1527,26 @@ function gameLoop(currentTime) {
     const dt = (currentTime - lastTime) / 1000;
     lastTime = currentTime;
     
-    // Auto Clicker from Gamepass (5 clicks/sec)
-    if (gameState.gamepasses && gameState.gamepasses.includes('gp1')) {
-        const clickGains = gameState.clickPower * 5 * dt;
-        gameState.raibos += clickGains;
-        gameState.totalRaibos += clickGains;
-    }
+    // Invasion Energy Regen
+    let regen = gameState.invasion.energyRegen || 1;
+    gameState.invasion.conqueredRegions.forEach(rid => {
+        const r = getAllRegions().find(x => x.id === rid);
+        if (r && r.type === 'energy') regen *= (1 + r.value);
+    });
     
-    // Auto Clicker from Mind Control
-    if (gameState.invasionPerks && gameState.invasionPerks.mindControl > 0) {
-        const clickGains = gameState.clickPower * 10 * dt; // 10 clicks per second
-        gameState.raibos += clickGains;
-        gameState.totalRaibos += clickGains;
-    }
+    gameState.invasion.energy = Math.min(gameState.invasion.energyMax || 100, (gameState.invasion.energy || 0) + regen * dt);
 
     if (gameState.idlePower > 0) {
         const gain = gameState.idlePower * dt;
         gameState.raibos += gain;
         gameState.totalRaibos += gain;
         
-        // We only check achievements occasionally in the loop to save performance
         if (Math.random() < 0.05) checkAchievements();
         updateUI();
-    } else if ((gameState.invasionPerks && gameState.invasionPerks.mindControl > 0) || (gameState.gamepasses && gameState.gamepasses.includes('gp1'))) {
+    } else {
         updateUI();
     }
     
-    // Auto Invasion Toggle
-    const autoInvEl = document.getElementById('auto-invasion-toggle');
-    if (autoInvEl && autoInvEl.checked) {
-        autoInvTimer += dt;
-        const invInterval = (gameState.gamepasses && gameState.gamepasses.includes('gp6')) ? 0.25 : 1.5;
-        if (autoInvTimer >= invInterval) {
-            autoInvTimer = 0;
-            const cost = getInvasionCost();
-            if (gameState.raibos >= cost && !document.getElementById('invasion-btn').disabled) {
-                document.getElementById('invasion-btn').click();
-            }
-        }
-    }
-
     // Time Skip Spawn
     timeSkipTimer += dt;
     if (timeSkipTimer >= nextTimeSkipStr) {
@@ -585,7 +1561,6 @@ function gameLoop(currentTime) {
         }
     }
     
-    // Save current time for offline progress
     gameState.lastSaveTime = Date.now();
     requestAnimationFrame(gameLoop);
 }
@@ -601,24 +1576,35 @@ function saveGame() {
 function loadGame() {
     const saved = localStorage.getItem(SAVE_KEY);
     if (saved) {
-        gameState = { ...gameState, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        
+        // Migration to Invasion 2.0
+        if (!parsed.invasion) {
+            parsed.invasion = {
+                energy: 100,
+                energyMax: 100,
+                energyRegen: 1,
+                currentPlanet: 0,
+                regionProgress: {},
+                conqueredRegions: []
+            };
+        }
+        
+        gameState = { ...gameState, ...parsed };
         if (!gameState.upgradeLevels) gameState.upgradeLevels = {};
         if (!gameState.achievements) gameState.achievements = [];
-        if (!gameState.gamepasses) gameState.gamepasses = [];
         
-        // Remove old illegally bought passes
-        if (!gameState.migratedInvasionPasses) {
-            gameState.gamepasses = [];
-            gameState.migratedInvasionPasses = true;
-        }
+        // Remove gamepasses if they exist in save
+        delete gameState.gamepasses;
+        delete gameState.invasionPerks;
+        delete gameState.invasionCount;
         
         // Calculate Offline Progress
         const now = Date.now();
         const offlineSecs = (now - gameState.lastSaveTime) / 1000;
         
-        recalculatePowers(); // need idle power first
+        recalculatePowers();
         
-        // If away for more than 60 seconds
         if (offlineSecs > 60 && gameState.idlePower > 0) {
             const gain = gameState.idlePower * offlineSecs;
             gameState.raibos += gain;
@@ -655,7 +1641,7 @@ elements.tabs.forEach(tab => {
                 const success = setRaibosUsername();
                 if (!success) {
                     const container = document.getElementById('ranking-container-raibos');
-                    if (container) container.innerHTML = '<div style="text-align:center; padding:20px; color:#ffcc00;">닉네임을 설정해야 랭킹을 이용할 수 있습니다.</div>';
+                    if (container) container.innerHTML = '<div style="text-align:center; padding:20px; color:#ffcc00;">You must set a nickname to use the rankings.</div>';
                     return;
                 }
             }
@@ -667,7 +1653,7 @@ elements.tabs.forEach(tab => {
 const API_BASE = "/api";
 
 function setRaibosUsername() {
-    const name = prompt("랭킹 보드에 사용될 닉네임을 입력해 주세요 (최대 12자):");
+    const name = prompt("Please enter a nickname for the leaderboard (max 12 characters):");
     if (name && name.trim().length > 0) {
         gameState.username = name.trim().substring(0, 12);
         saveGame();
@@ -677,26 +1663,71 @@ function setRaibosUsername() {
     return false;
 }
 
+// --- Security Layers ---
+const _k = [114,65,105,66,111,83,95,115,69,99,82,101,84,95,107,69,121,95,50,48,50,54,95,33,64,35];
+const _gK = () => String.fromCharCode(..._k);
+
+async function _h256(msg, key) {
+    try {
+        const enc = new TextEncoder();
+        const keyData = enc.encode(key);
+        const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+        const signature = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(msg));
+        return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch(e) { return ""; }
+}
+
+function _xE(str, key) {
+    const utf8Bytes = new TextEncoder().encode(str);
+    const keyBytes = new TextEncoder().encode(key);
+    const res = new Uint8Array(utf8Bytes.length);
+    for(let i=0; i<utf8Bytes.length; i++) {
+        res[i] = utf8Bytes[i] ^ keyBytes[i % keyBytes.length];
+    }
+    let binary = '';
+    for(let i=0; i<res.byteLength; i++) {
+        binary += String.fromCharCode(res[i]);
+    }
+    return btoa(binary);
+}
+
 async function syncRaibosRankings() {
     if (!gameState.username) return;
 
     try {
+        const statsObj = {
+            raibos_raibos: { value: gameState.raibos || 0 },
+            raibos_rp: { value: gameState.rebirthPoints || 0 },
+            raibos_clicks: { value: gameState.totalClicks || 0 },
+            raibos_achievements: { value: (gameState.achievements || []).length },
+            raibos_invasions: { value: gameState.invasionCount || 0 },
+            raibos_admin_tokens: { value: 0 } // Honeypot
+        };
+
+        const rawJson = JSON.stringify({
+            username: gameState.username,
+            stats: statsObj
+        });
+
+        const kStr = _gK();
+        const payloadStr = _xE(rawJson, kStr);
+        const ts = Date.now();
+        const dataToSign = ts + payloadStr;
+        
+        const sig = await _h256(dataToSign, kStr);
+        if (!sig) return; // Crypto not supported in this browser context (e.g. non-HTTPS sometimes)
+
         await fetch(`${API_BASE}/rank/update`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                username: gameState.username,
-                stats: {
-                    raibos_raibos: { value: gameState.raibos },
-                    raibos_rp: { value: gameState.rebirthPoints },
-                    raibos_clicks: { value: gameState.totalClicks },
-                    raibos_achievements: { value: gameState.achievements.length },
-                    raibos_invasions: { value: gameState.invasionCount || 0 }
-                }
+                payload: payloadStr,
+                signature: sig,
+                timestamp: ts
             })
         });
     } catch (e) {
-        console.warn("Ranking server not reachable");
+        console.warn("Ranking server not reachable or crypto error.");
     }
 }
 
@@ -742,147 +1773,124 @@ function renderRaibosLeaderboard(list, category) {
 }
 
 
-// Earth Invasion Handlers
-function getInvasionCost() {
-    const isIntelligent = gameState.gamepasses && gameState.gamepasses.includes('gp2');
-    const scaleFactor = isIntelligent ? 1.003 : 1.01;
-    return Math.floor(1000000 * Math.pow(scaleFactor, gameState.invasionCount || 0));
+// Invasion Engine 2.0 Logic
+let selectedRegionId = null;
+
+function selectRegion(regionId) {
+    selectedRegionId = regionId;
+    const region = getAllRegions().find(r => r.id === regionId);
+    if (!region) return;
+
+    document.getElementById('region-details').style.display = 'block';
+    document.getElementById('selected-region-name').innerText = region.name;
+    document.getElementById('selected-region-buff').innerText = `Reward: ${region.buff}`;
+    
+    updateInvasionUI();
 }
 
-const invBtn = document.getElementById('invasion-btn');
+function updateInvasionUI() {
+    const planet = planetsData[gameState.invasion.currentPlanet];
+    if (!planet) return;
 
-function renderInvasionUI() {
-    const cost = getInvasionCost();
-    const costDisp = document.getElementById('invasion-cost-disp');
-    if (costDisp) costDisp.innerText = formatNumber(cost);
+    document.getElementById('planet-name').innerText = planet.name;
+    document.getElementById('planet-name').style.color = planet.color;
 
-    if (gameState.raibos < cost) {
-        invBtn.disabled = true;
-        invBtn.style.filter = 'grayscale(1)';
-    } else {
-        invBtn.disabled = false;
-        invBtn.style.filter = 'none';
-    }
+    const energy = gameState.invasion.energy;
+    const maxEnergy = gameState.invasion.energyMax;
+    document.getElementById('energy-value').innerText = `${Math.floor(energy)} / ${maxEnergy}`;
+    document.getElementById('energy-bar-fill').style.width = `${(energy / maxEnergy) * 100}%`;
 
-    const perks = gameState.invasionPerks || {};
-    const list = document.getElementById('invasion-relics-list');
-    if (list) {
-        list.innerHTML = `
-            ${perks.annihilations > 0 ? `<li style="color:#ff00ff; text-shadow:0 0 5px #ff00ff; margin-bottom:5px;">❖ 지구 말살 (Earth Annihilation) x${perks.annihilations}<br><small>ㄴ 효과: 전역 배수 x100 중첩 적용</small></li>` : ''}
-            ${perks.mindControl > 0 ? `<li style="color:#ffaa00; margin-bottom:5px;">❖ 정신 제어 (Mind Control) x${perks.mindControl}<br><small>ㄴ 효과: 자동 클릭 활성화 및 전역 배수 +5000%</small></li>` : ''}
-            ${perks.coreFragments > 0 ? `<li style="color:#00ffcc; margin-bottom:5px;">❖ 행성 핵 조각 (Core Fragments) x${perks.coreFragments}<br><small>ㄴ 효과: 아이들 생산량 +1000%</small></li>` : ''}
-            ${perks.sectors > 0 ? `<li style="color:#00aaff; margin-bottom:5px;">❖ 점령된 구역 (Captured Sectors) x${perks.sectors}<br><small>ㄴ 효과: 클릭 위력 +20% 중첩</small></li>` : ''}
-            ${(!perks.sectors && !perks.coreFragments && !perks.mindControl && !perks.annihilations) ? '<li>아직 획득한 유물이 없습니다.</li>' : ''}
-        `;
-    }
-}
-
-if (invBtn) {
-    invBtn.addEventListener('click', () => {
-        const cost = getInvasionCost();
-        if (gameState.raibos < cost) {
-            showToast('Error', 'Insufficient Fleet Resources.');
-            return;
-        }
-        
-        gameState.raibos -= cost;
-        gameState.invasionCount = (gameState.invasionCount || 0) + 1;
-        updateUI();
-        
-        const resDiv = document.getElementById('invasion-result');
-        resDiv.innerHTML = '<span style="color:#fff; animation: blink 0.1s infinite;">Rerolling fate...</span>';
-        invBtn.disabled = true;
-        
-        const isQuantum = gameState.gamepasses && gameState.gamepasses.includes('gp6');
-        const delay = isQuantum ? 200 : 800;
-        
-        setTimeout(() => {
-            const rng = Math.random() * 100;
-            let msg = '';
-            let color = '#555';
-            
-            if (!gameState.invasionPerks) gameState.invasionPerks = { sectors: 0, coreFragments: 0, mindControl: 0, annihilations: 0 };
-            
-            if (rng < 0.001) {
-                gameState.invasionPerks.annihilations++;
-                msg = "EARTH ANNIHILATION! (x100 Multiplier)";
-                color = "#ff00ff";
-            } else if (rng < 0.006) {
-                if(!gameState.gamepasses.includes('gp5')) { gameState.gamepasses.push('gp5'); msg = "PASS FOUND: Absolute Ruler!"; }
-                else { gameState.rebirthPoints += 1000; msg = "Duplicate Pass -> +1000 RP"; }
-                color = "gold";
-            } else if (rng < 0.016) { 
-                gameState.invasionPerks.mindControl++;
-                msg = "Global Mind Control! (Auto Tap + 5000%)";
-                color = "#ffaa00";
-            } else if (rng < 0.026) { 
-                if(!gameState.gamepasses.includes('gp6')) { gameState.gamepasses.push('gp6'); msg = "PASS FOUND: Quantum Dispatch!"; }
-                else { gameState.rebirthPoints += 300; msg = "Duplicate Pass -> +300 RP"; }
-                color = "#44ff44";
-            } else if (rng < 0.046) { 
-                if(!gameState.gamepasses.includes('gp4')) { gameState.gamepasses.push('gp4'); msg = "PASS FOUND: Chrono Mastery!"; }
-                else { gameState.rebirthPoints += 200; msg = "Duplicate Pass -> +200 RP"; }
-                color = "#00ffff";
-            } else if (rng < 0.076) { 
-                if(!gameState.gamepasses.includes('gp3')) { gameState.gamepasses.push('gp3'); msg = "PASS FOUND: Double Rebirth!"; }
-                else { gameState.rebirthPoints += 150; msg = "Duplicate Pass -> +150 RP"; }
-                color = "#ffff00";
-            } else if (rng < 0.116) { 
-                if(!gameState.gamepasses.includes('gp2')) { gameState.gamepasses.push('gp2'); msg = "PASS FOUND: Invasion Intelligence!"; }
-                else { gameState.rebirthPoints += 100; msg = "Duplicate Pass -> +100 RP"; }
-                color = "#ffaa00";
-            } else if (rng < 0.166) { 
-                if(!gameState.gamepasses.includes('gp1')) { gameState.gamepasses.push('gp1'); msg = "PASS FOUND: VIP Autoclicker!"; }
-                else { gameState.rebirthPoints += 50; msg = "Duplicate Pass -> +50 RP"; }
-                color = "#00ffcc";
-            } else if (rng < 0.196) { 
-                if(!gameState.gamepasses.includes('gp7')) { gameState.gamepasses.push('gp7'); msg = "PASS FOUND: Quantum Crunch!"; }
-                else { gameState.rebirthPoints += 200; msg = "Duplicate Pass -> +200 RP"; }
-                color = "#39ff14";
-            } else if (rng < 0.226) { 
-                if(!gameState.gamepasses.includes('gp8')) { gameState.gamepasses.push('gp8'); msg = "PASS FOUND: Infinite Wisdom!"; }
-                else { gameState.rebirthPoints += 300; msg = "Duplicate Pass -> +300 RP"; }
-                color = "#ffff00";
-            } else if (rng < 0.256) { 
-                if(!gameState.gamepasses.includes('gp9')) { gameState.gamepasses.push('gp9'); msg = "PASS FOUND: Raibos Magnet!"; }
-                else { gameState.rebirthPoints += 250; msg = "Duplicate Pass -> +250 RP"; }
-                color = "#ffaa00";
-            } else if (rng < 0.276) { 
-                if(!gameState.gamepasses.includes('gp10')) { gameState.gamepasses.push('gp10'); msg = "PASS FOUND: Emperor of Raibos!"; }
-                else { gameState.rebirthPoints += 500; msg = "Duplicate Pass -> +500 RP"; }
-                color = "#ff00ff";
-            } else if (rng < 0.376) { 
-                gameState.invasionPerks.coreFragments++;
-                msg = "Earth Core Fragment! (+1000% Idle)";
-                color = "#00ffcc";
-            } else if (rng < 0.766) { 
-                const gain = Math.floor(gameState.rebirthPoints * 0.1);
-                gameState.rebirthPoints += gain;
-                msg = `Command Destroyed! (+${formatNumber(gain)} RP)`;
-                color = "#ffff00";
-            } else if (rng < 2.766) { 
-                gameState.invasionPerks.sectors++;
-                msg = "Sector Captured! (+20% Click)";
-                color = "#00aaff";
-            } else if (rng < 22.766) { 
-                gameState.raibos += cost * 3;
-                gameState.totalRaibos += cost * 3;
-                msg = "Supply Raid! (3x Refund)";
-                color = "#33cc33";
+    // Map coloring
+    planet.regions.forEach(r => {
+        const el = document.getElementById(`region-${r.id}`);
+        if (el) {
+            const isConquered = gameState.invasion.conqueredRegions.includes(r.id);
+            if (isConquered) {
+                el.classList.add('conquered');
             } else {
-                msg = "Operation Failed.";
-                color = "#555";
+                el.classList.remove('conquered');
             }
-            
-            resDiv.innerHTML = `<span style="color:${color}; text-shadow:0 0 10px ${color}; font-size:1.3rem;">${msg}</span>`;
-            if (color !== '#555') showToast('Invasion Success', msg);
-            
-            recalculatePowers();
-            saveGame();
-            updateUI();
-        }, delay);
+        }
     });
+
+    if (selectedRegionId) {
+        const region = planet.regions.find(r => r.id === selectedRegionId);
+        if (region) {
+            const progress = gameState.invasion.regionProgress[region.id] || 0;
+            document.getElementById('selected-region-progress').innerText = `${Math.floor(progress)}%`;
+            
+            const btn = document.getElementById('start-invasion-btn');
+            const isConquered = gameState.invasion.conqueredRegions.includes(region.id);
+            
+            if (isConquered) {
+                btn.disabled = true;
+                btn.innerText = 'CONQUERED';
+            } else if (gameState.invasion.energy < region.cost) {
+                btn.disabled = true;
+                btn.innerText = `ENERGY: ${region.cost}`;
+            } else {
+                btn.disabled = false;
+                btn.innerText = `INVADE (${region.cost})`;
+            }
+        }
+    }
 }
+
+document.getElementById('start-invasion-btn').addEventListener('click', () => {
+    if (!selectedRegionId) return;
+    const region = getAllRegions().find(r => r.id === selectedRegionId);
+    if (!region || gameState.invasion.energy < region.cost) return;
+
+    gameState.invasion.energy -= region.cost;
+    let progress = gameState.invasion.regionProgress[region.id] || 0;
+    
+    // Invasion power based on clickPower
+    progress += 20; // 5 hits to conquer for now, can be scaled
+    
+    if (progress >= 100) {
+        progress = 100;
+        if (!gameState.invasion.conqueredRegions.includes(region.id)) {
+            gameState.invasion.conqueredRegions.push(region.id);
+            showToast('Region Conquered!', `${region.name} has fallen. Buff applied: ${region.buff}`);
+            recalculatePowers();
+            checkPlanetClear();
+        }
+    }
+    
+    gameState.invasion.regionProgress[region.id] = progress;
+    updateInvasionUI();
+    saveGame();
+});
+
+function checkPlanetClear() {
+    const planet = planetsData[gameState.invasion.currentPlanet];
+    const allConquered = planet.regions.every(r => gameState.invasion.conqueredRegions.includes(r.id));
+    
+    if (allConquered) {
+        showToast('Planet Secured!', `${planet.name} is now under Raibos control.`);
+        if (gameState.invasion.currentPlanet < planetsData.length - 1) {
+            setTimeout(() => {
+                if (confirm(`${planet.name} cleared! Prepare for hyperspace jump to the next planet?`)) {
+                    document.getElementById('invasion-panel').classList.add('hyperdrive-active');
+                    setTimeout(() => {
+                        gameState.invasion.currentPlanet++;
+                        document.getElementById('invasion-panel').classList.remove('hyperdrive-active');
+                        updateInvasionUI();
+                        saveGame();
+                    }, 1500);
+                }
+            }, 1000);
+        }
+    }
+}
+
+// Add SVG listeners
+planetsData.forEach(p => {
+    p.regions.forEach(r => {
+        const el = document.getElementById(`region-${r.id}`);
+        if (el) el.addEventListener('click', () => selectRegion(r.id));
+    });
+});
 
 setInterval(saveGame, 10000); // 5초에서 10초로 간격 상향
 document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
@@ -895,16 +1903,16 @@ if (crBtn) {
             showToast('Time Skip Failed', 'You need Idle Production for Time Skips to work!');
             return;
         }
-        const isMaster = gameState.gamepasses && gameState.gamepasses.includes('gp4');
-        const seconds = isMaster ? 3600 : 300; // 1시간 or 5분
+        
+        // Standardized to 5 minutes for everyone now
+        const seconds = 300; 
         const gain = gameState.idlePower * seconds;
         
         gameState.raibos += gain;
         gameState.totalRaibos += gain;
         gameState.timeSkipsUsed = (gameState.timeSkipsUsed || 0) + 1;
         
-        const timeStr = isMaster ? "1시간" : "5분";
-        showToast(`TIME SKIP!`, `황금시계를 획득했습니다! ${timeStr} 분량의 생산량 획득: +${formatNumber(gain)} 라이보스`);
+        showToast(`TIME SKIP!`, `You found a Golden Chrono-Raibos! Gained 5 Minutes of production: +${formatNumber(gain)} Raibos`);
         
         // Massive glow effect
         document.body.style.boxShadow = "inset 0 0 100px gold";
@@ -917,8 +1925,8 @@ if (crBtn) {
 if (elements.hrBtn) {
     elements.hrBtn.onmousedown = (e) => {
         e.stopPropagation();
-        if (confirm("⚠️ 경고: 모든 진행 상황을 완전히 삭제하시겠습니까?")) {
-            if (confirm("정말 확실합니까? 저장된 모든 데이터가 영구적으로 사라집니다.")) {
+        if (confirm("⚠️ WARNING: Do you want to completely delete all progress?")) {
+            if (confirm("Are you sure? All saved data will be permanently lost.")) {
                 isResetting = true; // 저장 방지 플래그 활성화
                 localStorage.clear(); 
                 location.reload();
@@ -931,6 +1939,7 @@ if (elements.hrBtn) {
 renderLists();
 loadGame();
 updateUI();
+updateInvasionUI();
 
 // Ranking Events
 const refreshRankBtn = document.getElementById('refresh-ranking-raibos');

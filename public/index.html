@@ -66,9 +66,8 @@
                     <button class="tab" data-target="idle-upgrades">Idle</button>
                     <button class="tab" data-target="rebirth-panel" style="color: #ffaa00;">Rebirth</button>
                     <button class="tab" data-target="achievements-panel">Trophies</button>
-                    <button class="tab" data-target="invasion-panel" style="color: #ff3333; font-weight: bold; text-shadow: 0 0 5px red;">Invasion</button>
-                    <button class="tab" data-target="ranking-upgrades" style="color: #00ccff; font-weight: bold; text-shadow: 0 0 5px cyan;">Ranking</button>
-                    <button class="tab" data-target="gamepass-panel" style="color: #ff00ff; font-weight: bold; text-shadow: 0 0 5px magenta;">Shop 💵</button>
+                    <button class="tab" data-target="invasion-panel" style="color: #00f2ff; font-weight: bold; text-shadow: 0 0 10px cyan;">Invasion</button>
+                    <button class="tab" data-target="ranking-upgrades" style="color: #ffcc00; font-weight: bold; text-shadow: 0 0 10px gold;">Ranking</button>
                 </div>
                 
                 <!-- CLICK TAB -->
@@ -85,12 +84,10 @@
                 <div id="rebirth-panel" class="upgrade-list">
                     <div class="rebirth-info">
                         <h3>Ascend to Next Realm</h3>
-                        <p>환생하면 모든 진행 상황(업그레이드, Raibos 코인)이 초기화되지만, 영구적인 배수인 <span style="color:#ffaa00; font-weight:bold;">Rebirth Point</span>를 얻습니다.</p>
-                        <p>1 Rebirth Point = 전체 획득량 +10% 배수 증가</p>
+                        <p>Ascending resets your current progress but grants <span style="color:#ffaa00; font-weight:bold;">Rebirth Points</span> which multiply all future gains.</p>
                         <div class="rebirth-stats">
                             <div>Current Points: <span id="current-rp">0</span></div>
                             <div>Points to Earn: <span id="earn-rp" style="color: var(--accent-glow);">0</span></div>
-                            <div style="font-size: 0.8rem; color: #8ab095; margin-top: 5px;">(10M 코인당 1 Point 적립)</div>
                         </div>
                         <button id="rebirth-btn" class="action-btn">REBIRTH NOW</button>
                     </div>
@@ -98,48 +95,53 @@
 
                 <!-- ACHIEVEMENTS TAB -->
                 <div id="achievements-panel" class="upgrade-list">
-                    <div style="padding-bottom: 10px; border-bottom: 1px solid rgba(0,255,170,0.2); margin-bottom: 10px;">
-                        <span style="color: var(--accent-light); font-weight: bold;">Unlock progress for permanent Multipliers!</span>
-                    </div>
                     <div id="achievements-container" style="display:flex; flex-direction:column; gap:8px;">
                         <!-- Javascript will populate here -->
                     </div>
                 </div>
 
-                <!-- INVASION TAB -->
-                <div id="invasion-panel" class="upgrade-list" style="text-align: center;">
-                    <h3 style="color:#ff3333; text-shadow: 0 0 10px red; font-size: 1.5rem; margin-bottom: 10px;">EARTH INVASION</h3>
-                    <p style="color: #ccc; font-size: 0.9rem; margin-bottom: 15px;">Cost: <span id="invasion-cost-disp" style="color:#00ffaa; font-weight:bold;">1,000,000</span> Raibos per dispatch.<br>Success is unlikely, but rewards are godly.</p>
-                    
-                    <button id="invasion-btn" class="action-btn" style="background: linear-gradient(45deg, #aa0000, #ff3333); box-shadow: 0 0 15px red; margin-bottom: 10px;">LAUNCH INVASION</button>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <label style="color:#fff; font-size:0.9rem; cursor:pointer;">
-                            <input type="checkbox" id="auto-invasion-toggle" style="transform: scale(1.2); margin-right:5px;">
-                            Auto-Dispatch (Active if sufficient funds)
-                        </label>
+                <!-- INVASION TAB (2.0) -->
+                <div id="invasion-panel" class="upgrade-list">
+                    <div class="planet-header">
+                        <div id="planet-name" class="planet-name">Earth</div>
+                        <div id="planet-status" class="planet-status">Conquest in progress...</div>
                     </div>
-                    
-                    <div id="invasion-result" style="height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid #ff3333; margin-bottom: 15px;">
-                        Awaiting command...
-                    </div>
-                    
-                    <div style="text-align: left; font-size: 0.8rem; color: #fff;">
-                        <h4 style="color:#ffaa00; margin-bottom: 5px;">Invasion Log (Relics Secured):</h4>
-                        <ul id="invasion-relics-list" style="list-style: none; padding: 0;">
-                            <!-- Relics go here -->
-                        </ul>
-                    </div>
-                </div>
 
-                <!-- GAMEPASS TAB -->
-                <div id="gamepass-panel" class="upgrade-list">
-                    <div style="padding-bottom: 10px; border-bottom: 1px solid rgba(255,0,255,0.2); margin-bottom: 10px; text-align: center;">
-                        <span style="color: #ff00ff; font-weight: bold; font-size: 1.2rem; text-shadow: 0 0 10px magenta;">PREMIUM GAMEPASSES</span><br>
-                        <span style="font-size: 0.8rem; color: #aaa;">Dropped exclusively from Earth Invasions. Very Rare!</span>
+                    <div class="energy-container">
+                        <div class="energy-header">
+                            <span>Invasion Energy</span>
+                            <span id="energy-value">0 / 0</span>
+                        </div>
+                        <div class="energy-bar-bg">
+                            <div id="energy-bar-fill" class="energy-bar-fill"></div>
+                        </div>
                     </div>
-                    <div id="gamepass-container" style="display:flex; flex-direction:column; gap:8px;">
-                        <!-- Gamepasses will populate here -->
+
+                    <div id="invasion-map-container">
+                        <!-- Simplified World Map SVG -->
+                        <svg viewBox="0 0 200 100" class="map-svg">
+                            <!-- Asia -->
+                            <path id="region-asia" d="M140,20 L180,20 L190,50 L160,80 L130,60 Z" class="region-path" />
+                            <!-- Europe -->
+                            <path id="region-europe" d="M100,20 L130,20 L135,40 L110,50 L95,40 Z" class="region-path" />
+                            <!-- North America -->
+                            <path id="region-na" d="M20,20 L70,20 L80,50 L50,60 L10,50 Z" class="region-path" />
+                            <!-- South America -->
+                            <path id="region-sa" d="M40,65 L70,65 L75,90 L50,95 Z" class="region-path" />
+                            <!-- Africa -->
+                            <path id="region-africa" d="M100,55 L125,55 L130,85 L105,90 L95,75 Z" class="region-path" />
+                            <!-- Oceania -->
+                            <path id="region-oceania" d="M165,70 L185,70 L190,85 L170,90 Z" class="region-path" />
+                        </svg>
+                    </div>
+
+                    <div id="region-details" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 12px; border: 1px solid var(--border-color); display: none;">
+                        <h4 id="selected-region-name" style="color: var(--accent-glow); margin-bottom: 5px;">Select a Region</h4>
+                        <p id="selected-region-buff" style="font-size: 0.85rem; color: #ccc; margin-bottom: 10px;"></p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span id="selected-region-progress" style="font-size: 1.1rem; font-weight: bold; color: var(--accent-primary);">0%</span>
+                            <button id="start-invasion-btn" class="action-btn" style="padding: 8px 20px; font-size: 1rem;">INVADE</button>
+                        </div>
                     </div>
                 </div>
 

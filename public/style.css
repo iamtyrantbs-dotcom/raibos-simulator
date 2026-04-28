@@ -1,32 +1,53 @@
 :root {
-    /* Color Palette - Light Green / Mint Neon Theme */
-    --bg-dark: #0a0f0a;
-    --bg-panel: rgba(15, 30, 20, 0.4);
-    --bg-panel-hover: rgba(20, 40, 25, 0.6);
-    --border-color: rgba(0, 255, 170, 0.2);
-    --accent-glow: #00ffaa;
-    --accent-primary: #39ff14;
-    --accent-light: #cdffcd;
-    --text-primary: #e0f0e0;
-    --text-secondary: #8ab095;
+    /* Color Palette - Galactic Masterpiece Theme */
+    --bg-dark: #020408;
+    --bg-panel: rgba(10, 15, 25, 0.7);
+    --bg-panel-hover: rgba(15, 25, 45, 0.85);
+    --border-color: rgba(0, 195, 255, 0.25);
+    --accent-glow: #00d2ff;
+    --accent-primary: #00f2ff;
+    --accent-secondary: #ffcc00;
+    --accent-light: #e0faff;
+    --text-primary: #f0faff;
+    --text-secondary: #94a8b8;
     
-    --btn-gradient: linear-gradient(135deg, rgba(0, 255, 170, 0.2), rgba(57, 255, 20, 0.1));
-    --btn-gradient-hover: linear-gradient(135deg, rgba(0, 255, 170, 0.4), rgba(57, 255, 20, 0.2));
+    --btn-gradient: linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(0, 242, 255, 0.1));
+    --btn-gradient-hover: linear-gradient(135deg, rgba(0, 210, 255, 0.4), rgba(0, 242, 255, 0.2));
+    
+    --panel-blur: blur(20px);
+    --panel-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Outfit', 'Inter', sans-serif;
 }
 
 body {
     background-color: var(--bg-dark);
     color: var(--text-primary);
     overflow: hidden;
-    background: radial-gradient(circle at 50% 50%, var(--bg-dark) 40%, #031103 100%);
+    background: 
+        radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.05) 0%, transparent 80%),
+        radial-gradient(circle at 20% 30%, rgba(255, 204, 0, 0.03) 0%, transparent 50%),
+        var(--bg-dark);
     min-height: 100vh;
+    position: relative;
+}
+
+body::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+        linear-gradient(var(--border-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+    background-size: 50px 50px;
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 0;
 }
 
 #app-container {
@@ -167,12 +188,12 @@ body {
     width: 250px;
     height: 250px;
     border-radius: 50%;
-    background: linear-gradient(145deg, #0f1c14, #182b1d);
-    border: 2px solid var(--accent-glow);
+    background: radial-gradient(circle at center, #1a2a4a 0%, #020408 100%);
+    border: 3px solid var(--accent-glow);
     box-shadow: 
-        inset 0 0 50px rgba(0, 255, 170, 0.2),
-        0 0 30px rgba(0, 255, 170, 0.3),
-        0 15px 35px rgba(0,0,0,0.5);
+        inset 0 0 50px rgba(0, 210, 255, 0.4),
+        0 0 40px rgba(0, 210, 255, 0.3),
+        0 20px 50px rgba(0,0,0,0.8);
     cursor: pointer;
     position: relative;
     transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.1s ease;
@@ -181,30 +202,30 @@ body {
     align-items: center;
     outline: none;
     user-select: none;
+    overflow: hidden;
 }
 
-.raibos-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 
-        inset 0 0 60px rgba(0, 255, 170, 0.3),
-        0 0 50px rgba(0, 255, 170, 0.5),
-        0 20px 40px rgba(0,0,0,0.6);
+.raibos-btn::after {
+    content: "";
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.1) 50%, transparent 55%);
+    animation: shine 3s infinite;
 }
 
-.raibos-btn:active {
-    transform: scale(0.95);
-    box-shadow: 
-        inset 0 0 40px rgba(0, 255, 170, 0.4),
-        0 0 20px rgba(0, 255, 170, 0.4);
-    border-color: var(--accent-primary);
+@keyframes shine {
+    0% { transform: translate(-100%, -100%) rotate(45deg); }
+    100% { transform: translate(100%, 100%) rotate(45deg); }
 }
 
 .raibos-face {
     font-size: 8rem;
     font-weight: 900;
     color: var(--accent-light);
-    text-shadow: 0 0 20px rgba(0, 255, 170, 0.8);
+    text-shadow: 0 0 30px var(--accent-glow);
     pointer-events: none;
+    z-index: 2;
 }
 
 /* Floating Animation */
@@ -474,23 +495,115 @@ body {
     0%, 100% { transform: translateY(0) scale(1); }
     50% { transform: translateY(-10px) scale(1.1); }
 }
-.gamepass-item {
-    background: linear-gradient(135deg, rgba(255,0,255,0.1), rgba(0,0,0,0.8));
-    border: 1px solid magenta;
-    border-radius: 8px;
-    padding: 10px;
+/* Galactic Conquest Map */
+#invasion-map-container::after {
+    content: "";
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: linear-gradient(to bottom, transparent, var(--accent-glow), transparent);
+    opacity: 0.5;
+    animation: scanner 4s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes scanner {
+    0% { top: -10%; }
+    100% { top: 110%; }
+}
+
+.map-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.3));
+}
+
+.region-path {
+    fill: rgba(0, 210, 255, 0.1);
+    stroke: var(--accent-glow);
+    stroke-width: 1;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.region-path:hover {
+    fill: rgba(0, 210, 255, 0.3);
+    stroke-width: 2;
+    filter: drop-shadow(0 0 15px var(--accent-glow));
+}
+
+.region-path.conquered {
+    fill: rgba(255, 204, 0, 0.4);
+    stroke: var(--accent-secondary);
+}
+
+/* Energy Bar */
+.energy-container {
+    margin-bottom: 20px;
+    background: rgba(0,0,0,0.5);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.energy-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--accent-primary);
 }
-.gamepass-item.owned {
-    background: rgba(255,215,0,0.1) !important;
-    border-color: gold !important;
+
+.energy-bar-bg {
+    width: 100%;
+    height: 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
 }
-.gamepass-info { flex: 1; margin-right: 10px; text-align: left; }
-.gamepass-title { font-weight: bold; color: magenta; display: block; }
-.gamepass-item.owned .gamepass-title { color: gold; text-shadow: 0 0 5px gold; }
-.gamepass-desc { font-size: 0.8rem; color: #ccc; }
+
+.energy-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-glow), var(--accent-primary));
+    box-shadow: 0 0 15px var(--accent-glow);
+    transition: width 0.3s ease;
+}
+
+/* Planet Header */
+.planet-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.planet-name {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--accent-light);
+    text-shadow: 0 0 15px var(--accent-glow);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+.planet-status {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Hyperdrive Animation */
+@keyframes hyperdrive {
+    0% { transform: scale(1); filter: blur(0); opacity: 1; }
+    50% { transform: scale(2); filter: blur(20px); opacity: 0.5; }
+    100% { transform: scale(1); filter: blur(0); opacity: 1; }
+}
+
+.hyperdrive-active {
+    animation: hyperdrive 1.5s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+}
 
 /* Ranking Board Styles */
 .ranking-panel {
