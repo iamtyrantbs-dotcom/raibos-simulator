@@ -28,13 +28,13 @@ const planetsData = [
         name: 'Earth',
         color: '#00f2ff',
         regions: [
-            { id: 'asia', name: 'Asia', buff: 'Click Power +50%', type: 'click', value: 0.5, cost: 20, d: "M140,20 L180,20 L190,50 L160,80 L130,60 Z" },
-            { id: 'europe', name: 'Europe', buff: 'Upgrade Cost -5%', type: 'cost', value: 0.05, cost: 25, d: "M100,20 L130,20 L135,40 L110,50 L95,40 Z" },
-            { id: 'na', name: 'North America', buff: 'Idle Power +50%', type: 'idle', value: 0.5, cost: 30, d: "M20,20 L70,20 L80,50 L50,60 L10,50 Z" },
-            { id: 'sa', name: 'South America', buff: 'RP Gain +20%', type: 'rp', value: 0.2, cost: 35, d: "M40,65 L70,65 L75,90 L50,95 Z" },
-            { id: 'africa', name: 'Africa', buff: 'Energy Regen +50%', type: 'energy', value: 0.5, cost: 40, d: "M100,55 L125,55 L130,85 L105,90 L95,75 Z" },
-            { id: 'oceania', name: 'Oceania', buff: 'Global Multiplier +50%', type: 'mult', value: 0.5, cost: 50, d: "M165,70 L185,70 L190,85 L170,90 Z" },
-            { id: 'antarctica', name: 'Antarctica', buff: 'Global Multiplier x1.5', type: 'mult_total', value: 1.5, cost: 80, d: "M50,90 L150,90 L160,98 L40,98 Z" }
+            { id: 'e1', name: 'Asia', buff: 'Click Power +50%', type: 'click', value: 0.5, cost: 20, d: "M140,20 L180,20 L190,50 L160,80 L130,60 Z" },
+            { id: 'e2', name: 'Europe', buff: 'Upgrade Cost -5%', type: 'cost', value: 0.05, cost: 25, d: "M100,20 L130,20 L135,40 L110,50 L95,40 Z" },
+            { id: 'e3', name: 'North America', buff: 'Idle Power +50%', type: 'idle', value: 0.5, cost: 30, d: "M20,20 L70,20 L80,50 L50,60 L10,50 Z" },
+            { id: 'e4', name: 'South America', buff: 'RP Gain +20%', type: 'rp', value: 0.2, cost: 35, d: "M40,65 L70,65 L75,90 L50,95 Z" },
+            { id: 'e5', name: 'Africa', buff: 'Energy Regen +50%', type: 'energy', value: 0.5, cost: 40, d: "M100,55 L125,55 L130,85 L105,90 L95,75 Z" },
+            { id: 'e6', name: 'Oceania', buff: 'Global Multiplier +50%', type: 'mult', value: 0.5, cost: 50, d: "M165,70 L185,70 L190,85 L170,90 Z" },
+            { id: 'e7', name: 'Antarctica', buff: 'Global Multiplier x1.5', type: 'mult_total', value: 1.5, cost: 80, d: "M50,90 L150,90 L160,98 L40,98 Z" }
         ]
     },
     {
@@ -42,11 +42,11 @@ const planetsData = [
         name: 'Mars',
         color: '#ff4d4d',
         regions: [
-            { id: 'valles', name: 'Valles Marineris', buff: 'Global Multiplier x2', type: 'mult_total', value: 2, cost: 120, d: "M30,40 L70,30 L120,40 L160,60 L140,80 L80,70 Z" },
-            { id: 'olympus', name: 'Olympus Mons', buff: 'Click Power +200%', type: 'click', value: 2.0, cost: 180, d: "M80,20 L120,10 L130,30 L90,40 Z" },
-            { id: 'utopia', name: 'Utopia Planitia', buff: 'Idle Power +200%', type: 'idle', value: 2.0, cost: 240, d: "M140,20 L180,30 L170,50 L130,40 Z" },
-            { id: 'hellas', name: 'Hellas Planitia', buff: 'Rebirth Points +100%', type: 'rp', value: 1.0, cost: 300, d: "M40,60 L80,55 L90,85 L50,90 Z" },
-            { id: 'mars_poles', name: 'Polar Caps', buff: 'Energy Regen x2', type: 'energy_mult', value: 2, cost: 400, d: "M20,10 L180,10 L170,15 L30,15 Z" }
+            { id: 'm1', name: 'Valles Marineris', buff: 'Global Multiplier x2', type: 'mult_total', value: 2, cost: 150, d: "M30,40 L70,30 L120,40 L160,60 L140,80 L80,70 Z" },
+            { id: 'm2', name: 'Olympus Mons', buff: 'Click Power +200%', type: 'click', value: 2.0, cost: 200, d: "M80,20 L120,10 L130,30 L90,40 Z" },
+            { id: 'm3', name: 'Utopia Planitia', buff: 'Idle Power +200%', type: 'idle', value: 2.0, cost: 250, d: "M140,20 L180,30 L170,50 L130,40 Z" },
+            { id: 'm4', name: 'Hellas Planitia', buff: 'Rebirth Points +100%', type: 'rp', value: 1.0, cost: 300, d: "M40,60 L80,55 L90,85 L50,90 Z" },
+            { id: 'm5', name: 'Cydonia', buff: 'All Costs -10%', type: 'cost', value: 0.1, cost: 400, d: "M100,10 Q120,0 140,10 L120,30 Z" }
         ]
     },
     {
@@ -54,10 +54,11 @@ const planetsData = [
         name: 'Jupiter',
         color: '#ffcc99',
         regions: [
-            { id: 'grs', name: 'Great Red Spot', buff: 'Global Multiplier x10', type: 'mult_total', value: 10, cost: 600, d: "M80,50 Q100,30 140,50 T100,70 Z" },
-            { id: 'europa', name: 'Europa', buff: 'All Production x5', type: 'all_prod', value: 5, cost: 800, d: "M30,30 L60,20 L70,50 L40,60 Z" },
-            { id: 'ganymede', name: 'Ganymede', buff: 'Upgrade Cost -20%', type: 'cost', value: 0.2, cost: 1000, d: "M130,20 L160,30 L150,60 L120,50 Z" },
-            { id: 'io', name: 'Io', buff: 'Click Power +500%', type: 'click', value: 5.0, cost: 1200, d: "M50,70 L80,65 L85,90 L55,95 Z" }
+            { id: 'j1', name: 'Great Red Spot', buff: 'Global Multiplier x10', type: 'mult_total', value: 10, cost: 600, d: "M70,40 Q100,10 130,40 T70,60 Z" },
+            { id: 'j2', name: 'Europa', buff: 'All Production x5', type: 'all_prod', value: 5, cost: 800, d: "M30,20 L60,10 L70,40 L40,50 Z" },
+            { id: 'j3', name: 'Ganymede', buff: 'Upgrade Cost -20%', type: 'cost', value: 0.2, cost: 1000, d: "M130,10 L160,20 L150,50 L120,40 Z" },
+            { id: 'j4', name: 'Io', buff: 'Click Power +500%', type: 'click', value: 5.0, cost: 1200, d: "M50,60 L80,55 L85,80 L55,85 Z" },
+            { id: 'j5', name: 'Callisto', buff: 'Energy Max +200%', type: 'energy_max_flat', value: 200, cost: 1500, d: "M150,60 L180,50 L190,80 L160,90 Z" }
         ]
     },
     {
@@ -65,9 +66,20 @@ const planetsData = [
         name: 'Saturn',
         color: '#e6e600',
         regions: [
-            { id: 'rings', name: 'Celestial Rings', buff: 'Global Multiplier x50', type: 'mult_total', value: 50, cost: 2500, d: "M10,50 Q50,20 190,50 T10,50 M30,50 Q60,35 170,50 T30,50" },
-            { id: 'titan', name: 'Titan', buff: 'Idle Power +1000%', type: 'idle', value: 10, cost: 3000, d: "M40,20 L80,15 L90,45 L50,50 Z" },
-            { id: 'enceladus', name: 'Enceladus', buff: 'Energy Regen x3', type: 'energy_mult', value: 3, cost: 3500, d: "M120,60 L150,55 L160,85 L130,90 Z" }
+            { id: 's1', name: 'Celestial Rings', buff: 'Global Multiplier x25', type: 'mult_total', value: 25, cost: 2000, d: "M10,40 Q100,10 190,40 T10,60 Z" },
+            { id: 's2', name: 'Titan', buff: 'Idle Power +1000%', type: 'idle', value: 10, cost: 3000, d: "M40,10 L80,5 L90,35 L50,40 Z" },
+            { id: 's3', name: 'Enceladus', buff: 'Energy Regen x3', type: 'energy_mult', value: 3, cost: 4000, d: "M120,50 L150,45 L160,75 L130,80 Z" },
+            { id: 's4', name: 'Rhea', buff: 'All Production x10', type: 'all_prod', value: 10, cost: 5000, d: "M20,60 L50,55 L60,85 L30,90 Z" }
+        ]
+    },
+    {
+        id: 'uranus',
+        name: 'Uranus',
+        color: '#b3ffff',
+        regions: [
+            { id: 'u1', name: 'Titania', buff: 'Click Power x20', type: 'click_mult', value: 20, cost: 6000, d: "M60,20 L100,10 L110,40 L70,50 Z" },
+            { id: 'u2', name: 'Oberon', buff: 'Idle Power x20', type: 'idle_mult', value: 20, cost: 8000, d: "M120,20 L160,10 L170,40 L130,50 Z" },
+            { id: 'u3', name: 'Mirandax', buff: 'Global Multiplier x100', type: 'mult_total', value: 100, cost: 10000, d: "M80,60 L120,60 L120,90 L80,90 Z" }
         ]
     },
     {
@@ -75,18 +87,19 @@ const planetsData = [
         name: 'Neptune',
         color: '#4d4dff',
         regions: [
-            { id: 'triton', name: 'Triton', buff: 'RP Gain x5', type: 'rp_mult', value: 5, cost: 5000, d: "M50,40 L90,30 L100,60 L60,70 Z" },
-            { id: 'darkspot', name: 'Great Dark Spot', buff: 'Global Multiplier x500', type: 'mult_total', value: 500, cost: 7500, d: "M110,40 Q130,20 170,40 T130,60 Z" },
-            { id: 'neptune_core', name: 'Frozen Core', buff: 'All Costs -50%', type: 'cost', value: 0.5, cost: 10000, d: "M80,70 L120,70 L120,95 L80,95 Z" }
+            { id: 'n1', name: 'Triton', buff: 'RP Gain x5', type: 'rp_mult', value: 5, cost: 12000, d: "M50,30 L90,20 L100,50 L60,60 Z" },
+            { id: 'n2', name: 'Great Dark Spot', buff: 'Global Multiplier x500', type: 'mult_total', value: 500, cost: 15000, d: "M110,30 Q130,10 170,30 T130,50 Z" },
+            { id: 'n3', name: 'Proteus', buff: 'Energy Regen x5', type: 'energy_mult', value: 5, cost: 20000, d: "M80,60 L120,60 L120,90 L80,90 Z" }
         ]
     },
     {
         id: 'pluto',
-        name: 'Pluto (Outer Rim)',
+        name: 'Pluto',
         color: '#ffffff',
         regions: [
-            { id: 'charon', name: 'Charon', buff: 'Final Multiplier x1000', type: 'mult_total', value: 1000, cost: 20000, d: "M30,30 L60,30 L60,60 L30,60 Z" },
-            { id: 'heart', name: 'The Heart', buff: 'Raibos Masterpiece: x10^6 Power', type: 'mult_total', value: 1000000, cost: 50000, d: "M100,40 Q120,20 140,40 L100,80 L60,40 Q80,20 100,40 Z" }
+            { id: 'p1', name: 'Charon', buff: 'Final Multiplier x1000', type: 'mult_total', value: 1000, cost: 30000, d: "M30,30 L60,30 L60,60 L30,60 Z" },
+            { id: 'p2', name: 'Styx', buff: 'Click Power x1000', type: 'click_mult', value: 1000, cost: 40000, d: "M100,20 L130,10 L140,40 L110,50 Z" },
+            { id: 'p3', name: 'Kerberos', buff: 'Idle Power x1000', type: 'idle_mult', value: 1000, cost: 50000, d: "M60,60 L90,55 L95,80 L65,85 Z" }
         ]
     },
     {
@@ -94,9 +107,9 @@ const planetsData = [
         name: 'Kuiper Belt',
         color: '#aaddff',
         regions: [
-            { id: 'comet_grave', name: 'Comet Graveyard', buff: 'Click Power x100', type: 'click', value: 100, cost: 1e5, d: "M20,20 L50,20 L40,50 Z" },
-            { id: 'deep_frozen', name: 'Deep Frozen', buff: 'Idle Power x100', type: 'idle', value: 100, cost: 2e5, d: "M120,20 L150,20 L140,50 Z" },
-            { id: 'rim_shard', name: 'Rim Shard', buff: 'All Production x50', type: 'all_prod', value: 50, cost: 5e5, d: "M70,70 L130,70 L100,95 Z" }
+            { id: 'k1', name: 'Comet Graveyard', buff: 'Click Power x10^4', type: 'click_mult', value: 10000, cost: 1e5, d: "M20,20 L50,15 L60,45 L30,50 Z" },
+            { id: 'k2', name: 'Frozen Core', buff: 'Idle Power x10^4', type: 'idle_mult', value: 10000, cost: 2e5, d: "M120,20 L150,15 L160,45 L130,50 Z" },
+            { id: 'k3', name: 'Eris Outer Rim', buff: 'Global Multiplier x10^6', type: 'mult_total', value: 1e6, cost: 5e5, d: "M70,60 L130,60 L130,95 L70,95 Z" }
         ]
     },
     {
@@ -104,16 +117,16 @@ const planetsData = [
         name: 'Oort Cloud',
         color: '#cccccc',
         regions: [
-            { id: 'void_shell', name: 'Void Shell', buff: 'Global Multiplier x10^9', type: 'mult_total', value: 1e9, cost: 1e6, d: "M10,10 L190,10 L190,190 L10,190 Z" },
-            { id: 'dark_matter_node', name: 'Dark Matter Node', buff: 'RP Gain x100', type: 'rp_mult', value: 100, cost: 5e6, d: "M80,80 L120,80 L120,120 L80,120 Z" }
+            { id: 'o1', name: 'Void Shell', buff: 'Global Multiplier x10^9', type: 'mult_total', value: 1e9, cost: 1e6, d: "M10,10 L190,10 L190,90 L10,90 Z" },
+            { id: 'o2', name: 'Stardust Node', buff: 'RP Gain x10^4', type: 'rp_mult', value: 10000, cost: 5e6, d: "M80,30 L120,30 L120,70 L80,70 Z" }
         ]
     },
     {
         id: 'andromeda',
-        name: 'Andromeda Core',
+        name: 'Andromeda',
         color: '#ff00ff',
         regions: [
-            { id: 'reality_fold', name: 'Reality Fold', buff: 'Final Masterpiece: x10^15 Power', type: 'mult_total', value: 1e15, cost: 1e7, d: "M100,10 Q190,100 100,190 Q10,100 100,10 Z" }
+            { id: 'a1', name: 'Reality Fold', buff: 'Final Masterpiece: x10^12 Power', type: 'mult_total', value: 1e12, cost: 1e7, d: "M100,5 Q190,50 100,95 Q10,50 100,5 Z" }
         ]
     }
 ];
@@ -452,6 +465,8 @@ function updatePower() {
         if (region) {
             if (region.type === 'click') cp *= (1 + region.value);
             if (region.type === 'idle') ip *= (1 + region.value);
+            if (region.type === 'click_mult') cp *= region.value;
+            if (region.type === 'idle_mult') ip *= region.value;
             if (region.type === 'all_prod') { cp *= region.value; ip *= region.value; }
         }
     });
@@ -549,6 +564,7 @@ function buyUpgrade(upg) {
 // Artifact System
 function renderArtifacts() {
     const container = elements.artifactList;
+    if (!container) return;
     container.innerHTML = '';
     
     artifactsData.forEach(art => {
@@ -593,6 +609,7 @@ function renderInvasion() {
     if (!planet) return;
 
     const cont = document.getElementById('invasion-planet-container');
+    if (!cont) return;
     cont.innerHTML = `
         <div class="planet-view" style="background: radial-gradient(circle, ${planet.color}44 0%, transparent 70%);">
             <h2 style="color: ${planet.color}; text-shadow: 0 0 10px ${planet.color};">${planet.name}</h2>
@@ -620,8 +637,16 @@ function renderInvasion() {
     `;
 
     const nav = document.getElementById('planet-nav');
+    if (!nav) return;
     nav.innerHTML = planetsData.map((p, idx) => {
-        const unlocked = idx <= gameState.invasion.currentPlanet || idx <= (gameState.invasion.conqueredRegions.length / 3);
+        // Unlock next planet if 50% of previous regions are conquered
+        const prevPlanet = planetsData[idx-1];
+        let unlocked = true;
+        if (prevPlanet) {
+            const conqueredInPrev = prevPlanet.regions.filter(r => gameState.invasion.conqueredRegions.includes(r.id)).length;
+            unlocked = conqueredInPrev >= (prevPlanet.regions.length / 2);
+        }
+        
         return `<button class="planet-btn ${idx === planetIdx ? 'active' : ''}" 
                         ${unlocked ? '' : 'disabled'} 
                         onclick="switchPlanet(${idx})">${p.name}</button>`;
@@ -640,7 +665,7 @@ function attackRegion(rid) {
 
     // Special Invasion Artifact
     const hasHyper = gameState.unlockedArtifacts.includes('art15');
-    const actualCost = gameState.unlockedArtifacts.includes('art8') ? region.cost * 0.8 : region.cost;
+    const actualCost = gameState.unlockedArtifacts.includes('art8') ? region.cost * 0.85 : region.cost;
 
     if (gameState.invasion.energy >= actualCost) {
         gameState.invasion.energy -= actualCost;
@@ -651,8 +676,8 @@ function attackRegion(rid) {
         if (prog >= 100) {
             prog = 100;
             gameState.invasion.conqueredRegions.push(rid);
-            gameState.artifactShards += Math.floor(region.cost / 2); // Shards from conquest
-            showToast(`Conquered ${region.name}! (+${Math.floor(region.cost / 2)} Shards)`, "success");
+            gameState.artifactShards += Math.floor(region.cost / 4) + 1; // Shards from conquest
+            showToast(`Conquered ${region.name}! (+${Math.floor(region.cost / 4) + 1} Shards)`, "success");
             updatePower();
         }
         gameState.invasion.regionProgress[rid] = prog;
@@ -673,6 +698,7 @@ function createInvasionEffect() {
 // Achievements
 function renderAchievements() {
     const container = elements.achievementsList;
+    if (!container) return;
     container.innerHTML = '';
     
     achievementsData.forEach(ach => {
@@ -731,6 +757,12 @@ function gameLoop() {
     });
 
     let maxE = gameState.invasion.energyMax;
+    // Flat energy max buffs from regions (Callisto etc)
+    gameState.invasion.conqueredRegions.forEach(rid => {
+        const r = getAllRegions().find(x => x.id === rid);
+        if (r && r.type === 'energy_max_flat') maxE += r.value;
+    });
+
     gameState.unlockedArtifacts.forEach(aid => {
         const art = artifactsData.find(a => a.id === aid);
         if (art && art.type === 'energy_max') maxE *= art.value;
