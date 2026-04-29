@@ -829,8 +829,40 @@ elements.tabs.forEach(tab => {
         elements.tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         updateUI();
+        if (tab.dataset.tab === 'ranking-tab') fetchRanking();
     };
 });
+
+// Ranking Fetch Logic
+async function fetchRanking() {
+    const listCont = document.getElementById('ranking-list');
+    const type = document.getElementById('ranking-type').value;
+    listCont.innerHTML = '<div style="text-align:center; padding:20px;">Loading rankings...</div>';
+    
+    try {
+        const response = await fetch(`/ranking?type=${type}`);
+        const data = await response.json();
+        listCont.innerHTML = '';
+        data.forEach((entry, idx) => {
+            const item = document.createElement('div');
+            item.className = 'rank-item';
+            item.innerHTML = `
+                <div class="rank-num">#${idx + 1}</div>
+                <div class="rank-info">
+                    <div class="rank-username">${entry.username || 'Anonymous'}</div>
+                    <div class="rank-value">${formatNumber(entry.value)}</div>
+                </div>
+            `;
+            listCont.appendChild(item);
+        });
+    } catch (e) {
+        listCont.innerHTML = '<div style="text-align:center; padding:20px; color:#ff3333;">Offline Mode / Error</div>';
+    }
+}
+
+document.getElementById('refresh-ranking').onclick = fetchRanking;
+document.getElementById('ranking-type').onchange = fetchRanking;
+
 
 function rebirth() {
     const points = getPointsToEarn(gameState.totalRaibos);
