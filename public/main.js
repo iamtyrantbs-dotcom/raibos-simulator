@@ -284,25 +284,24 @@ const artifactsData = [
 ];
 
 const achievementsData = [
-    { id: 'a1', title: 'First Steps', req: () => gameState.totalClicks >= 10, desc: 'Click 10 times', bonus: 0.05 },
-    { id: 'a2', title: 'Getting Serious', req: () => gameState.totalClicks >= 100, desc: 'Click 100 times', bonus: 0.1 },
-    { id: 'a3', title: 'Click Maniac', req: () => gameState.totalClicks >= 1000, desc: 'Click 1,000 times', bonus: 0.2 },
-    { id: 'a4', title: 'Wealthy', req: () => gameState.totalRaibos >= 10000, desc: 'Earn 10,000 Raibos total', bonus: 0.1 },
-    { id: 'a5', title: 'Millionaire', req: () => gameState.totalRaibos >= 1000000, desc: 'Earn 1M Raibos total', bonus: 1.0 },
-    { id: 'a6', title: 'Billionaire', req: () => gameState.totalRaibos >= 1000000000, desc: 'Earn 1B Raibos total', bonus: 5.0 },
-    { id: 'a7', title: 'Industrialist', req: () => gameState.idlePower >= 10000, desc: 'Reach 10k Raibos/sec', bonus: 0.5 },
-    { id: 'a8', title: 'Ascended', req: () => gameState.rebirthPoints > 0, desc: 'Rebirth for the first time', bonus: 1.0 },
-    
-    // Extended Normal Achievements
-    { id: 'a9', title: 'Click God', req: () => gameState.totalClicks >= 10000, desc: 'Click 10,000 times', bonus: 1.0 },
-    { id: 'a10', title: 'Trillionaire', req: () => gameState.totalRaibos >= 1e12, desc: 'Earn 1 Trillion Raibos', bonus: 10.0 },
-    { id: 'a11', title: 'Quadrillionaire', req: () => gameState.totalRaibos >= 1e15, desc: 'Earn 1 Quadrillion Raibos', bonus: 20.0 },
-    { id: 'a12', title: 'Cosmic Tycoon', req: () => gameState.totalRaibos >= 1e18, desc: 'Earn 1 Quintillion Raibos', bonus: 50.0 },
-    { id: 'a13', title: 'Automation Rookie', req: () => gameState.idlePower >= 1000000, desc: 'Reach 1M Raibos/sec', bonus: 2.0 },
-    { id: 'a14', title: 'Automation Master', req: () => gameState.idlePower >= 1e9, desc: 'Reach 1B Raibos/sec', bonus: 5.0 },
-    { id: 'a15', title: 'Rebirth Master', req: () => gameState.rebirthPoints >= 1000, desc: 'Accumulate 1,000 Rebirth Points', bonus: 10.0 },
-    { id: 'a16', title: 'Fleet Commander', req: () => gameState.invasionCount >= 10, desc: 'Dispatch 10 Earth Invasions', bonus: 2.0 },
-    { id: 'a17', title: 'Artifact Hunter', req: () => gameState.unlockedArtifacts.length >= 1, desc: 'Find your first Artifact', bonus: 5.0 }
+    { id: 'a1', title: 'First Steps', req: () => gameState.totalClicks >= 10, desc: 'Click 10 times', bonus: 0.1 },
+    { id: 'a2', title: 'Getting Serious', req: () => gameState.totalClicks >= 500, desc: 'Click 500 times', bonus: 0.5 },
+    { id: 'a3', title: 'Click God', req: () => gameState.totalClicks >= 10000, desc: 'Click 10,000 times', bonus: 2.0 },
+    { id: 'a4', title: 'Wealthy', req: () => gameState.totalRaibos >= 1e6, desc: 'Earn 1M Raibos total', bonus: 0.5 },
+    { id: 'a5', title: 'Billionaire', req: () => gameState.totalRaibos >= 1e9, desc: 'Earn 1B Raibos total', bonus: 1.0 },
+    { id: 'a6', title: 'Trillionaire', req: () => gameState.totalRaibos >= 1e12, desc: 'Earn 1T Raibos total', bonus: 2.0 },
+    { id: 'a7', title: 'Cosmic Tycoon', req: () => gameState.totalRaibos >= 1e18, desc: 'Earn 1 Quintillion Raibos', bonus: 5.0 },
+    { id: 'a8', title: 'Universal Overlord', req: () => gameState.totalRaibos >= 1e30, desc: 'Earn 1 Nonillion Raibos', bonus: 20.0 },
+    { id: 'a9', title: 'Industrialist', req: () => gameState.idlePower >= 10000, desc: 'Reach 10k Raibos/sec', bonus: 0.5 },
+    { id: 'a10', title: 'Automation Master', req: () => gameState.idlePower >= 1e9, desc: 'Reach 1B Raibos/sec', bonus: 2.0 },
+    { id: 'a11', title: 'Singularity Automation', req: () => gameState.idlePower >= 1e20, desc: 'Reach 100ab Raibos/sec', bonus: 10.0 },
+    { id: 'a12', title: 'Ascended', req: () => gameState.rebirthPoints > 0, desc: 'Rebirth for the first time', bonus: 1.0 },
+    { id: 'a13', title: 'Rebirth Master', req: () => gameState.rebirthPoints >= 1000, desc: 'Accumulate 1,000 Rebirth Points', bonus: 5.0 },
+    { id: 'a14', title: 'Planetary Conqueror', req: () => gameState.invasion.conqueredRegions.length >= 7, desc: 'Conquer Earth', bonus: 2.0 },
+    { id: 'a15', title: 'Galactic Emperor', req: () => gameState.invasion.conqueredRegions.length >= 25, desc: 'Conquer 25 Regions', bonus: 10.0 },
+    { id: 'a16', title: 'Artifact Hunter', req: () => gameState.unlockedArtifacts.length >= 1, desc: 'Find your first Artifact', bonus: 1.0 },
+    { id: 'a17', title: 'Relic Hoarder', req: () => gameState.unlockedArtifacts.length >= 10, desc: 'Find 10 Artifacts', bonus: 5.0 },
+    { id: 'a18', title: 'Raibos Ultimate Collector', req: () => gameState.unlockedArtifacts.length >= 20, desc: 'Collect all 20 Artifacts', bonus: 50.0 }
 ];
 
 // DOM Elements
@@ -517,6 +516,44 @@ function updateUI() {
         elements.rebirthBadge.classList.add('hidden');
         elements.rbMinReq.classList.remove('hidden');
     }
+}
+
+// Achievements System
+function checkAchievements() {
+    let newlyUnlocked = false;
+    achievementsData.forEach(ach => {
+        if (!gameState.achievements.includes(ach.id)) {
+            if (ach.req()) {
+                gameState.achievements.push(ach.id);
+                newlyUnlocked = true;
+                showToast(`Achievement Unlocked: ${ach.title}`, "success");
+            }
+        }
+    });
+    if (newlyUnlocked) {
+        updatePower();
+        renderAchievements();
+        saveGame();
+    }
+}
+
+function renderAchievements() {
+    const container = elements.achievementsList;
+    if (!container) return;
+    container.innerHTML = '';
+    
+    achievementsData.forEach(ach => {
+        const unlocked = gameState.achievements.includes(ach.id);
+        const card = document.createElement('div');
+        card.className = `achievement-card ${unlocked ? 'unlocked' : 'locked'}`;
+        card.innerHTML = `
+            <div class="ach-title">${ach.title}</div>
+            <div class="ach-desc">${ach.desc}</div>
+            <div class="ach-bonus">Reward: Global Multiplier +${ach.bonus.toFixed(2)}</div>
+            ${unlocked ? '<div class="ach-status" style="color:#00ffaa;">✅ Unlocked</div>' : '<div class="ach-status" style="color:#ff3333;">🔒 Locked</div>'}
+        `;
+        container.appendChild(card);
+    });
 }
 
 function renderUpgrades() {
@@ -892,22 +929,8 @@ function loadGame() {
         const parsed = JSON.parse(saved);
         Object.assign(gameState, parsed);
         
-        // Deep-merge fix: restore missing nested structures from older save versions
-        if (!gameState.invasion) gameState.invasion = {};
-        if (!gameState.invasion.conqueredRegions) gameState.invasion.conqueredRegions = [];
-        if (!gameState.invasion.regionProgress) gameState.invasion.regionProgress = {};
-        if (typeof gameState.invasion.energyMax === 'undefined') gameState.invasion.energyMax = 100;
-        if (typeof gameState.invasion.energy === 'undefined') gameState.invasion.energy = 100;
-        if (typeof gameState.invasion.energyRegen === 'undefined') gameState.invasion.energyRegen = 1;
-        if (typeof gameState.invasion.currentPlanet === 'undefined') gameState.invasion.currentPlanet = 0;
-        
-        if (!gameState.unlockedArtifacts) gameState.unlockedArtifacts = [];
-        if (!gameState.achievements) gameState.achievements = [];
-        if (!gameState.upgradeLevels) gameState.upgradeLevels = {};
-        
         const offlineTime = (Date.now() - gameState.lastSaveTime) / 1000;
         if (offlineTime > 60) {
-            // Need to ensure upgrade logic uses safe defaults before calculating offline gains
             updatePower();
             let rate = 0.5;
             if (gameState.unlockedArtifacts.includes('art2')) rate = 1.0;

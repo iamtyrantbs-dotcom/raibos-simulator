@@ -33,7 +33,13 @@ function getRankings() {
 }
 
 function saveRankings(data) {
-    fs.writeFileSync(RANKINGS_FILE, JSON.stringify(data, null, 2));
+    try {
+        const tmpFile = RANKINGS_FILE + '.tmp';
+        fs.writeFileSync(tmpFile, JSON.stringify(data, null, 2));
+        fs.renameSync(tmpFile, RANKINGS_FILE);
+    } catch (e) {
+        console.error("Critical error saving rankings:", e);
+    }
 }
 
 // API Routes
