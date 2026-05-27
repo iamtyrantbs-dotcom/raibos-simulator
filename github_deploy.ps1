@@ -40,7 +40,13 @@ if (!(Test-Path ".git")) {
 Write-Host "Adding files and committing..." -ForegroundColor Cyan
 git add .
 $commitMessage = "Auto deploy update: " + (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-git commit -m $commitMessage
+$commitOutput = git commit -m $commitMessage 2>&1
+
+if ($commitOutput -match "nothing to commit") {
+    Write-Host "No new changes to commit." -ForegroundColor Yellow
+} else {
+    Write-Host $commitOutput -ForegroundColor Gray
+}
 
 Write-Host "Pushing to GitHub..." -ForegroundColor Green
 git push -u origin main
