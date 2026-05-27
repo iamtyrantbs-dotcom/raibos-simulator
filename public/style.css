@@ -1,18 +1,18 @@
 :root {
-    /* Color Palette - Galactic Masterpiece Theme (Raibos Green) */
-    --bg-dark: #051a0a;
-    --bg-panel: rgba(10, 30, 15, 0.7);
-    --bg-panel-hover: rgba(15, 45, 25, 0.85);
-    --border-color: rgba(0, 255, 102, 0.25);
-    --accent-glow: #00ff66;
-    --accent-primary: #33ff88;
-    --accent-secondary: #00cc55;
-    --accent-light: #ccffdd;
-    --text-primary: #e6fff0;
-    --text-secondary: #99ccaa;
+    /* Color Palette - Galactic Masterpiece Theme */
+    --bg-dark: #020408;
+    --bg-panel: rgba(10, 15, 25, 0.7);
+    --bg-panel-hover: rgba(15, 25, 45, 0.85);
+    --border-color: rgba(0, 195, 255, 0.25);
+    --accent-glow: #00d2ff;
+    --accent-primary: #00f2ff;
+    --accent-secondary: #ffcc00;
+    --accent-light: #e0faff;
+    --text-primary: #f0faff;
+    --text-secondary: #94a8b8;
     
-    --btn-gradient: linear-gradient(135deg, rgba(0, 255, 102, 0.2), rgba(51, 255, 136, 0.1));
-    --btn-gradient-hover: linear-gradient(135deg, rgba(0, 255, 102, 0.4), rgba(51, 255, 136, 0.2));
+    --btn-gradient: linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(0, 242, 255, 0.1));
+    --btn-gradient-hover: linear-gradient(135deg, rgba(0, 210, 255, 0.4), rgba(0, 242, 255, 0.2));
     
     --panel-blur: blur(20px);
     --panel-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
@@ -24,15 +24,14 @@
     padding: 0;
     font-family: 'Outfit', 'Inter', sans-serif;
 }
-.hidden { display: none !important; }
 
 body {
     background-color: var(--bg-dark);
     color: var(--text-primary);
     overflow: hidden;
     background: 
-        radial-gradient(circle at 50% 50%, rgba(0, 255, 102, 0.05) 0%, transparent 80%),
-        radial-gradient(circle at 20% 30%, rgba(51, 255, 136, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.05) 0%, transparent 80%),
+        radial-gradient(circle at 20% 30%, rgba(255, 204, 0, 0.03) 0%, transparent 50%),
         var(--bg-dark);
     min-height: 100vh;
     position: relative;
@@ -736,120 +735,4 @@ body::before {
     color: #ffaa00;
     margin-top: 2px;
 }
-
-/* Artifacts System UI */
-.artifact-header {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.shard-count {
-    font-size: 1.8rem;
-    font-weight: 900;
-    color: #ffcc00;
-    text-shadow: 0 0 15px rgba(255, 204, 0, 0.6);
-    margin-bottom: 10px;
-}
-
-.artifact-hint {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    font-style: italic;
-}
-
-.artifact-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 15px;
-    padding: 5px;
-}
-
-.artifact-card {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 15px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-height: 180px;
-}
-
-.artifact-card:hover:not(.disabled) {
-    transform: translateY(-5px) scale(1.02);
-    border-color: #ffcc00;
-    box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
-}
-
-.artifact-card.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    filter: grayscale(0.8);
-}
-
-.artifact-card.unlocked {
-    background: linear-gradient(135deg, rgba(255, 204, 0, 0.15), rgba(0, 242, 255, 0.05));
-    border: 1px solid #ffcc00;
-    box-shadow: 0 0 30px rgba(255, 204, 0, 0.1);
-}
-
-.artifact-card.unlocked::before {
-    content: "";
-    position: absolute;
-    top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-    animation: rotateGlow 10s linear infinite;
-}
-
-@keyframes rotateGlow {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.art-icon {
-    font-size: 2.5rem;
-    margin-bottom: 5px;
-    z-index: 1;
-}
-
-.art-name {
-    font-weight: 900;
-    color: #fff;
-    font-size: 1.1rem;
-    z-index: 1;
-}
-
-.art-desc {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    line-height: 1.3;
-    z-index: 1;
-    flex: 1;
-}
-
-.art-cost {
-    font-weight: 800;
-    color: #ffcc00;
-    font-size: 0.9rem;
-    z-index: 1;
-}
-
-.art-status {
-    font-weight: 900;
-    color: #00f2ff;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-    z-index: 1;
-}
-
 

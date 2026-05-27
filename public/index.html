@@ -3,21 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raibos Simulator - Galactic Conquest</title>
+    <title>Raibos Simulator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Toast Notifications Container -->
     <div id="toast-container"></div>
-    <div id="particles"></div>
 
     <div id="app-container">
+        <!-- Floating particles container -->
+        <div id="particles"></div>
+
+        <!-- Header / Stats -->
         <header class="header">
             <div class="title-area">
                 <h1 class="title">Raibos Simulator</h1>
-                <div id="rebirth-badge" class="rebirth-badge hidden">Rebirth: <span id="rebirth-count-disp">0</span></div>
+                <div id="rebirth-badge" class="rebirth-badge" style="display: none;">Rebirth: <span id="rebirth-count-disp">0</span></div>
             </div>
             
             <div class="stats">
@@ -40,82 +44,143 @@
             </div>
         </header>
 
+        <!-- Main Workspace -->
         <main class="main-content">
+            <!-- Left: Clicker Area -->
             <section class="clicker-area">
                 <div class="clicker-glow" id="clicker-glow"></div>
+                <!-- The target button -->
                 <button id="raibos-button" class="raibos-btn">
                     <div class="raibos-face">R</div>
                 </button>
             </section>
 
-            <aside class="shop-area">
-                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 class="panel-title" style="margin: 0; border: none;">Control Center</h2>
-                    <button id="hard-reset-btn" class="action-btn" style="background: rgba(255,0,0,0.1); border: 1px solid #ff3333; color: #ff3333; padding: 5px 12px; font-size: 0.8rem;">Hard Reset</button>
+            <!-- Right: Upgrades / Shop -->
+            <aside class="shop-area panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 255, 170, 0.2); margin-bottom: 20px; padding-bottom: 10px;">
+                    <h2 class="panel-title" style="margin-bottom: 0; border: none;">메뉴</h2>
+                    <button id="hard-reset-btn" class="action-btn" style="background: rgba(255,0,0,0.2); border: 1px solid #ff3333; color: #ff5555; padding: 5px 10px; font-size: 0.8rem; font-weight: bold;">전체 초기화 ⚠️</button>
                 </div>
-
                 <div class="tabs">
-                    <button class="tab active" data-tab="click-tab">Click</button>
-                    <button class="tab" data-tab="idle-tab">Idle</button>
-                    <button class="tab" data-tab="invasion-tab">Invasion</button>
-                    <button class="tab" data-tab="artifact-tab">Artifacts</button>
-                    <button class="tab" data-tab="ranking-tab">Ranking</button>
-                    <button class="tab" data-tab="achievements-tab">Achievements</button>
+                    <button class="tab active" data-target="click-upgrades">Click</button>
+                    <button class="tab" data-target="idle-upgrades">Idle</button>
+                    <button class="tab" data-target="rebirth-panel" style="color: #ffaa00;">Rebirth</button>
+                    <button class="tab" data-target="achievements-panel">Trophies</button>
+                    <button class="tab" data-target="invasion-panel" style="color: #00f2ff; font-weight: bold; text-shadow: 0 0 10px cyan;">Invasion</button>
+                    <button class="tab" data-target="ranking-upgrades" style="color: #ffcc00; font-weight: bold; text-shadow: 0 0 10px gold;">Ranking</button>
+                </div>
+                
+                <!-- CLICK TAB -->
+                <div id="click-upgrades" class="upgrade-list active">
+                    <!-- Javascript will populate here -->
+                </div>
+                
+                <!-- IDLE TAB -->
+                <div id="idle-upgrades" class="upgrade-list">
+                    <!-- Javascript will populate here -->
                 </div>
 
-                <div id="click-tab" class="upgrade-list active">
-                    <div id="click-upgrades"></div>
-                </div>
-
-                <div id="idle-tab" class="upgrade-list hidden">
-                    <div id="idle-upgrades"></div>
-                </div>
-
-                <div id="invasion-tab" class="upgrade-list hidden">
-                    <div id="invasion-planet-container"></div>
-                    <div id="planet-nav" class="planet-navigation"></div>
-                </div>
-
-                <div id="artifact-tab" class="upgrade-list hidden">
-                    <div class="artifact-header">
-                        <div class="shard-count">Cosmic Shards: <span id="shard-amount">0</span></div>
-                        <p class="artifact-hint">Rare drops on click (1/5000) or from conquest!</p>
+                <!-- REBIRTH TAB -->
+                <div id="rebirth-panel" class="upgrade-list">
+                    <div class="rebirth-info">
+                        <h3>Ascend to Next Realm</h3>
+                        <p>Ascending resets your current progress but grants <span style="color:#ffaa00; font-weight:bold;">Rebirth Points</span> which multiply all future gains.</p>
+                        <div class="rebirth-stats">
+                            <div>Current Points: <span id="current-rp">0</span></div>
+                            <div>Points to Earn: <span id="earn-rp" style="color: var(--accent-glow);">0</span></div>
+                        </div>
+                        <button id="rebirth-btn" class="action-btn">REBIRTH NOW</button>
                     </div>
-                    <div id="artifact-container" class="artifact-grid"></div>
                 </div>
 
-                <div id="ranking-tab" class="upgrade-list hidden">
+                <!-- ACHIEVEMENTS TAB -->
+                <div id="achievements-panel" class="upgrade-list">
+                    <div id="achievements-container" style="display:flex; flex-direction:column; gap:8px;">
+                        <!-- Javascript will populate here -->
+                    </div>
+                </div>
+
+                <!-- INVASION TAB (2.0) -->
+                <div id="invasion-panel" class="upgrade-list">
+                    <div class="planet-header">
+                        <div id="planet-name" class="planet-name">Earth</div>
+                        <div id="planet-status" class="planet-status">Conquest in progress...</div>
+                    </div>
+
+                    <div class="energy-container">
+                        <div class="energy-header">
+                            <span>Invasion Energy</span>
+                            <span id="energy-value">0 / 0</span>
+                        </div>
+                        <div class="energy-bar-bg">
+                            <div id="energy-bar-fill" class="energy-bar-fill"></div>
+                        </div>
+                    </div>
+
+                    <div id="invasion-map-container">
+                        <!-- Simplified World Map SVG -->
+                        <svg viewBox="0 0 200 100" class="map-svg">
+                            <!-- Asia -->
+                            <path id="region-asia" d="M140,20 L180,20 L190,50 L160,80 L130,60 Z" class="region-path" />
+                            <!-- Europe -->
+                            <path id="region-europe" d="M100,20 L130,20 L135,40 L110,50 L95,40 Z" class="region-path" />
+                            <!-- North America -->
+                            <path id="region-na" d="M20,20 L70,20 L80,50 L50,60 L10,50 Z" class="region-path" />
+                            <!-- South America -->
+                            <path id="region-sa" d="M40,65 L70,65 L75,90 L50,95 Z" class="region-path" />
+                            <!-- Africa -->
+                            <path id="region-africa" d="M100,55 L125,55 L130,85 L105,90 L95,75 Z" class="region-path" />
+                            <!-- Oceania -->
+                            <path id="region-oceania" d="M165,70 L185,70 L190,85 L170,90 Z" class="region-path" />
+                        </svg>
+                    </div>
+
+                    <div id="region-details" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 12px; border: 1px solid var(--border-color); display: none;">
+                        <h4 id="selected-region-name" style="color: var(--accent-glow); margin-bottom: 5px;">Select a Region</h4>
+                        <p id="selected-region-buff" style="font-size: 0.85rem; color: #ccc; margin-bottom: 10px;"></p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span id="selected-region-progress" style="font-size: 1.1rem; font-weight: bold; color: var(--accent-primary);">0%</span>
+                            <button id="start-invasion-btn" class="action-btn" style="padding: 8px 20px; font-size: 1rem;">INVADE</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RANKING TAB -->
+                <div id="ranking-upgrades" class="upgrade-list">
                     <div class="ranking-panel">
                         <div class="ranking-header-bar">
-                            <select id="ranking-type" class="ranking-select">
-                                <option value="totalRaibos">Total Raibos</option>
-                                <option value="rebirthPoints">Rebirth Points</option>
+                            <select id="ranking-category-raibos" class="ranking-select">
+                                <option value="raibos_raibos">Total Raibos</option>
+                                <option value="raibos_rp">Rebirth Points</option>
+                                <option value="raibos_clicks">Total Clicks</option>
+                                <option value="raibos_achievements">Achievements</option>
+                                <option value="raibos_invasions">Invasions</option>
                             </select>
-                            <button id="refresh-ranking" class="refresh-btn">🔄</button>
+                            <button id="refresh-ranking-raibos" class="refresh-btn">🔄</button>
+                            <button id="ranking-help-btn" class="refresh-btn" style="background: rgba(255, 170, 0, 0.2); border: 1px solid #ffaa00; color: #ffaa00; margin-left: 5px;">?</button>
                         </div>
-                        <div id="ranking-list" class="ranking-container"></div>
+                        <div id="ranking-container-raibos" class="ranking-container">
+                            <div style="text-align:center; padding:20px; color:#666;">Loading global rankings...</div>
+                        </div>
                     </div>
-                </div>
-
-                <div id="achievements-tab" class="upgrade-list hidden">
-                    <div id="achievements-container" class="achievements-grid"></div>
-                </div>
-
-                <div class="rebirth-footer" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-                    <div id="rb-min-req" style="font-size: 0.85rem; color: #666; text-align: center; margin-bottom: 10px;">Reach 1B Raibos to unlock Rebirth</div>
-                    <button id="rebirth-trigger-btn" class="action-btn" style="width: 100%;" onclick="rebirth()">REBIRTH</button>
                 </div>
             </aside>
         </main>
     </div>
-
-    <div id="offline-modal" class="modal-overlay hidden">
+    
+    <!-- Time Skip (Golden Raibos) Element -->
+    <div id="chrono-raibos" style="display: none; position: absolute; font-size: 3rem; cursor: pointer; z-index: 9999; filter: drop-shadow(0 0 20px gold); animation: floatPop 2s ease-in-out infinite;">
+        ⏳
+    </div>
+    
+    <!-- Modal for Offline Progress -->
+    <div id="offline-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h2>Welcome Back!</h2>
-            <p>During your absence for <span id="offline-time">0s</span></p>
-            <p>Your Raibos worked hard:</p>
+            <p>당신이 자리를 비운 <span id="offline-time" style="color:var(--accent-glow)">0초</span> 동안</p>
+            <p>라이보스들이 열심히 일했습니다:</p>
             <div class="offline-gain">+<span id="offline-amount">0</span> Raibos</div>
-            <button id="offline-close-btn" class="action-btn">CLAIM</button>
+            <button id="offline-close-btn" class="action-btn">Awesome!</button>
         </div>
     </div>
 
