@@ -14,8 +14,6 @@ const rateLimitMap = new Map();
 
 app.use(cors()); // Allow all origins for now, but API is protected by HMAC
 app.use(express.json());
-
-// Serve static files from the 'public' folder
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Initialize rankings file if it doesn't exist
