@@ -539,6 +539,13 @@ body::before {
     stroke: var(--accent-secondary);
 }
 
+.region-path.selected {
+    fill: rgba(0, 242, 255, 0.45);
+    stroke: #ffffff;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 12px var(--accent-primary));
+}
+
 /* Energy Bar */
 .energy-container {
     margin-bottom: 20px;

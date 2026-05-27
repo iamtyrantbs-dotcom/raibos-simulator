@@ -252,8 +252,7 @@ const clickUpgrades = [
         "baseCost": 1e+35,
         "costMul": 1.47,
         "value": 1.953125e+28
-    }
-];,
+    },
     {
         "id": "c21",
         "name": "Raibos Star Pulse 21",
@@ -1210,20 +1209,20 @@ const achievementsData = [
     { id: 'a13', title: 'Automation Rookie', req: () => gameState.idlePower >= 1000000, desc: 'Reach 1M Raibos/sec', bonus: 2.0 },
     { id: 'a14', title: 'Automation Master', req: () => gameState.idlePower >= 1e9, desc: 'Reach 1B Raibos/sec', bonus: 5.0 },
     { id: 'a15', title: 'Rebirth Master', req: () => gameState.rebirthPoints >= 1000, desc: 'Accumulate 1,000 Rebirth Points', bonus: 10.0 },
-    { id: 'a16', title: 'Fleet Commander', req: () => gameState.invasionCount >= 10, desc: 'Dispatch 10 Earth Invasions', bonus: 2.0 },
-    { id: 'a17', title: 'Whale', req: () => gameState.gamepasses && gameState.gamepasses.length >= 1, desc: 'Buy any Gamepass', bonus: 5.0 },
-
+    { id: 'a16', title: 'Fleet Commander', req: () => gameState.invasion.conqueredRegions.length >= 5, desc: 'Conquer 5 Regions', bonus: 2.0 },
+    { id: 'a17', title: 'Galactic Pioneer', req: () => gameState.invasion.currentPlanet >= 1, desc: 'Conquer your first planet (Earth)', bonus: 5.0 },
+ 
     // Hidden Achievements (10)
-    { id: 'h1', title: 'Doomsday', req: () => gameState.invasionPerks && gameState.invasionPerks.annihilations >= 1, desc: 'Roll the 0.001% Earth Annihilation.', bonus: 50.0, hidden: true },
-    { id: 'h2', title: 'P2W God', req: () => gameState.gamepasses && gameState.gamepasses.length === 5, desc: 'Purchase every single Gamepass.', bonus: 100.0, hidden: true },
+    { id: 'h1', title: 'Red Conquest', req: () => gameState.invasion.currentPlanet >= 2, desc: 'Conquer Mars.', bonus: 50.0, hidden: true },
+    { id: 'h2', title: 'Jovian Giant', req: () => gameState.invasion.currentPlanet >= 3, desc: 'Conquer Jupiter.', bonus: 100.0, hidden: true },
     { id: 'h3', title: 'Pinnacle of Idle', req: () => gameState.upgradeLevels['i15'] >= 1, desc: 'Unlock the Omega Core.', bonus: 25.0, hidden: true },
     { id: 'h4', title: 'Time Traveler', req: () => gameState.timeSkipsUsed >= 5, desc: 'Catch the Golden Chrono-Raibos 5 times.', bonus: 10.0, hidden: true },
     { id: 'h5', title: 'Hardcore Grinder', req: () => gameState.rebirthPoints >= 100000, desc: 'Reach 100,000 Rebirth Points.', bonus: 200.0, hidden: true },
-    { id: 'h6', title: 'Mind Controller', req: () => gameState.invasionPerks && gameState.invasionPerks.mindControl >= 5, desc: 'Accumulate 5 Mind Control perks.', bonus: 30.0, hidden: true },
+    { id: 'h6', title: 'Lord of the Rings', req: () => gameState.invasion.currentPlanet >= 4, desc: 'Conquer Saturn.', bonus: 30.0, hidden: true },
     { id: 'h7', title: 'Click Omega', req: () => gameState.upgradeLevels['c12'] >= 1, desc: 'Unlock the Omega End click upgrade.', bonus: 25.0, hidden: true },
     { id: 'h8', title: 'Absolute Zero', req: () => gameState.upgradeLevels['c1'] >= 100, desc: 'Reach level 100 on the first Click Upgrade.', bonus: 15.0, hidden: true },
-    { id: 'h9', title: 'Gacha Addict', req: () => gameState.invasionCount >= 50, desc: 'Perform 50 Earth Invasions.', bonus: 30.0, hidden: true },
-    { id: 'h10', title: 'The Chosen One', req: () => (gameState.gamepasses && gameState.gamepasses.includes('gp5')) && (gameState.invasionPerks && gameState.invasionPerks.annihilations >= 1), desc: 'Be the Absolute Ruler AND obtain Earth Annihilation.', bonus: 500.0, hidden: true }
+    { id: 'h9', title: 'Neptunian Depth', req: () => gameState.invasion.currentPlanet >= 5, desc: 'Conquer Neptune.', bonus: 30.0, hidden: true },
+    { id: 'h10', title: 'System Sovereign', req: () => gameState.invasion.currentPlanet === 5 && planetsData[5].regions.every(r => gameState.invasion.conqueredRegions.includes(r.id)), desc: 'Conquer the entire Solar System (Pluto).', bonus: 500.0, hidden: true }
 ];
 
 // DOM Elements
@@ -1834,18 +1833,28 @@ function updateInvasionUI() {
     document.getElementById('energy-value').innerText = `${Math.floor(energy)} / ${maxEnergy}`;
     document.getElementById('energy-bar-fill').style.width = `${(energy / maxEnergy) * 100}%`;
 
-    // Map coloring
-    planet.regions.forEach(r => {
-        const el = document.getElementById(`region-${r.id}`);
-        if (el) {
+    // Dynamic map generation
+    const mapSvg = document.getElementById('invasion-map-svg');
+    if (mapSvg) {
+        mapSvg.innerHTML = '';
+        planet.regions.forEach(r => {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('id', `region-${r.id}`);
+            path.setAttribute('d', r.d);
+            path.setAttribute('class', 'region-path');
+            
             const isConquered = gameState.invasion.conqueredRegions.includes(r.id);
             if (isConquered) {
-                el.classList.add('conquered');
-            } else {
-                el.classList.remove('conquered');
+                path.classList.add('conquered');
             }
-        }
-    });
+            if (selectedRegionId === r.id) {
+                path.classList.add('selected');
+            }
+            
+            path.addEventListener('click', () => selectRegion(r.id));
+            mapSvg.appendChild(path);
+        });
+    }
 
     if (selectedRegionId) {
         const region = planet.regions.find(r => r.id === selectedRegionId);
@@ -1918,13 +1927,7 @@ function checkPlanetClear() {
     }
 }
 
-// Add SVG listeners
-planetsData.forEach(p => {
-    p.regions.forEach(r => {
-        const el = document.getElementById(`region-${r.id}`);
-        if (el) el.addEventListener('click', () => selectRegion(r.id));
-    });
-});
+// SVG click listeners are now handled dynamically in updateInvasionUI()
 
 setInterval(saveGame, 10000); // 5초에서 10초로 간격 상향
 document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
