@@ -1,35 +1,49 @@
-# One-Click GitHub Deployment Script (Raibos Simulator)
+# GitHub Online Deployment Script (Raibos Simulator) - Auto Update Version
 
-$projPath = "c:\Users\dogye\.gemini\antigravity\scratch\raibos-simulator"
-Set-Location $projPath
-
-Write-Host "--- RAIBOS ONE-CLICK DEPLOY ---" -ForegroundColor Cyan
-
-# 1. Check Git
 if (!(Get-Command git -ErrorAction SilentlyContinue)) {
-    Write-Host "ERROR: Git not found!" -ForegroundColor Red
-    Pause; exit
+    Write-Host "==========================================" -ForegroundColor Red
+    Write-Host "ERROR: Git is not installed!" -ForegroundColor Red
+    Write-Host "Please download it from: https://git-scm.com/" -ForegroundColor Yellow
+    Write-Host "==========================================" -ForegroundColor Red
+    Start-Sleep -Seconds 5
+    exit
 }
 
-# 2. Check Repo
+# Identity Check
+$userName = git config user.name
+$userEmail = git config user.email
+
+if ([string]::IsNullOrWhiteSpace($userName)) {
+    Write-Host "Git identity is not set." -ForegroundColor Yellow
+    $userName = Read-Host "Please enter your Name (for Git commit)"
+    git config --global user.name "$userName"
+}
+
+if ([string]::IsNullOrWhiteSpace($userEmail)) {
+    $userEmail = Read-Host "Please enter your Email (for Git commit)"
+    git config --global user.email "$userEmail"
+}
+
 if (!(Test-Path ".git")) {
-    Write-Host "Initializing new repository..." -ForegroundColor Yellow
+    $repoUrl = Read-Host "Enter your GitHub Repository URL (e.g., https://github.com/user/repo.git)"
+    if ([string]::IsNullOrWhiteSpace($repoUrl)) {
+        Write-Host "URL cannot be empty. Exiting." -ForegroundColor Red
+        Start-Sleep -Seconds 5
+        exit
+    }
+    Write-Host "Initializing local repository..." -ForegroundColor Cyan
     git init
     git branch -M main
-    $url = Read-Host "Enter GitHub Repository URL"
-    git remote add origin $url
+    git remote add origin $repoUrl
 }
 
-# 3. Add & Commit
-Write-Host "Capturing changes..." -ForegroundColor Blue
+Write-Host "Adding files and committing..." -ForegroundColor Cyan
 git add .
-$msg = "Auto-update: " + (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-git commit -m "$msg"
+$commitMessage = "Auto deploy update: " + (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+git commit -m $commitMessage
 
-# 4. Push
-Write-Host "Uploading to GitHub..." -ForegroundColor Green
-git push origin main
+Write-Host "Pushing to GitHub..." -ForegroundColor Green
+git push -u origin main
 
-Write-Host "`nDEPLOYMENT TRIGGERED!" -ForegroundColor Green
-Write-Host "Wait 1-2 minutes for Render.com to refresh." -ForegroundColor White
+Write-Host "`nDone! Your code is now updated on GitHub." -ForegroundColor Green
 Start-Sleep -Seconds 3

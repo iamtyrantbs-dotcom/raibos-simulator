@@ -85,7 +85,6 @@ body::before {
     text-transform: uppercase;
     background: -webkit-linear-gradient(0deg, var(--accent-light), var(--accent-glow));
     -webkit-background-clip: text;
-    background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: 2px;
 }
@@ -515,76 +514,64 @@ body::before {
     100% { top: 110%; }
 }
 
-.planet-map {
+.map-svg {
     width: 100%;
     height: 100%;
     filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.3));
 }
 
-.region {
-    fill: rgba(0, 210, 255, 0.05);
+.region-path {
+    fill: rgba(0, 210, 255, 0.1);
     stroke: var(--accent-glow);
-    stroke-width: 0.5;
+    stroke-width: 1;
     transition: all 0.3s ease;
     cursor: pointer;
-    pointer-events: all;
 }
 
-.region:hover {
-    fill: rgba(0, 210, 255, 0.2);
-    stroke-width: 1;
-    filter: drop-shadow(0 0 10px var(--accent-glow));
+.region-path:hover {
+    fill: rgba(0, 210, 255, 0.3);
+    stroke-width: 2;
+    filter: drop-shadow(0 0 15px var(--accent-glow));
 }
 
-.region.conquered {
-    fill: rgba(0, 242, 255, 0.4);
-    stroke: #fff;
-    filter: drop-shadow(0 0 5px #fff);
+.region-path.conquered {
+    fill: rgba(255, 204, 0, 0.4);
+    stroke: var(--accent-secondary);
 }
 
-/* Energy Bar 2.0 */
-.energy-bar-cont {
-    width: 100%;
-    height: 24px;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--border-color);
+/* Energy Bar */
+.energy-container {
+    margin-bottom: 20px;
+    background: rgba(0,0,0,0.5);
+    padding: 15px;
     border-radius: 12px;
-    margin: 15px 0;
-    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+.energy-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--accent-primary);
+}
+
+.energy-bar-bg {
+    width: 100%;
+    height: 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 6px;
     overflow: hidden;
+    position: relative;
 }
 
-.energy-fill {
+.energy-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #00d2ff, #00f2ff);
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-glow), var(--accent-primary));
     box-shadow: 0 0 15px var(--accent-glow);
-    transition: width 0.1s linear;
-}
-
-.energy-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 0.8rem;
-    font-weight: 900;
-    color: #fff;
-    text-shadow: 1px 1px 2px #000;
-    pointer-events: none;
-}
-
-.invasion-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255, 255, 255, 0.1);
-    pointer-events: none;
-    animation: flash 0.5s ease-out;
-    z-index: 1000;
-}
-
-@keyframes flash {
-    0% { opacity: 1; }
-    100% { opacity: 0; }
+    transition: width 0.3s ease;
 }
 
 /* Planet Header */
