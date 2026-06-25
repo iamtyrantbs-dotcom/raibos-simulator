@@ -730,3 +730,63 @@ body::before {
     margin-top: 2px;
 }
 
+/* Region List UI */
+.region-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.region-list::-webkit-scrollbar {
+    width: 6px;
+}
+.region-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.region-list-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.region-list-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-glow);
+}
+
+.region-list-item.selected {
+    background: rgba(0, 242, 255, 0.1);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+}
+
+.region-list-item.conquered {
+    background: rgba(0, 255, 100, 0.1);
+    border-color: #00ff66;
+    color: #00ff66;
+}
+
+.region-list-item-name {
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: var(--text-color);
+}
+.region-list-item.conquered .region-list-item-name {
+    text-decoration: line-through;
+    opacity: 0.7;
+}

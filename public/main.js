@@ -9,9 +9,9 @@ let gameState = {
     achievements: [],
     timeSkipsUsed: 0,
     invasion: {
-        energy: 100,
-        energyMax: 100,
-        energyRegen: 1,
+        energy: 10000,
+        energyMax: 10000,
+        energyRegen: 5,
         currentPlanet: 0,
         regionProgress: {}, // regionId -> 0-100
         conqueredRegions: [] // list of regionIds
@@ -25,66 +25,158 @@ const planetsData = [
         id: 'earth',
         name: 'Earth',
         color: '#00f2ff',
+        energyMax: 10000,
+        energyRegen: 5,
         regions: [
-            { id: 'asia', name: 'Asia', buff: 'Click Power +50%', type: 'click', value: 0.5, cost: 20, d: "M140,20 L180,20 L190,50 L160,80 L130,60 Z" },
-            { id: 'europe', name: 'Europe', buff: 'Upgrade Cost -5%', type: 'cost', value: 0.05, cost: 25, d: "M100,20 L130,20 L135,40 L110,50 L95,40 Z" },
-            { id: 'na', name: 'North America', buff: 'Idle Power +50%', type: 'idle', value: 0.5, cost: 30, d: "M20,20 L70,20 L80,50 L50,60 L10,50 Z" },
-            { id: 'sa', name: 'South America', buff: 'RP Gain +20%', type: 'rp', value: 0.2, cost: 35, d: "M40,65 L70,65 L75,90 L50,95 Z" },
-            { id: 'africa', name: 'Africa', buff: 'Energy Regen +50%', type: 'energy', value: 0.5, cost: 40, d: "M100,55 L125,55 L130,85 L105,90 L95,75 Z" },
-            { id: 'oceania', name: 'Oceania', buff: 'Global Multiplier +50%', type: 'mult', value: 0.5, cost: 50, d: "M165,70 L185,70 L190,85 L170,90 Z" },
-            { id: 'antarctica', name: 'Antarctica', buff: 'Global Multiplier x1.5', type: 'mult_total', value: 1.5, cost: 80, d: "M50,90 L150,90 L160,98 L40,98 Z" }
+            { id: 'asia', name: 'Asia', buff: 'Click Power +50%', type: 'click', value: 0.5, cost: 200, d: "M138,15 L175,15 L188,35 L180,55 L165,72 L140,68 L128,50 L130,30 Z" },
+            { id: 'europe', name: 'Europe', buff: 'Upgrade Cost -5%', type: 'cost', value: 0.05, cost: 250, d: "M95,12 L120,10 L128,28 L115,38 L100,35 L90,25 Z" },
+            { id: 'na', name: 'North America', buff: 'Idle Power +50%', type: 'idle', value: 0.5, cost: 300, d: "M12,10 L68,10 L75,28 L70,48 L52,58 L22,55 L8,38 Z" },
+            { id: 'sa', name: 'South America', buff: 'RP Gain +20%', type: 'rp', value: 0.2, cost: 350, d: "M38,62 L65,60 L72,80 L65,94 L48,96 L35,82 Z" },
+            { id: 'africa', name: 'Africa', buff: 'Energy Regen +50%', type: 'energy', value: 0.5, cost: 400, d: "M98,50 L122,48 L130,68 L125,88 L108,92 L94,78 L92,60 Z" },
+            { id: 'oceania', name: 'Oceania', buff: 'Global Multiplier +50%', type: 'mult', value: 0.5, cost: 500, d: "M162,68 L185,65 L190,82 L178,90 L162,84 Z" },
+            { id: 'antarctica', name: 'Antarctica', buff: 'Global Multiplier x1.5', type: 'mult_total', value: 1.5, cost: 800, d: "M40,90 L160,90 L165,98 L35,98 Z" },
+            { id: 'middleeast', name: 'Middle East', buff: 'All Production x1.2', type: 'all_prod', value: 1.2, cost: 450, d: "M128,38 L148,35 L155,52 L138,58 L125,50 Z" },
+            { id: 'centralasia', name: 'Central Asia', buff: 'Idle Power +80%', type: 'idle', value: 0.8, cost: 550, d: "M138,15 L128,50 L140,68 L160,58 L168,35 L155,18 Z" },
+            { id: 'siberia', name: 'Siberia', buff: 'Energy Regen +100%', type: 'energy', value: 1.0, cost: 620, d: "M135,5 L185,5 L188,15 L175,15 L155,18 L140,15 Z" },
+            { id: 'greenland', name: 'Greenland', buff: 'Click Power +80%', type: 'click', value: 0.8, cost: 700, d: "M68,5 L88,5 L90,18 L78,22 L65,18 Z" },
+            { id: 'seabottom', name: 'Deep Ocean Floor', buff: 'Global Multiplier x2', type: 'mult_total', value: 2, cost: 1200, d: "M8,38 L22,55 L38,62 L35,82 L60,96 L65,94 L72,80 L65,60 L50,55 L30,48 Z" }
         ]
     },
     {
         id: 'mars',
         name: 'Mars',
-        color: '#ff4d4d',
+        color: '#ff6633',
+        energyMax: 25000,
+        energyRegen: 5,
         regions: [
-            { id: 'valles', name: 'Valles Marineris', buff: 'Global Multiplier x2', type: 'mult_total', value: 2, cost: 120, d: "M30,40 L70,30 L120,40 L160,60 L140,80 L80,70 Z" },
-            { id: 'olympus', name: 'Olympus Mons', buff: 'Click Power +200%', type: 'click', value: 2.0, cost: 180, d: "M80,20 L120,10 L130,30 L90,40 Z" },
-            { id: 'utopia', name: 'Utopia Planitia', buff: 'Idle Power +200%', type: 'idle', value: 2.0, cost: 240, d: "M140,20 L180,30 L170,50 L130,40 Z" },
-            { id: 'hellas', name: 'Hellas Planitia', buff: 'Rebirth Points +100%', type: 'rp', value: 1.0, cost: 300, d: "M40,60 L80,55 L90,85 L50,90 Z" },
-            { id: 'mars_poles', name: 'Polar Caps', buff: 'Energy Regen x2', type: 'energy_mult', value: 2, cost: 400, d: "M20,10 L180,10 L170,15 L30,15 Z" }
+            { id: 'valles', name: 'Valles Marineris', buff: 'Global Multiplier x2', type: 'mult_total', value: 2, cost: 1200, d: "M25,45 L80,32 L135,42 L165,62 L145,80 L75,72 Z" },
+            { id: 'olympus', name: 'Olympus Mons', buff: 'Click Power +200%', type: 'click', value: 2.0, cost: 1800, d: "M78,15 L115,8 L128,25 L110,38 L82,35 Z" },
+            { id: 'utopia', name: 'Utopia Planitia', buff: 'Idle Power +200%', type: 'idle', value: 2.0, cost: 2400, d: "M138,15 L180,22 L175,45 L145,48 L132,32 Z" },
+            { id: 'hellas', name: 'Hellas Planitia', buff: 'Rebirth Points +100%', type: 'rp', value: 1.0, cost: 3000, d: "M38,62 L78,55 L88,82 L65,90 L40,85 Z" },
+            { id: 'mars_poles', name: 'North Polar Cap', buff: 'Energy Regen x2', type: 'energy_mult', value: 2, cost: 4000, d: "M60,5 L145,5 L148,14 L58,14 Z" },
+            { id: 'south_pole', name: 'South Polar Cap', buff: 'Energy Regen x2', type: 'energy_mult', value: 2, cost: 4000, d: "M55,90 L148,90 L150,98 L52,98 Z" },
+            { id: 'elysium', name: 'Elysium Planitia', buff: 'All Production x1.5', type: 'all_prod', value: 1.5, cost: 3500, d: "M148,48 L182,40 L188,68 L162,72 L145,65 Z" },
+            { id: 'argyre', name: 'Argyre Basin', buff: 'Upgrade Cost -15%', type: 'cost', value: 0.15, cost: 5000, d: "M30,70 L68,65 L72,85 L42,90 Z" },
+            { id: 'tharsis', name: 'Tharsis Bulge', buff: 'Click Power +300%', type: 'click', value: 3.0, cost: 6000, d: "M38,35 L78,30 L82,55 L42,58 Z" },
+            { id: 'mars_core', name: 'Martian Core', buff: 'Global Multiplier x5', type: 'mult_total', value: 5, cost: 9000, d: "M82,55 L135,42 L145,65 L88,82 L72,68 Z" }
         ]
     },
     {
         id: 'jupiter',
         name: 'Jupiter',
         color: '#ffcc99',
+        energyMax: 60000,
+        energyRegen: 5,
         regions: [
-            { id: 'grs', name: 'Great Red Spot', buff: 'Global Multiplier x10', type: 'mult_total', value: 10, cost: 600, d: "M80,50 Q100,30 140,50 T100,70 Z" },
-            { id: 'europa', name: 'Europa', buff: 'All Production x5', type: 'all_prod', value: 5, cost: 800, d: "M30,30 L60,20 L70,50 L40,60 Z" },
-            { id: 'ganymede', name: 'Ganymede', buff: 'Upgrade Cost -20%', type: 'cost', value: 0.2, cost: 1000, d: "M130,20 L160,30 L150,60 L120,50 Z" },
-            { id: 'io', name: 'Io', buff: 'Click Power +500%', type: 'click', value: 5.0, cost: 1200, d: "M50,70 L80,65 L85,90 L55,95 Z" }
+            { id: 'grs', name: 'Great Red Spot', buff: 'Global Multiplier x10', type: 'mult_total', value: 10, cost: 6000, d: "M72,45 Q100,28 145,48 T108,70 Z" },
+            { id: 'europa', name: 'Europa', buff: 'All Production x5', type: 'all_prod', value: 5, cost: 8000, d: "M25,28 L60,18 L70,48 L38,58 Z" },
+            { id: 'ganymede', name: 'Ganymede', buff: 'Upgrade Cost -20%', type: 'cost', value: 0.2, cost: 9999, d: "M128,15 L162,25 L155,55 L118,48 Z" },
+            { id: 'io', name: 'Io', buff: 'Click Power +500%', type: 'click', value: 5.0, cost: 9999, d: "M45,68 L80,62 L85,88 L52,94 Z" },
+            { id: 'callisto', name: 'Callisto', buff: 'Idle Power +500%', type: 'idle', value: 5.0, cost: 9999, d: "M150,62 L185,55 L188,82 L162,88 Z" },
+            { id: 'band_north', name: 'Northern Bands', buff: 'Energy Regen x2.5', type: 'energy_mult', value: 2.5, cost: 9999, d: "M8,12 L192,12 L190,25 L10,25 Z" },
+            { id: 'band_south', name: 'Southern Bands', buff: 'Energy Regen x2.5', type: 'energy_mult', value: 2.5, cost: 9999, d: "M8,75 L192,75 L190,88 L10,88 Z" },
+            { id: 'polar_hex', name: 'Polar Hexagon', buff: 'Global Multiplier x15', type: 'mult_total', value: 15, cost: 9999, d: "M80,5 L120,5 L140,15 L120,25 L80,25 L60,15 Z" },
+            { id: 'storm_belt', name: 'Equatorial Storm Belt', buff: 'Click Power +800%', type: 'click', value: 8.0, cost: 9999, d: "M10,38 L190,38 L188,52 L12,52 Z" },
+            { id: 'jupiter_core', name: 'Metallic Core', buff: 'Global Multiplier x25', type: 'mult_total', value: 25, cost: 9999, d: "M70,28 L130,28 L140,55 L105,75 L65,55 Z" },
+            { id: 'amalthea', name: 'Amalthea', buff: 'RP Gain x2', type: 'rp_mult', value: 2, cost: 9999, d: "M165,28 L188,22 L190,38 L170,42 Z" }
         ]
     },
     {
         id: 'saturn',
         name: 'Saturn',
         color: '#e6e600',
+        energyMax: 120000,
+        energyRegen: 5,
         regions: [
-            { id: 'rings', name: 'Celestial Rings', buff: 'Global Multiplier x50', type: 'mult_total', value: 50, cost: 2500, d: "M10,50 Q50,20 190,50 T10,50 M30,50 Q60,35 170,50 T30,50" },
-            { id: 'titan', name: 'Titan', buff: 'Idle Power +1000%', type: 'idle', value: 10, cost: 3000, d: "M40,20 L80,15 L90,45 L50,50 Z" },
-            { id: 'enceladus', name: 'Enceladus', buff: 'Energy Regen x3', type: 'energy_mult', value: 3, cost: 3500, d: "M120,60 L150,55 L160,85 L130,90 Z" }
+            { id: 'rings_a', name: 'A Ring', buff: 'Global Multiplier x30', type: 'mult_total', value: 30, cost: 9999, d: "M8,45 Q50,15 192,45 L190,52 Q50,22 10,52 Z" },
+            { id: 'rings_b', name: 'B Ring (Brightest)', buff: 'Global Multiplier x50', type: 'mult_total', value: 50, cost: 9999, d: "M12,55 Q55,28 188,55 L186,62 Q52,35 14,62 Z" },
+            { id: 'rings_c', name: 'C Ring', buff: 'Idle Power +800%', type: 'idle', value: 8.0, cost: 9999, d: "M15,38 Q55,8 185,38 L183,45 Q52,15 17,45 Z" },
+            { id: 'titan', name: 'Titan', buff: 'Idle Power +1000%', type: 'idle', value: 10, cost: 9999, d: "M35,18 L72,12 L85,42 L48,48 Z" },
+            { id: 'enceladus', name: 'Enceladus', buff: 'Energy Regen x3', type: 'energy_mult', value: 3, cost: 9999, d: "M118,58 L150,52 L158,82 L128,88 Z" },
+            { id: 'mimas', name: 'Mimas', buff: 'Upgrade Cost -25%', type: 'cost', value: 0.25, cost: 9999, d: "M158,15 L182,10 L188,30 L165,35 Z" },
+            { id: 'rhea', name: 'Rhea', buff: 'Click Power +1000%', type: 'click', value: 10.0, cost: 9999, d: "M38,68 L70,62 L75,88 L42,92 Z" },
+            { id: 'dione', name: 'Dione', buff: 'RP Gain x3', type: 'rp_mult', value: 3, cost: 9999, d: "M155,62 L182,58 L185,80 L158,85 Z" },
+            { id: 'saturn_poles', name: 'Saturn Storm Poles', buff: 'All Production x3', type: 'all_prod', value: 3, cost: 9999, d: "M70,5 L132,5 L135,15 L68,15 Z" },
+            { id: 'cassini_div', name: 'Cassini Division', buff: 'Global Multiplier x80', type: 'mult_total', value: 80, cost: 9999, d: "M12,62 Q55,35 188,62 L186,68 Q52,42 14,68 Z" },
+            { id: 'saturn_core', name: 'Saturn Core', buff: 'Global Multiplier x100', type: 'mult_total', value: 100, cost: 9999, d: "M72,25 L128,25 L140,68 L100,80 L60,68 Z" }
         ]
     },
     {
         id: 'neptune',
         name: 'Neptune',
-        color: '#4d4dff',
+        color: '#3366ff',
+        energyMax: 250000,
+        energyRegen: 5,
         regions: [
-            { id: 'triton', name: 'Triton', buff: 'RP Gain x5', type: 'rp_mult', value: 5, cost: 5000, d: "M50,40 L90,30 L100,60 L60,70 Z" },
-            { id: 'darkspot', name: 'Great Dark Spot', buff: 'Global Multiplier x500', type: 'mult_total', value: 500, cost: 7500, d: "M110,40 Q130,20 170,40 T130,60 Z" },
-            { id: 'neptune_core', name: 'Frozen Core', buff: 'All Costs -50%', type: 'cost', value: 0.5, cost: 10000, d: "M80,70 L120,70 L120,95 L80,95 Z" }
+            { id: 'triton', name: 'Triton', buff: 'RP Gain x5', type: 'rp_mult', value: 5, cost: 9999, d: "M45,38 L85,28 L98,58 L58,68 Z" },
+            { id: 'darkspot', name: 'Great Dark Spot', buff: 'Global Multiplier x500', type: 'mult_total', value: 500, cost: 9999, d: "M105,38 Q128,18 172,38 T132,58 Z" },
+            { id: 'neptune_core', name: 'Frozen Core', buff: 'All Costs -50%', type: 'cost', value: 0.5, cost: 9999, d: "M75,68 L125,68 L122,94 L78,94 Z" },
+            { id: 'nereid', name: 'Nereid', buff: 'Click Power +2000%', type: 'click', value: 20.0, cost: 9999, d: "M155,20 L182,15 L188,38 L162,42 Z" },
+            { id: 'proteus', name: 'Proteus', buff: 'Idle Power +2000%', type: 'idle', value: 20.0, cost: 9999, d: "M15,50 L48,44 L52,68 L18,72 Z" },
+            { id: 'polar_vortex', name: 'Polar Vortex', buff: 'Energy Regen x5', type: 'energy_mult', value: 5, cost: 9999, d: "M72,5 L128,5 L132,18 L68,18 Z" },
+            { id: 'nep_ring', name: 'Adams Ring', buff: 'Global Multiplier x300', type: 'mult_total', value: 300, cost: 9999, d: "M10,32 Q50,5 190,32 L188,40 Q48,12 12,40 Z" },
+            { id: 'storm_bands', name: 'Methane Storm Bands', buff: 'All Production x8', type: 'all_prod', value: 8, cost: 9999, d: "M10,45 L190,45 L188,58 L12,58 Z" },
+            { id: 'nep_magnetic', name: 'Magnetic Pole', buff: 'Global Multiplier x800', type: 'mult_total', value: 800, cost: 9999, d: "M72,88 L128,88 L132,98 L68,98 Z" },
+            { id: 'deep_ocean', name: 'Water-Ice Mantle', buff: 'Global Multiplier x10', type: 'mult_total', value: 10, cost: 9999, d: "M48,20 L152,20 L165,68 L100,80 L35,68 Z" }
         ]
     },
     {
         id: 'pluto',
         name: 'Pluto (Outer Rim)',
-        color: '#ffffff',
+        color: '#ccccff',
+        energyMax: 500000,
+        energyRegen: 5,
         regions: [
-            { id: 'charon', name: 'Charon', buff: 'Final Multiplier x1000', type: 'mult_total', value: 1000, cost: 20000, d: "M30,30 L60,30 L60,60 L30,60 Z" },
-            { id: 'heart', name: 'The Heart', buff: 'Raibos Masterpiece: x10^6 Power', type: 'mult_total', value: 1000000, cost: 50000, d: "M100,40 Q120,20 140,40 L100,80 L60,40 Q80,20 100,40 Z" }
+            { id: 'charon', name: 'Charon', buff: 'Final Multiplier x1000', type: 'mult_total', value: 1000, cost: 9999, d: "M25,25 L65,25 L65,62 L25,62 Z" },
+            { id: 'heart', name: 'Tombaugh Regio (The Heart)', buff: 'All Production x100', type: 'all_prod', value: 100, cost: 9999, d: "M95,38 Q118,18 142,38 L100,78 L58,38 Q82,18 95,38 Z" },
+            { id: 'norgay', name: 'Norgay Montes', buff: 'Click Power +5000%', type: 'click', value: 50.0, cost: 9999, d: "M148,55 L182,48 L188,75 L158,80 Z" },
+            { id: 'sputnik', name: 'Sputnik Planitia', buff: 'Idle Power +5000%', type: 'idle', value: 50.0, cost: 9999, d: "M58,38 L95,38 L100,78 L50,70 Z" },
+            { id: 'pluto_poles', name: 'Polar Ice Plains', buff: 'Energy Regen x10', type: 'energy_mult', value: 10, cost: 9999, d: "M40,5 L165,5 L168,18 L38,18 Z" },
+            { id: 'hydra', name: 'Hydra Moon', buff: 'RP Gain x10', type: 'rp_mult', value: 10, cost: 9999, d: "M165,22 L190,18 L192,40 L168,44 Z" },
+            { id: 'nix_moon', name: 'Nix Moon', buff: 'Global Multiplier x10', type: 'mult_total', value: 10, cost: 9999, d: "M10,30 L35,25 L38,50 L12,54 Z" },
+            { id: 'pluto_core', name: 'Ancient Frozen Core', buff: 'Global Multiplier x1000', type: 'mult_total', value: 1000, cost: 9999, d: "M65,25 L142,38 L158,80 L100,92 L40,70 L25,62 Z" }
+        ]
+    },
+    {
+        id: 'interstellar',
+        name: 'Interstellar Space',
+        color: '#aaaaaa',
+        energyMax: 2000000,
+        energyRegen: 10,
+        regions: [
+            { id: 'oort_cloud', name: 'The Oort Cloud', buff: 'Global Multiplier x10', type: 'mult_total', value: 10, cost: 9999, d: "M10,10 Q50,0 100,10 T190,10 L190,90 Q150,100 100,90 T10,90 Z" },
+            { id: 'voyager_zone', name: 'Voyager Deadzone', buff: 'All Production x500', type: 'all_prod', value: 500, cost: 9999, d: "M20,40 L60,35 L65,65 L25,70 Z" },
+            { id: 'rogue_planet', name: 'Wandering Rogue Planet', buff: 'Click Power +20,000%', type: 'click', value: 200.0, cost: 9999, d: "M140,40 L180,35 L185,65 L145,70 Z" },
+            { id: 'heliopause', name: 'Heliopause Border', buff: 'Energy Regen x20', type: 'energy_mult', value: 20, cost: 9999, d: "M70,20 L130,20 L135,80 L65,80 Z" },
+            { id: 'dark_matter_sea', name: 'Dark Matter Sea', buff: 'Global Multiplier x50', type: 'mult_total', value: 50, cost: 9999, d: "M80,30 L120,30 L125,70 L75,70 Z" }
+        ]
+    },
+    {
+        id: 'alpha_centauri',
+        name: 'Alpha Centauri System',
+        color: '#ffcc66',
+        energyMax: 10000000,
+        energyRegen: 50,
+        regions: [
+            { id: 'proxima_b', name: 'Proxima Centauri b', buff: 'Global Multiplier x200', type: 'mult_total', value: 200, cost: 9999, d: "M30,30 Q60,10 90,30 L85,70 Q55,90 25,70 Z" },
+            { id: 'alpha_a', name: 'Centauri A Core', buff: 'Idle Power +100,000%', type: 'idle', value: 1000.0, cost: 9999, d: "M110,30 Q140,10 170,30 L165,70 Q135,90 105,70 Z" },
+            { id: 'alpha_b', name: 'Centauri B Core', buff: 'Click Power +100,000%', type: 'click', value: 1000.0, cost: 9999, d: "M90,30 L110,30 L105,70 L85,70 Z" },
+            { id: 'binary_bridge', name: 'Binary Star Bridge', buff: 'All Production x10', type: 'all_prod', value: 10, cost: 9999, d: "M70,40 L130,40 L125,60 L65,60 Z" },
+            { id: 'centauri_dyson', name: 'Dyson Sphere Prototype', buff: 'Global Multiplier x1,000', type: 'mult_total', value: 1000, cost: 9999, d: "M50,15 L150,15 L155,85 L45,85 Z" }
+        ]
+    },
+    {
+        id: 'galactic_center',
+        name: 'The Galactic Center',
+        color: '#ff33ff',
+        energyMax: 50000000,
+        energyRegen: 200,
+        regions: [
+            { id: 'orion_nebula', name: 'Orion Nebula Birthplace', buff: 'All Production x25', type: 'all_prod', value: 25, cost: 9999, d: "M10,20 Q60,5 110,20 L105,40 Q55,25 5,40 Z" },
+            { id: 'pillars_creation', name: 'Pillars of Creation', buff: 'Global Multiplier x5,000', type: 'mult_total', value: 5000, cost: 9999, d: "M130,10 L160,10 L165,90 L125,90 Z" },
+            { id: 'neutron_star', name: 'Pulsar Matrix', buff: 'RP Gain x100', type: 'rp_mult', value: 100, cost: 9999, d: "M20,60 L80,55 L85,85 L15,90 Z" },
+            { id: 'accretion_disk', name: 'Accretion Disk', buff: 'Energy Regen x100', type: 'energy_mult', value: 100, cost: 9999, d: "M40,30 Q100,10 160,30 L155,70 Q95,90 35,70 Z" },
+            { id: 'sagittarius_a', name: 'Sagittarius A* (Supermassive)', buff: 'Global Multiplier x100,000', type: 'mult_total', value: 100000, cost: 9999, d: "M70,30 A30,30 0 1,1 130,70 A30,30 0 1,1 70,30 Z" }
         ]
     }
 ];
@@ -255,7 +347,7 @@ const clickUpgrades = [
     },
     {
         "id": "c21",
-        "name": "Raibos Star Pulse 21",
+        "name": "Raibos Knuckle Strike",
         "desc": "+9.8e+29 Raibos/click",
         "baseCost": 1e+37,
         "costMul": 1.482,
@@ -263,7 +355,7 @@ const clickUpgrades = [
     },
     {
         "id": "c22",
-        "name": "Raibos Galaxy Pulse 22",
+        "name": "Raibos Thunder Clap",
         "desc": "+4.9e+31 Raibos/click",
         "baseCost": 1e+39,
         "costMul": 1.474,
@@ -271,7 +363,7 @@ const clickUpgrades = [
     },
     {
         "id": "c23",
-        "name": "Raibos Universe Pulse 23",
+        "name": "Raibos Shockwave",
         "desc": "+2.4e+33 Raibos/click",
         "baseCost": 1e+41,
         "costMul": 1.466,
@@ -279,7 +371,7 @@ const clickUpgrades = [
     },
     {
         "id": "c24",
-        "name": "Raibos Multiverse Pulse 24",
+        "name": "Raibos Gravity Well",
         "desc": "+1.2e+35 Raibos/click",
         "baseCost": 1e+43,
         "costMul": 1.458,
@@ -287,7 +379,7 @@ const clickUpgrades = [
     },
     {
         "id": "c25",
-        "name": "Raibos Dimension Pulse 25",
+        "name": "Raibos Rift Breaker",
         "desc": "+6.1e+36 Raibos/click",
         "baseCost": 1.0000000000000001e+45,
         "costMul": 1.45,
@@ -295,7 +387,7 @@ const clickUpgrades = [
     },
     {
         "id": "c26",
-        "name": "Raibos Chrono Pulse 26",
+        "name": "Raibos Time Slicer",
         "desc": "+3.1e+38 Raibos/click",
         "baseCost": 1e+47,
         "costMul": 1.442,
@@ -303,7 +395,7 @@ const clickUpgrades = [
     },
     {
         "id": "c27",
-        "name": "Raibos Void Pulse 27",
+        "name": "Raibos Void Fist",
         "desc": "+1.5e+40 Raibos/click",
         "baseCost": 1.0000000000000001e+49,
         "costMul": 1.434,
@@ -311,7 +403,7 @@ const clickUpgrades = [
     },
     {
         "id": "c28",
-        "name": "Raibos Infinity Pulse 28",
+        "name": "Raibos Infinite Touch",
         "desc": "+7.6e+41 Raibos/click",
         "baseCost": 1e+51,
         "costMul": 1.426,
@@ -319,7 +411,7 @@ const clickUpgrades = [
     },
     {
         "id": "c29",
-        "name": "Raibos Singularity Pulse 29",
+        "name": "Raibos Collapse Strike",
         "desc": "+3.8e+43 Raibos/click",
         "baseCost": 1e+53,
         "costMul": 1.418,
@@ -327,7 +419,7 @@ const clickUpgrades = [
     },
     {
         "id": "c30",
-        "name": "Raibos Cosmic Pulse 30",
+        "name": "Raibos Cosmic Hammer",
         "desc": "+7.6e+45 Raibos/click",
         "baseCost": 5e+55,
         "costMul": 1.41,
@@ -335,7 +427,7 @@ const clickUpgrades = [
     },
     {
         "id": "c31",
-        "name": "Raibos Astral Pulse 31",
+        "name": "Raibos Astral Impact",
         "desc": "+1.5e+48 Raibos/click",
         "baseCost": 2.5000000000000002e+58,
         "costMul": 1.402,
@@ -343,7 +435,7 @@ const clickUpgrades = [
     },
     {
         "id": "c32",
-        "name": "Raibos Ethereal Pulse 32",
+        "name": "Raibos Ethereal Smash",
         "desc": "+3.1e+50 Raibos/click",
         "baseCost": 1.25e+61,
         "costMul": 1.394,
@@ -351,7 +443,7 @@ const clickUpgrades = [
     },
     {
         "id": "c33",
-        "name": "Raibos Divine Pulse 33",
+        "name": "Raibos Divine Judgement",
         "desc": "+6.1e+52 Raibos/click",
         "baseCost": 6.25e+63,
         "costMul": 1.386,
@@ -359,7 +451,7 @@ const clickUpgrades = [
     },
     {
         "id": "c34",
-        "name": "Raibos Absolute Pulse 34",
+        "name": "Raibos Absolute Obliteration",
         "desc": "+1.2e+55 Raibos/click",
         "baseCost": 3.125e+66,
         "costMul": 1.378,
@@ -367,7 +459,7 @@ const clickUpgrades = [
     },
     {
         "id": "c35",
-        "name": "Raibos Eternal Pulse 35",
+        "name": "Raibos Eternal Barrage",
         "desc": "+2.4e+57 Raibos/click",
         "baseCost": 1.5624999999999999e+69,
         "costMul": 1.37,
@@ -375,7 +467,7 @@ const clickUpgrades = [
     },
     {
         "id": "c36",
-        "name": "Raibos Primal Pulse 36",
+        "name": "Raibos Primal Upheaval",
         "desc": "+4.9e+59 Raibos/click",
         "baseCost": 7.8125e+71,
         "costMul": 1.362,
@@ -383,7 +475,7 @@ const clickUpgrades = [
     },
     {
         "id": "c37",
-        "name": "Raibos Ancient Pulse 37",
+        "name": "Raibos Ancient Detonation",
         "desc": "+9.8e+61 Raibos/click",
         "baseCost": 3.90625e+74,
         "costMul": 1.354,
@@ -391,7 +483,7 @@ const clickUpgrades = [
     },
     {
         "id": "c38",
-        "name": "Raibos Transcendent Pulse 38",
+        "name": "Raibos Transcendent Eruption",
         "desc": "+2.0e+64 Raibos/click",
         "baseCost": 1.953125e+77,
         "costMul": 1.346,
@@ -399,7 +491,7 @@ const clickUpgrades = [
     },
     {
         "id": "c39",
-        "name": "Raibos Final Pulse 39",
+        "name": "Raibos Cataclysm",
         "desc": "+3.9e+66 Raibos/click",
         "baseCost": 9.765625e+79,
         "costMul": 1.338,
@@ -407,7 +499,7 @@ const clickUpgrades = [
     },
     {
         "id": "c40",
-        "name": "Raibos Nebula Pulse 40",
+        "name": "Raibos Nebula Crash",
         "desc": "+7.8e+68 Raibos/click",
         "baseCost": 4.8828125e+82,
         "costMul": 1.33,
@@ -415,7 +507,7 @@ const clickUpgrades = [
     },
     {
         "id": "c41",
-        "name": "Raibos Star Pulse 41",
+        "name": "Raibos Stellar Desolation",
         "desc": "+1.6e+71 Raibos/click",
         "baseCost": 2.44140625e+85,
         "costMul": 1.322,
@@ -423,7 +515,7 @@ const clickUpgrades = [
     },
     {
         "id": "c42",
-        "name": "Raibos Galaxy Pulse 42",
+        "name": "Raibos Galactic Rupture",
         "desc": "+3.1e+73 Raibos/click",
         "baseCost": 1.220703125e+88,
         "costMul": 1.314,
@@ -431,7 +523,7 @@ const clickUpgrades = [
     },
     {
         "id": "c43",
-        "name": "Raibos Universe Pulse 43",
+        "name": "Raibos Universal Collapse",
         "desc": "+6.2e+75 Raibos/click",
         "baseCost": 6.103515625e+90,
         "costMul": 1.306,
@@ -439,7 +531,7 @@ const clickUpgrades = [
     },
     {
         "id": "c44",
-        "name": "Raibos Multiverse Pulse 44",
+        "name": "Raibos Multiverse Fracture",
         "desc": "+1.2e+78 Raibos/click",
         "baseCost": 3.0517578125e+93,
         "costMul": 1.298,
@@ -447,7 +539,7 @@ const clickUpgrades = [
     },
     {
         "id": "c45",
-        "name": "Raibos Dimension Pulse 45",
+        "name": "Raibos Dimension Shatter",
         "desc": "+6.2e+80 Raibos/click",
         "baseCost": 3.0517578125e+96,
         "costMul": 1.29,
@@ -455,7 +547,7 @@ const clickUpgrades = [
     },
     {
         "id": "c46",
-        "name": "Raibos Chrono Pulse 46",
+        "name": "Raibos Chrono Annihilation",
         "desc": "+3.1e+83 Raibos/click",
         "baseCost": 3.0517578125e+99,
         "costMul": 1.282,
@@ -463,7 +555,7 @@ const clickUpgrades = [
     },
     {
         "id": "c47",
-        "name": "Raibos Void Pulse 47",
+        "name": "Raibos Void Armageddon",
         "desc": "+1.6e+86 Raibos/click",
         "baseCost": 3.0517578125e+102,
         "costMul": 1.274,
@@ -471,7 +563,7 @@ const clickUpgrades = [
     },
     {
         "id": "c48",
-        "name": "Raibos Infinity Pulse 48",
+        "name": "Raibos Infinite Recursion",
         "desc": "+7.8e+88 Raibos/click",
         "baseCost": 3.0517578125e+105,
         "costMul": 1.266,
@@ -479,7 +571,7 @@ const clickUpgrades = [
     },
     {
         "id": "c49",
-        "name": "Raibos Singularity Pulse 49",
+        "name": "Raibos Event Horizon",
         "desc": "+3.9e+91 Raibos/click",
         "baseCost": 3.0517578125e+108,
         "costMul": 1.258,
@@ -487,7 +579,7 @@ const clickUpgrades = [
     },
     {
         "id": "c50",
-        "name": "Raibos Cosmic Pulse 50",
+        "name": "Raibos Cosmic Reckoning",
         "desc": "+2.0e+94 Raibos/click",
         "baseCost": 3.0517578125e+111,
         "costMul": 1.25,
@@ -495,7 +587,7 @@ const clickUpgrades = [
     },
     {
         "id": "c51",
-        "name": "Raibos Astral Pulse 51",
+        "name": "Raibos Astral Extinction",
         "desc": "+9.8e+96 Raibos/click",
         "baseCost": 3.0517578125e+114,
         "costMul": 1.242,
@@ -503,7 +595,7 @@ const clickUpgrades = [
     },
     {
         "id": "c52",
-        "name": "Raibos Ethereal Pulse 52",
+        "name": "Raibos Ethereal Devastation",
         "desc": "+4.9e+99 Raibos/click",
         "baseCost": 3.0517578125e+117,
         "costMul": 1.234,
@@ -511,7 +603,7 @@ const clickUpgrades = [
     },
     {
         "id": "c53",
-        "name": "Raibos Divine Pulse 53",
+        "name": "Raibos God Slayer",
         "desc": "+2.4e+102 Raibos/click",
         "baseCost": 3.0517578125e+120,
         "costMul": 1.226,
@@ -519,7 +611,7 @@ const clickUpgrades = [
     },
     {
         "id": "c54",
-        "name": "Raibos Absolute Pulse 54",
+        "name": "Raibos Absolute Dominion",
         "desc": "+1.2e+105 Raibos/click",
         "baseCost": 3.0517578125e+123,
         "costMul": 1.218,
@@ -527,7 +619,7 @@ const clickUpgrades = [
     },
     {
         "id": "c55",
-        "name": "Raibos Eternal Pulse 55",
+        "name": "Raibos Eternal Conquest",
         "desc": "+6.1e+107 Raibos/click",
         "baseCost": 3.0517578125e+126,
         "costMul": 1.21,
@@ -535,7 +627,7 @@ const clickUpgrades = [
     },
     {
         "id": "c56",
-        "name": "Raibos Primal Pulse 56",
+        "name": "Raibos Primal Sovereignty",
         "desc": "+3.1e+110 Raibos/click",
         "baseCost": 3.0517578125e+129,
         "costMul": 1.202,
@@ -543,7 +635,7 @@ const clickUpgrades = [
     },
     {
         "id": "c57",
-        "name": "Raibos Ancient Pulse 57",
+        "name": "Raibos Ancient Supremacy",
         "desc": "+1.5e+113 Raibos/click",
         "baseCost": 3.0517578125e+132,
         "costMul": 1.194,
@@ -551,7 +643,7 @@ const clickUpgrades = [
     },
     {
         "id": "c58",
-        "name": "Raibos Transcendent Pulse 58",
+        "name": "Raibos Transcendent Mastery",
         "desc": "+7.6e+115 Raibos/click",
         "baseCost": 3.0517578125e+135,
         "costMul": 1.186,
@@ -559,7 +651,7 @@ const clickUpgrades = [
     },
     {
         "id": "c59",
-        "name": "Raibos Final Pulse 59",
+        "name": "Raibos Final Apotheosis",
         "desc": "+3.8e+118 Raibos/click",
         "baseCost": 3.0517578125e+138,
         "costMul": 1.178,
@@ -567,7 +659,7 @@ const clickUpgrades = [
     },
     {
         "id": "c60",
-        "name": "Raibos Nebula Pulse 60",
+        "name": "Raibos Nebula Genesis",
         "desc": "+1.9e+121 Raibos/click",
         "baseCost": 3.0517578125e+141,
         "costMul": 1.17,
@@ -575,7 +667,7 @@ const clickUpgrades = [
     },
     {
         "id": "c61",
-        "name": "Raibos Star Pulse 61",
+        "name": "Raibos Star Forge",
         "desc": "+9.5e+123 Raibos/click",
         "baseCost": 3.0517578125e+144,
         "costMul": 1.162,
@@ -583,7 +675,7 @@ const clickUpgrades = [
     },
     {
         "id": "c62",
-        "name": "Raibos Galaxy Pulse 62",
+        "name": "Raibos Galaxy Forge",
         "desc": "+4.8e+126 Raibos/click",
         "baseCost": 3.0517578125e+147,
         "costMul": 1.154,
@@ -591,7 +683,7 @@ const clickUpgrades = [
     },
     {
         "id": "c63",
-        "name": "Raibos Universe Pulse 63",
+        "name": "Raibos Universe Engine",
         "desc": "+2.4e+129 Raibos/click",
         "baseCost": 3.0517578125e+150,
         "costMul": 1.15,
@@ -599,7 +691,7 @@ const clickUpgrades = [
     },
     {
         "id": "c64",
-        "name": "Raibos Multiverse Pulse 64",
+        "name": "Raibos Multiverse Engine",
         "desc": "+1.2e+132 Raibos/click",
         "baseCost": 3.0517578125e+153,
         "costMul": 1.15,
@@ -607,7 +699,7 @@ const clickUpgrades = [
     },
     {
         "id": "c65",
-        "name": "Raibos Dimension Pulse 65",
+        "name": "Raibos Omnipotence",
         "desc": "+6.0e+134 Raibos/click",
         "baseCost": 3.0517578125e+156,
         "costMul": 1.15,
@@ -658,7 +750,7 @@ const idleUpgrades = [
     },
     {
         "id": "i6",
-        "name": "Raibos Chrono Reactor 6",
+        "name": "Raibos Temporal Engine",
         "desc": "+6.0e+5 Raibos/sec",
         "baseCost": 32000000,
         "costMul": 1.37,
@@ -666,7 +758,7 @@ const idleUpgrades = [
     },
     {
         "id": "i7",
-        "name": "Raibos Void Reactor 7",
+        "name": "Raibos Void Harvester",
         "desc": "+2.4e+7 Raibos/sec",
         "baseCost": 2560000000,
         "costMul": 1.365,
@@ -674,7 +766,7 @@ const idleUpgrades = [
     },
     {
         "id": "i8",
-        "name": "Raibos Infinity Reactor 8",
+        "name": "Raibos Infinity Core",
         "desc": "+9.6e+8 Raibos/sec",
         "baseCost": 204800000000,
         "costMul": 1.36,
@@ -682,7 +774,7 @@ const idleUpgrades = [
     },
     {
         "id": "i9",
-        "name": "Raibos Singularity Reactor 9",
+        "name": "Raibos Singularity Engine",
         "desc": "+3.8e+10 Raibos/sec",
         "baseCost": 16384000000000,
         "costMul": 1.355,
@@ -690,7 +782,7 @@ const idleUpgrades = [
     },
     {
         "id": "i10",
-        "name": "Raibos Cosmic Reactor 10",
+        "name": "Raibos Cosmic Turbine",
         "desc": "+1.5e+12 Raibos/sec",
         "baseCost": 1310720000000000,
         "costMul": 1.35,
@@ -698,7 +790,7 @@ const idleUpgrades = [
     },
     {
         "id": "i11",
-        "name": "Raibos Astral Reactor 11",
+        "name": "Raibos Astral Furnace",
         "desc": "+6.1e+13 Raibos/sec",
         "baseCost": 104857600000000000,
         "costMul": 1.345,
@@ -706,7 +798,7 @@ const idleUpgrades = [
     },
     {
         "id": "i12",
-        "name": "Raibos Ethereal Reactor 12",
+        "name": "Raibos Ethereal Condenser",
         "desc": "+2.5e+15 Raibos/sec",
         "baseCost": 8388608000000000000,
         "costMul": 1.34,
@@ -714,7 +806,7 @@ const idleUpgrades = [
     },
     {
         "id": "i13",
-        "name": "Raibos Divine Reactor 13",
+        "name": "Raibos Divine Incubator",
         "desc": "+9.8e+16 Raibos/sec",
         "baseCost": 671088640000000000000,
         "costMul": 1.335,
@@ -722,7 +814,7 @@ const idleUpgrades = [
     },
     {
         "id": "i14",
-        "name": "Raibos Absolute Reactor 14",
+        "name": "Raibos Absolute Refinery",
         "desc": "+3.9e+18 Raibos/sec",
         "baseCost": 5.36870912e+22,
         "costMul": 1.33,
@@ -730,7 +822,7 @@ const idleUpgrades = [
     },
     {
         "id": "i15",
-        "name": "Raibos Eternal Reactor 15",
+        "name": "Raibos Eternal Dynamo",
         "desc": "+1.6e+20 Raibos/sec",
         "baseCost": 4.294967296e+24,
         "costMul": 1.325,
@@ -738,7 +830,7 @@ const idleUpgrades = [
     },
     {
         "id": "i16",
-        "name": "Raibos Primal Reactor 16",
+        "name": "Raibos Primal Catalyst",
         "desc": "+6.3e+21 Raibos/sec",
         "baseCost": 3.4359738368e+26,
         "costMul": 1.32,
@@ -746,7 +838,7 @@ const idleUpgrades = [
     },
     {
         "id": "i17",
-        "name": "Raibos Ancient Reactor 17",
+        "name": "Raibos Ancient Accelerator",
         "desc": "+2.5e+23 Raibos/sec",
         "baseCost": 2.74877906944e+28,
         "costMul": 1.315,
@@ -754,7 +846,7 @@ const idleUpgrades = [
     },
     {
         "id": "i18",
-        "name": "Raibos Transcendent Reactor 18",
+        "name": "Raibos Transcendent Collider",
         "desc": "+1.0e+25 Raibos/sec",
         "baseCost": 2.199023255552e+30,
         "costMul": 1.31,
@@ -762,7 +854,7 @@ const idleUpgrades = [
     },
     {
         "id": "i19",
-        "name": "Raibos Final Reactor 19",
+        "name": "Raibos Perpetual Reactor",
         "desc": "+4.0e+26 Raibos/sec",
         "baseCost": 1.7592186044416e+32,
         "costMul": 1.305,
@@ -770,7 +862,7 @@ const idleUpgrades = [
     },
     {
         "id": "i20",
-        "name": "Raibos Nebula Reactor 20",
+        "name": "Raibos Nebula Incinerator",
         "desc": "+4.0e+28 Raibos/sec",
         "baseCost": 3.5184372088832e+34,
         "costMul": 1.3,
@@ -778,7 +870,7 @@ const idleUpgrades = [
     },
     {
         "id": "i21",
-        "name": "Raibos Star Reactor 21",
+        "name": "Raibos Star Igniter",
         "desc": "+4.0e+30 Raibos/sec",
         "baseCost": 7.0368744177664e+36,
         "costMul": 1.295,
@@ -786,7 +878,7 @@ const idleUpgrades = [
     },
     {
         "id": "i22",
-        "name": "Raibos Galaxy Reactor 22",
+        "name": "Raibos Galaxy Converter",
         "desc": "+4.0e+32 Raibos/sec",
         "baseCost": 1.40737488355328e+39,
         "costMul": 1.29,
@@ -794,7 +886,7 @@ const idleUpgrades = [
     },
     {
         "id": "i23",
-        "name": "Raibos Universe Reactor 23",
+        "name": "Raibos Universe Transformer",
         "desc": "+4.0e+34 Raibos/sec",
         "baseCost": 2.81474976710656e+41,
         "costMul": 1.285,
@@ -802,7 +894,7 @@ const idleUpgrades = [
     },
     {
         "id": "i24",
-        "name": "Raibos Multiverse Reactor 24",
+        "name": "Raibos Multiverse Superconductor",
         "desc": "+4.0e+36 Raibos/sec",
         "baseCost": 5.62949953421312e+43,
         "costMul": 1.28,
@@ -810,7 +902,7 @@ const idleUpgrades = [
     },
     {
         "id": "i25",
-        "name": "Raibos Dimension Reactor 25",
+        "name": "Raibos Dimension Splitter",
         "desc": "+4.0e+38 Raibos/sec",
         "baseCost": 1.125899906842624e+46,
         "costMul": 1.275,
@@ -818,7 +910,7 @@ const idleUpgrades = [
     },
     {
         "id": "i26",
-        "name": "Raibos Chrono Reactor 26",
+        "name": "Raibos Chrono Amplifier",
         "desc": "+4.0e+40 Raibos/sec",
         "baseCost": 2.251799813685248e+48,
         "costMul": 1.27,
@@ -826,7 +918,7 @@ const idleUpgrades = [
     },
     {
         "id": "i27",
-        "name": "Raibos Void Reactor 27",
+        "name": "Raibos Void Reactor Zero",
         "desc": "+4.0e+42 Raibos/sec",
         "baseCost": 4.503599627370496e+50,
         "costMul": 1.265,
@@ -834,7 +926,7 @@ const idleUpgrades = [
     },
     {
         "id": "i28",
-        "name": "Raibos Infinity Reactor 28",
+        "name": "Raibos Boundless Reactor",
         "desc": "+4.0e+44 Raibos/sec",
         "baseCost": 9.007199254740992e+52,
         "costMul": 1.26,
@@ -842,7 +934,7 @@ const idleUpgrades = [
     },
     {
         "id": "i29",
-        "name": "Raibos Singularity Reactor 29",
+        "name": "Raibos Black Hole Tap",
         "desc": "+4.0e+46 Raibos/sec",
         "baseCost": 1.8014398509481983e+55,
         "costMul": 1.255,
@@ -850,7 +942,7 @@ const idleUpgrades = [
     },
     {
         "id": "i30",
-        "name": "Raibos Cosmic Reactor 30",
+        "name": "Raibos Big Bang Harvester",
         "desc": "+4.0e+48 Raibos/sec",
         "baseCost": 3.602879701896397e+57,
         "costMul": 1.25,
@@ -858,7 +950,7 @@ const idleUpgrades = [
     },
     {
         "id": "i31",
-        "name": "Raibos Astral Reactor 31",
+        "name": "Raibos Astral Web",
         "desc": "+4.0e+50 Raibos/sec",
         "baseCost": 7.205759403792794e+59,
         "costMul": 1.245,
@@ -866,7 +958,7 @@ const idleUpgrades = [
     },
     {
         "id": "i32",
-        "name": "Raibos Ethereal Reactor 32",
+        "name": "Raibos Phantom Mill",
         "desc": "+4.0e+52 Raibos/sec",
         "baseCost": 1.4411518807585588e+62,
         "costMul": 1.24,
@@ -874,7 +966,7 @@ const idleUpgrades = [
     },
     {
         "id": "i33",
-        "name": "Raibos Divine Reactor 33",
+        "name": "Raibos Holy Forge",
         "desc": "+4.0e+54 Raibos/sec",
         "baseCost": 2.8823037615171176e+64,
         "costMul": 1.235,
@@ -882,7 +974,7 @@ const idleUpgrades = [
     },
     {
         "id": "i34",
-        "name": "Raibos Absolute Reactor 34",
+        "name": "Raibos Absolute Foundry",
         "desc": "+4.0e+56 Raibos/sec",
         "baseCost": 5.764607523034235e+66,
         "costMul": 1.23,
@@ -890,7 +982,7 @@ const idleUpgrades = [
     },
     {
         "id": "i35",
-        "name": "Raibos Eternal Reactor 35",
+        "name": "Raibos Eternal Matrix",
         "desc": "+4.0e+58 Raibos/sec",
         "baseCost": 1.152921504606847e+69,
         "costMul": 1.225,
@@ -898,7 +990,7 @@ const idleUpgrades = [
     },
     {
         "id": "i36",
-        "name": "Raibos Primal Reactor 36",
+        "name": "Raibos Primal Nexus",
         "desc": "+4.0e+60 Raibos/sec",
         "baseCost": 2.305843009213694e+71,
         "costMul": 1.22,
@@ -906,7 +998,7 @@ const idleUpgrades = [
     },
     {
         "id": "i37",
-        "name": "Raibos Ancient Reactor 37",
+        "name": "Raibos Ancient Grid",
         "desc": "+4.0e+62 Raibos/sec",
         "baseCost": 4.611686018427388e+73,
         "costMul": 1.215,
@@ -914,7 +1006,7 @@ const idleUpgrades = [
     },
     {
         "id": "i38",
-        "name": "Raibos Transcendent Reactor 38",
+        "name": "Raibos Transcendent Array",
         "desc": "+4.0e+64 Raibos/sec",
         "baseCost": 9.223372036854776e+75,
         "costMul": 1.21,
@@ -922,7 +1014,7 @@ const idleUpgrades = [
     },
     {
         "id": "i39",
-        "name": "Raibos Final Reactor 39",
+        "name": "Raibos Omega Reactor",
         "desc": "+4.0e+66 Raibos/sec",
         "baseCost": 1.8446744073709553e+78,
         "costMul": 1.205,
@@ -930,7 +1022,7 @@ const idleUpgrades = [
     },
     {
         "id": "i40",
-        "name": "Raibos Nebula Reactor 40",
+        "name": "Raibos Nebula Crucible",
         "desc": "+1.6e+69 Raibos/sec",
         "baseCost": 1.4757395258967643e+81,
         "costMul": 1.2,
@@ -938,7 +1030,7 @@ const idleUpgrades = [
     },
     {
         "id": "i41",
-        "name": "Raibos Star Reactor 41",
+        "name": "Raibos Pulsar Array",
         "desc": "+6.4e+71 Raibos/sec",
         "baseCost": 1.1805916207174114e+84,
         "costMul": 1.195,
@@ -946,7 +1038,7 @@ const idleUpgrades = [
     },
     {
         "id": "i42",
-        "name": "Raibos Galaxy Reactor 42",
+        "name": "Raibos Quasar Tap",
         "desc": "+2.6e+74 Raibos/sec",
         "baseCost": 9.444732965739291e+86,
         "costMul": 1.19,
@@ -954,7 +1046,7 @@ const idleUpgrades = [
     },
     {
         "id": "i43",
-        "name": "Raibos Universe Reactor 43",
+        "name": "Raibos Dark Matter Conduit",
         "desc": "+1.0e+77 Raibos/sec",
         "baseCost": 7.555786372591433e+89,
         "costMul": 1.185,
@@ -962,7 +1054,7 @@ const idleUpgrades = [
     },
     {
         "id": "i44",
-        "name": "Raibos Multiverse Reactor 44",
+        "name": "Raibos Quantum Weave",
         "desc": "+4.1e+79 Raibos/sec",
         "baseCost": 6.044629098073146e+92,
         "costMul": 1.18,
@@ -970,7 +1062,7 @@ const idleUpgrades = [
     },
     {
         "id": "i45",
-        "name": "Raibos Dimension Reactor 45",
+        "name": "Raibos Tesseract Engine",
         "desc": "+1.6e+82 Raibos/sec",
         "baseCost": 4.835703278458517e+95,
         "costMul": 1.175,
@@ -978,7 +1070,7 @@ const idleUpgrades = [
     },
     {
         "id": "i46",
-        "name": "Raibos Chrono Reactor 46",
+        "name": "Raibos Temporal Distillery",
         "desc": "+6.6e+84 Raibos/sec",
         "baseCost": 3.868562622766813e+98,
         "costMul": 1.17,
@@ -986,7 +1078,7 @@ const idleUpgrades = [
     },
     {
         "id": "i47",
-        "name": "Raibos Void Reactor 47",
+        "name": "Raibos Dark Energy Siphon",
         "desc": "+2.6e+87 Raibos/sec",
         "baseCost": 3.0948500982134505e+101,
         "costMul": 1.165,
@@ -994,7 +1086,7 @@ const idleUpgrades = [
     },
     {
         "id": "i48",
-        "name": "Raibos Infinity Reactor 48",
+        "name": "Raibos Möbius Generator",
         "desc": "+1.1e+90 Raibos/sec",
         "baseCost": 2.4758800785707605e+104,
         "costMul": 1.16,
@@ -1002,7 +1094,7 @@ const idleUpgrades = [
     },
     {
         "id": "i49",
-        "name": "Raibos Singularity Reactor 49",
+        "name": "Raibos Hawking Radiator",
         "desc": "+4.2e+92 Raibos/sec",
         "baseCost": 1.9807040628566084e+107,
         "costMul": 1.155,
@@ -1010,7 +1102,7 @@ const idleUpgrades = [
     },
     {
         "id": "i50",
-        "name": "Raibos Cosmic Reactor 50",
+        "name": "Raibos Cosmic Web Weaver",
         "desc": "+1.7e+95 Raibos/sec",
         "baseCost": 1.5845632502852866e+110,
         "costMul": 1.15,
@@ -1018,7 +1110,7 @@ const idleUpgrades = [
     },
     {
         "id": "i51",
-        "name": "Raibos Astral Reactor 51",
+        "name": "Raibos Astral Vortex",
         "desc": "+6.8e+97 Raibos/sec",
         "baseCost": 1.2676506002282293e+113,
         "costMul": 1.15,
@@ -1026,7 +1118,7 @@ const idleUpgrades = [
     },
     {
         "id": "i52",
-        "name": "Raibos Ethereal Reactor 52",
+        "name": "Raibos Spirit Engine",
         "desc": "+2.7e+100 Raibos/sec",
         "baseCost": 1.0141204801825834e+116,
         "costMul": 1.15,
@@ -1034,7 +1126,7 @@ const idleUpgrades = [
     },
     {
         "id": "i53",
-        "name": "Raibos Divine Reactor 53",
+        "name": "Raibos Heaven Furnace",
         "desc": "+1.1e+103 Raibos/sec",
         "baseCost": 8.112963841460666e+118,
         "costMul": 1.15,
@@ -1042,7 +1134,7 @@ const idleUpgrades = [
     },
     {
         "id": "i54",
-        "name": "Raibos Absolute Reactor 54",
+        "name": "Raibos Origin Reactor",
         "desc": "+4.3e+105 Raibos/sec",
         "baseCost": 6.490371073168533e+121,
         "costMul": 1.15,
@@ -1050,7 +1142,7 @@ const idleUpgrades = [
     },
     {
         "id": "i55",
-        "name": "Raibos Eternal Reactor 55",
+        "name": "Raibos Perpetual Sun",
         "desc": "+1.7e+108 Raibos/sec",
         "baseCost": 5.192296858534826e+124,
         "costMul": 1.15,
@@ -1058,7 +1150,7 @@ const idleUpgrades = [
     },
     {
         "id": "i56",
-        "name": "Raibos Primal Reactor 56",
+        "name": "Raibos Ur-Reactor",
         "desc": "+6.9e+110 Raibos/sec",
         "baseCost": 4.153837486827861e+127,
         "costMul": 1.15,
@@ -1066,7 +1158,7 @@ const idleUpgrades = [
     },
     {
         "id": "i57",
-        "name": "Raibos Ancient Reactor 57",
+        "name": "Raibos Ancient Colossus",
         "desc": "+2.8e+113 Raibos/sec",
         "baseCost": 3.323069989462289e+130,
         "costMul": 1.15,
@@ -1074,7 +1166,7 @@ const idleUpgrades = [
     },
     {
         "id": "i58",
-        "name": "Raibos Transcendent Reactor 58",
+        "name": "Raibos Apex Turbine",
         "desc": "+1.1e+116 Raibos/sec",
         "baseCost": 2.658455991569831e+133,
         "costMul": 1.15,
@@ -1082,7 +1174,7 @@ const idleUpgrades = [
     },
     {
         "id": "i59",
-        "name": "Raibos Final Reactor 59",
+        "name": "Raibos Final Crucible",
         "desc": "+4.4e+118 Raibos/sec",
         "baseCost": 2.1267647932558648e+136,
         "costMul": 1.15,
@@ -1090,7 +1182,7 @@ const idleUpgrades = [
     },
     {
         "id": "i60",
-        "name": "Raibos Nebula Reactor 60",
+        "name": "Raibos Nebula Heart",
         "desc": "+1.8e+121 Raibos/sec",
         "baseCost": 1.7014118346046917e+139,
         "costMul": 1.15,
@@ -1098,7 +1190,7 @@ const idleUpgrades = [
     },
     {
         "id": "i61",
-        "name": "Raibos Star Reactor 61",
+        "name": "Raibos Stellar Womb",
         "desc": "+7.1e+123 Raibos/sec",
         "baseCost": 1.3611294676837533e+142,
         "costMul": 1.15,
@@ -1106,7 +1198,7 @@ const idleUpgrades = [
     },
     {
         "id": "i62",
-        "name": "Raibos Galaxy Reactor 62",
+        "name": "Raibos Galactic Chorus",
         "desc": "+2.8e+126 Raibos/sec",
         "baseCost": 1.0889035741470026e+145,
         "costMul": 1.15,
@@ -1114,7 +1206,7 @@ const idleUpgrades = [
     },
     {
         "id": "i63",
-        "name": "Raibos Universe Reactor 63",
+        "name": "Raibos Universal Hum",
         "desc": "+1.1e+129 Raibos/sec",
         "baseCost": 8.71122859317602e+147,
         "costMul": 1.15,
@@ -1122,7 +1214,7 @@ const idleUpgrades = [
     },
     {
         "id": "i64",
-        "name": "Raibos Multiverse Reactor 64",
+        "name": "Raibos Omniversal Pulse",
         "desc": "+4.5e+131 Raibos/sec",
         "baseCost": 6.968982874540817e+150,
         "costMul": 1.15,
@@ -1130,7 +1222,7 @@ const idleUpgrades = [
     },
     {
         "id": "i65",
-        "name": "Raibos Dimension Reactor 65",
+        "name": "Raibos The Final Reactor",
         "desc": "+1.8e+134 Raibos/sec",
         "baseCost": 5.575186299632653e+153,
         "costMul": 1.15,
@@ -1138,7 +1230,7 @@ const idleUpgrades = [
     },
     {
         "id": "i66",
-        "name": "Raibos Chrono Reactor 66",
+        "name": "Raibos Chrono Singularity Plant",
         "desc": "+7.3e+136 Raibos/sec",
         "baseCost": 4.4601490397061224e+156,
         "costMul": 1.15,
@@ -1146,7 +1238,7 @@ const idleUpgrades = [
     },
     {
         "id": "i67",
-        "name": "Raibos Void Reactor 67",
+        "name": "Raibos Void Sector Omega",
         "desc": "+2.9e+139 Raibos/sec",
         "baseCost": 3.568119231764898e+159,
         "costMul": 1.15,
@@ -1154,7 +1246,7 @@ const idleUpgrades = [
     },
     {
         "id": "i68",
-        "name": "Raibos Infinity Reactor 68",
+        "name": "Raibos Infinite Loop Station",
         "desc": "+1.2e+142 Raibos/sec",
         "baseCost": 2.8544953854119187e+162,
         "costMul": 1.15,
@@ -1162,7 +1254,7 @@ const idleUpgrades = [
     },
     {
         "id": "i69",
-        "name": "Raibos Singularity Reactor 69",
+        "name": "Raibos Singularity Supernova",
         "desc": "+4.6e+144 Raibos/sec",
         "baseCost": 2.283596308329535e+165,
         "costMul": 1.15,
@@ -1170,7 +1262,7 @@ const idleUpgrades = [
     },
     {
         "id": "i70",
-        "name": "Raibos Cosmic Reactor 70",
+        "name": "Raibos The Eternal Heartbeat",
         "desc": "+1.9e+147 Raibos/sec",
         "baseCost": 1.8268770466636279e+168,
         "costMul": 1.15,
@@ -1178,18 +1270,6 @@ const idleUpgrades = [
     }
 ];
 
-const gamepassData = [
-    { id: 'gp1', title: 'VIP Autoclicker', desc: 'Auto-clicks 5 times every second.', price: '$4.99' },
-    { id: 'gp2', title: 'Invasion Intelligence', desc: 'Invasion cost scales at x1.003 instead of x1.01.', price: '$9.99' },
-    { id: 'gp3', title: 'Double Rebirth Boost', desc: 'Multiplies Rebirth Point (RP) gains by x2 permanently.', price: '$14.99' },
-    { id: 'gp4', title: 'Chrono Mastery', desc: 'Time Skips grant 1 hour of production instead of 5 minutes.', price: '$19.99' },
-    { id: 'gp6', title: 'Quantum Dispatch', desc: 'Auto-Invasion dispatches every 0.25s. Removes animation delay.', price: '$29.99' },
-    { id: 'gp5', title: 'Absolute Ruler', desc: 'Base Global Multiplier x50. You become a Golden God.', price: '$49.99' },
-    { id: 'gp7', title: 'Quantum Crunch', desc: '2% chance on click to gain 1 minute of production instantly.', price: '$24.99' },
-    { id: 'gp8', title: 'Infinite Wisdom', desc: 'Upgrade price scaling is 50% slower.', price: '$39.99' },
-    { id: 'gp9', title: 'Raibos Magnet', desc: '10% chance on click to gain 10x Raibos.', price: '$24.99' },
-    { id: 'gp10', title: 'Emperor of Raibos', desc: '+1x Global Multiplier for every 100 total upgrade levels.', price: '$59.99' }
-];
 
 const achievementsData = [
     { id: 'a1', title: 'First Steps', req: () => gameState.totalClicks >= 10, desc: 'Click 10 times', bonus: 0.05 },
@@ -1209,13 +1289,15 @@ const achievementsData = [
     { id: 'a13', title: 'Automation Rookie', req: () => gameState.idlePower >= 1000000, desc: 'Reach 1M Raibos/sec', bonus: 2.0 },
     { id: 'a14', title: 'Automation Master', req: () => gameState.idlePower >= 1e9, desc: 'Reach 1B Raibos/sec', bonus: 5.0 },
     { id: 'a15', title: 'Rebirth Master', req: () => gameState.rebirthPoints >= 1000, desc: 'Accumulate 1,000 Rebirth Points', bonus: 10.0 },
-    { id: 'a16', title: 'Fleet Commander', req: () => gameState.invasion.conqueredRegions.length >= 5, desc: 'Conquer 5 Regions', bonus: 2.0 },
+    { id: 'a16', title: 'Vanguard', req: () => gameState.invasion.conqueredRegions.length >= 5, desc: 'Conquer 5 Regions', bonus: 2.0 },
     { id: 'a17', title: 'Galactic Pioneer', req: () => gameState.invasion.currentPlanet >= 1, desc: 'Conquer your first planet (Earth)', bonus: 5.0 },
+    { id: 'a18', title: 'Imperial Fleet', req: () => gameState.invasion.conqueredRegions.length >= 25, desc: 'Conquer 25 Regions across the solar system', bonus: 15.0 },
+    { id: 'a19', title: 'Universal Wealth', req: () => gameState.totalRaibos >= 1e33, desc: 'Earn 1 Decillion (1e33) Raibos', bonus: 100.0 },
  
-    // Hidden Achievements (10)
+    // Hidden Achievements
     { id: 'h1', title: 'Red Conquest', req: () => gameState.invasion.currentPlanet >= 2, desc: 'Conquer Mars.', bonus: 50.0, hidden: true },
     { id: 'h2', title: 'Jovian Giant', req: () => gameState.invasion.currentPlanet >= 3, desc: 'Conquer Jupiter.', bonus: 100.0, hidden: true },
-    { id: 'h3', title: 'Pinnacle of Idle', req: () => gameState.upgradeLevels['i15'] >= 1, desc: 'Unlock the Omega Core.', bonus: 25.0, hidden: true },
+    { id: 'h3', title: 'Pinnacle of Idle', req: () => gameState.upgradeLevels['i15'] >= 1, desc: 'Unlock the Eternal Dynamo.', bonus: 25.0, hidden: true },
     { id: 'h4', title: 'Time Traveler', req: () => gameState.timeSkipsUsed >= 5, desc: 'Catch the Golden Chrono-Raibos 5 times.', bonus: 10.0, hidden: true },
     { id: 'h5', title: 'Hardcore Grinder', req: () => gameState.rebirthPoints >= 100000, desc: 'Reach 100,000 Rebirth Points.', bonus: 200.0, hidden: true },
     { id: 'h6', title: 'Lord of the Rings', req: () => gameState.invasion.currentPlanet >= 4, desc: 'Conquer Saturn.', bonus: 30.0, hidden: true },
@@ -1811,7 +1893,7 @@ let selectedRegionId = null;
 
 function selectRegion(regionId) {
     selectedRegionId = regionId;
-    const region = getAllRegions().find(r => r.id === regionId);
+    const region = planetsData[gameState.invasion.currentPlanet].regions.find(r => r.id === regionId);
     if (!region) return;
 
     document.getElementById('region-details').style.display = 'block';
@@ -1856,6 +1938,32 @@ function updateInvasionUI() {
         });
     }
 
+    // Dynamic region list generation
+    const listContainer = document.getElementById('region-list-container');
+    if (listContainer) {
+        listContainer.innerHTML = '';
+        planet.regions.forEach(r => {
+            const div = document.createElement('div');
+            div.className = 'region-list-item';
+            
+            const isConquered = gameState.invasion.conqueredRegions.includes(r.id);
+            if (isConquered) {
+                div.classList.add('conquered');
+            }
+            if (selectedRegionId === r.id) {
+                div.classList.add('selected');
+            }
+            
+            div.innerHTML = `
+                <div class="region-list-item-name">${r.name}</div>
+                <div>${isConquered ? 'Conquered' : `Cost: ${r.cost}`}</div>
+            `;
+            
+            div.addEventListener('click', () => selectRegion(r.id));
+            listContainer.appendChild(div);
+        });
+    }
+
     if (selectedRegionId) {
         const region = planet.regions.find(r => r.id === selectedRegionId);
         if (region) {
@@ -1881,14 +1989,15 @@ function updateInvasionUI() {
 
 document.getElementById('start-invasion-btn').addEventListener('click', () => {
     if (!selectedRegionId) return;
-    const region = getAllRegions().find(r => r.id === selectedRegionId);
+    const region = planetsData[gameState.invasion.currentPlanet].regions.find(r => r.id === selectedRegionId);
     if (!region || gameState.invasion.energy < region.cost) return;
 
     gameState.invasion.energy -= region.cost;
     let progress = gameState.invasion.regionProgress[region.id] || 0;
     
-    // Invasion power based on clickPower
-    progress += 20; // 5 hits to conquer for now, can be scaled
+    // Random invasion progress between 1 and 30
+    const progressGain = Math.floor(Math.random() * 30) + 1;
+    progress += progressGain;
     
     if (progress >= 100) {
         progress = 100;
