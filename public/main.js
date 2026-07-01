@@ -27,6 +27,7 @@ const planetsData = [
         color: '#00f2ff',
         energyMax: 10000,
         energyRegen: 5,
+        regions: [
             { id: 'asia', name: 'Asia', buff: 'Click Power +50%', type: 'click', value: 0.5, cost: 10, d: "M138,15 L175,15 L188,35 L180,55 L165,72 L140,68 L128,50 L130,30 Z" },
             { id: 'europe', name: 'Europe', buff: 'Upgrade Cost -5%', type: 'cost', value: 0.05, cost: 50, d: "M95,12 L120,10 L128,28 L115,38 L100,35 L90,25 Z" },
             { id: 'na', name: 'North America', buff: 'Idle Power +50%', type: 'idle', value: 0.5, cost: 200, d: "M12,10 L68,10 L75,28 L70,48 L52,58 L22,55 L8,38 Z" },
