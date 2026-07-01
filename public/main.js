@@ -1647,7 +1647,10 @@ function gameLoop(currentTime) {
         if (r && r.type === 'energy') regen *= (1 + r.value);
     });
     
-    gameState.invasion.energy = Math.min(gameState.invasion.energyMax || 10000, (gameState.invasion.energy || 0) + regen * dt);
+    const currentPlanetData = planetsData[gameState.invasion.currentPlanet];
+    const maxE = currentPlanetData ? currentPlanetData.energyMax : 10000;
+    gameState.invasion.energyMax = maxE; // enforce to fix legacy saves
+    gameState.invasion.energy = Math.min(maxE, (gameState.invasion.energy || 0) + regen * dt);
 
     if (gameState.idlePower > 0) {
         const gain = gameState.idlePower * dt;
@@ -1713,6 +1716,12 @@ function loadGame() {
         delete gameState.invasionCount;
         
         // Calculate Offline Progress
+        
+        // Force update energyMax for legacy saves
+        if (gameState.invasion && planetsData[gameState.invasion.currentPlanet]) {
+            gameState.invasion.energyMax = planetsData[gameState.invasion.currentPlanet].energyMax;
+        }
+
         const now = Date.now();
         const offlineSecs = (now - gameState.lastSaveTime) / 1000;
         
