@@ -27,19 +27,16 @@ const planetsData = [
         color: '#00f2ff',
         energyMax: 10000,
         energyRegen: 5,
-        regions: [
-            { id: 'asia', name: 'Asia', buff: 'Click Power +50%', type: 'click', value: 0.5, cost: 200, d: "M138,15 L175,15 L188,35 L180,55 L165,72 L140,68 L128,50 L130,30 Z" },
-            { id: 'europe', name: 'Europe', buff: 'Upgrade Cost -5%', type: 'cost', value: 0.05, cost: 250, d: "M95,12 L120,10 L128,28 L115,38 L100,35 L90,25 Z" },
-            { id: 'na', name: 'North America', buff: 'Idle Power +50%', type: 'idle', value: 0.5, cost: 300, d: "M12,10 L68,10 L75,28 L70,48 L52,58 L22,55 L8,38 Z" },
-            { id: 'sa', name: 'South America', buff: 'RP Gain +20%', type: 'rp', value: 0.2, cost: 350, d: "M38,62 L65,60 L72,80 L65,94 L48,96 L35,82 Z" },
-            { id: 'africa', name: 'Africa', buff: 'Energy Regen +50%', type: 'energy', value: 0.5, cost: 400, d: "M98,50 L122,48 L130,68 L125,88 L108,92 L94,78 L92,60 Z" },
-            { id: 'oceania', name: 'Oceania', buff: 'Global Multiplier +50%', type: 'mult', value: 0.5, cost: 500, d: "M162,68 L185,65 L190,82 L178,90 L162,84 Z" },
-            { id: 'antarctica', name: 'Antarctica', buff: 'Global Multiplier x1.5', type: 'mult_total', value: 1.5, cost: 800, d: "M40,90 L160,90 L165,98 L35,98 Z" },
-            { id: 'middleeast', name: 'Middle East', buff: 'All Production x1.2', type: 'all_prod', value: 1.2, cost: 450, d: "M128,38 L148,35 L155,52 L138,58 L125,50 Z" },
-            { id: 'centralasia', name: 'Central Asia', buff: 'Idle Power +80%', type: 'idle', value: 0.8, cost: 550, d: "M138,15 L128,50 L140,68 L160,58 L168,35 L155,18 Z" },
-            { id: 'siberia', name: 'Siberia', buff: 'Energy Regen +100%', type: 'energy', value: 1.0, cost: 620, d: "M135,5 L185,5 L188,15 L175,15 L155,18 L140,15 Z" },
-            { id: 'greenland', name: 'Greenland', buff: 'Click Power +80%', type: 'click', value: 0.8, cost: 700, d: "M68,5 L88,5 L90,18 L78,22 L65,18 Z" },
-            { id: 'seabottom', name: 'Deep Ocean Floor', buff: 'Global Multiplier x2', type: 'mult_total', value: 2, cost: 1200, d: "M8,38 L22,55 L38,62 L35,82 L60,96 L65,94 L72,80 L65,60 L50,55 L30,48 Z" }
+            { id: 'asia', name: 'Asia', buff: 'Click Power +50%', type: 'click', value: 0.5, cost: 10, d: "M138,15 L175,15 L188,35 L180,55 L165,72 L140,68 L128,50 L130,30 Z" },
+            { id: 'europe', name: 'Europe', buff: 'Upgrade Cost -5%', type: 'cost', value: 0.05, cost: 50, d: "M95,12 L120,10 L128,28 L115,38 L100,35 L90,25 Z" },
+            { id: 'na', name: 'North America', buff: 'Idle Power +50%', type: 'idle', value: 0.5, cost: 200, d: "M12,10 L68,10 L75,28 L70,48 L52,58 L22,55 L8,38 Z" },
+            { id: 'sa', name: 'South America', buff: 'RP Gain +20%', type: 'rp', value: 0.2, cost: 500, d: "M38,62 L65,60 L72,80 L65,94 L48,96 L35,82 Z" },
+            { id: 'africa', name: 'Africa', buff: 'Energy Regen +50%', type: 'energy', value: 0.5, cost: 1000, d: "M98,50 L122,48 L130,68 L125,88 L108,92 L94,78 L92,60 Z" },
+            { id: 'oceania', name: 'Oceania', buff: 'Global Multiplier +50%', type: 'mult', value: 0.5, cost: 2500, d: "M162,68 L185,65 L190,82 L178,90 L162,84 Z" },
+            { id: 'antarctica', name: 'Antarctica', buff: 'Global Multiplier x1.5', type: 'mult_total', value: 1.5, cost: 5000, d: "M40,90 L160,90 L165,98 L35,98 Z" },
+            { id: 'atlantis', name: 'Atlantis', buff: 'All Production x2', type: 'all_prod', value: 2.0, cost: 7000, d: "M75,35 L90,30 L95,50 L80,55 Z" },
+            { id: 'lemuria', name: 'Lemuria', buff: 'Click Power +200%', type: 'click', value: 2.0, cost: 8500, d: "M130,70 L150,75 L155,90 L135,85 Z" },
+            { id: 'mu', name: 'Mu', buff: 'Global Multiplier x3', type: 'mult_total', value: 3.0, cost: 10000, d: "M10,60 L30,55 L35,75 L15,80 Z" }
         ]
     },
     {
@@ -1649,7 +1646,7 @@ function gameLoop(currentTime) {
         if (r && r.type === 'energy') regen *= (1 + r.value);
     });
     
-    gameState.invasion.energy = Math.min(gameState.invasion.energyMax || 100, (gameState.invasion.energy || 0) + regen * dt);
+    gameState.invasion.energy = Math.min(gameState.invasion.energyMax || 10000, (gameState.invasion.energy || 0) + regen * dt);
 
     if (gameState.idlePower > 0) {
         const gain = gameState.idlePower * dt;
@@ -1696,8 +1693,8 @@ function loadGame() {
         // Migration to Invasion 2.0
         if (!parsed.invasion) {
             parsed.invasion = {
-                energy: 100,
-                energyMax: 100,
+                energy: 10000,
+                energyMax: 10000,
                 energyRegen: 1,
                 currentPlanet: 0,
                 regionProgress: {},
