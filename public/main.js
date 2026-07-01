@@ -11,7 +11,7 @@ let gameState = {
     invasion: {
         energy: 10000,
         energyMax: 10000,
-        energyRegen: 25,
+        energyRegen: 5,
         currentPlanet: 0,
         regionProgress: {}, // regionId -> 0-100
         conqueredRegions: [] // list of regionIds
@@ -26,7 +26,7 @@ const planetsData = [
         name: 'Earth',
         color: '#00f2ff',
         energyMax: 10000,
-        energyRegen: 25,
+        energyRegen: 5,
         regions: [
             { id: 'asia',       name: 'Asia',            buff: 'Click Power +50%',          type: 'click',      value: 0.5,  cost: 10,   d: "M138,15 L175,15 L188,35 L180,55 L165,72 L140,68 L128,50 L130,30 Z" },
             { id: 'europe',     name: 'Europe',          buff: 'Upgrade Cost -5%',           type: 'cost',       value: 0.05, cost: 20,   d: "M95,12 L120,10 L128,28 L115,38 L100,35 L90,25 Z" },
@@ -45,7 +45,7 @@ const planetsData = [
         name: 'Mars',
         color: '#ff6633',
         energyMax: 10000,
-        energyRegen: 25,
+        energyRegen: 5,
         regions: [
             { id: 'valles',     name: 'Valles Marineris',  buff: 'Global Multiplier x2',       type: 'mult_total',   value: 2,    cost: 100,  d: "M25,45 L80,32 L135,42 L165,62 L145,80 L75,72 Z" },
             { id: 'olympus',    name: 'Olympus Mons',      buff: 'Click Power +200%',           type: 'click',        value: 2.0,  cost: 130,  d: "M78,15 L115,8 L128,25 L110,38 L82,35 Z" },
@@ -64,7 +64,7 @@ const planetsData = [
         name: 'Jupiter',
         color: '#ffcc99',
         energyMax: 10000,
-        energyRegen: 25,
+        energyRegen: 5,
         regions: [
             { id: 'grs',        name: 'Great Red Spot',         buff: 'Global Multiplier x10',    type: 'mult_total',  value: 10,   cost: 300,  d: "M72,45 Q100,28 145,48 T108,70 Z" },
             { id: 'europa',     name: 'Europa',                 buff: 'All Production x5',        type: 'all_prod',    value: 5,    cost: 400,  d: "M25,28 L60,18 L70,48 L38,58 Z" },
@@ -84,7 +84,7 @@ const planetsData = [
         name: 'Saturn',
         color: '#e6e600',
         energyMax: 10000,
-        energyRegen: 25,
+        energyRegen: 5,
         regions: [
             { id: 'rings_a',    name: 'A Ring',              buff: 'Global Multiplier x30',   type: 'mult_total', value: 30,  cost: 1000,  d: "M8,45 Q50,15 192,45 L190,52 Q50,22 10,52 Z" },
             { id: 'rings_b',    name: 'B Ring (Brightest)',   buff: 'Global Multiplier x50',   type: 'mult_total', value: 50,  cost: 1500,  d: "M12,55 Q55,28 188,55 L186,62 Q52,35 14,62 Z" },
@@ -104,7 +104,7 @@ const planetsData = [
         name: 'Neptune',
         color: '#3366ff',
         energyMax: 10000,
-        energyRegen: 25,
+        energyRegen: 5,
         regions: [
             { id: 'triton',      name: 'Triton',               buff: 'RP Gain x5',               type: 'rp_mult',    value: 5,    cost: 2000,  d: "M45,38 L85,28 L98,58 L58,68 Z" },
             { id: 'darkspot',    name: 'Great Dark Spot',       buff: 'Global Multiplier x500',   type: 'mult_total', value: 500,  cost: 2500,  d: "M105,38 Q128,18 172,38 T132,58 Z" },
@@ -123,7 +123,7 @@ const planetsData = [
         name: 'Pluto (Outer Rim)',
         color: '#ccccff',
         energyMax: 10000,
-        energyRegen: 25,
+        energyRegen: 5,
         regions: [
             { id: 'charon',    name: 'Charon',                      buff: 'Final Multiplier x1000',  type: 'mult_total', value: 1000, cost: 3000,  d: "M25,25 L65,25 L65,62 L25,62 Z" },
             { id: 'heart',     name: 'Tombaugh Regio (The Heart)',   buff: 'All Production x100',     type: 'all_prod',   value: 100,  cost: 4000,  d: "M95,38 Q118,18 142,38 L100,78 L58,38 Q82,18 95,38 Z" },
@@ -140,7 +140,7 @@ const planetsData = [
         name: 'Interstellar Space',
         color: '#aaaaaa',
         energyMax: 10000,
-        energyRegen: 25,
+        energyRegen: 5,
         regions: [
             { id: 'oort_cloud',     name: 'The Oort Cloud',            buff: 'Global Multiplier x10',    type: 'mult_total', value: 10,  cost: 5000,  d: "M10,10 Q50,0 100,10 T190,10 L190,90 Q150,100 100,90 T10,90 Z" },
             { id: 'voyager_zone',   name: 'Voyager Deadzone',          buff: 'All Production x500',      type: 'all_prod',   value: 500, cost: 6000,  d: "M20,40 L60,35 L65,65 L25,70 Z" },
@@ -154,7 +154,7 @@ const planetsData = [
         name: 'Alpha Centauri System',
         color: '#ffcc66',
         energyMax: 10000,
-        energyRegen: 25,
+        energyRegen: 5,
         regions: [
             { id: 'proxima_b',      name: 'Proxima Centauri b',      buff: 'Global Multiplier x200',    type: 'mult_total', value: 200,  cost: 6000,  d: "M30,30 Q60,10 90,30 L85,70 Q55,90 25,70 Z" },
             { id: 'alpha_a',        name: 'Centauri A Core',         buff: 'Idle Power +100,000%',      type: 'idle',       value: 1000, cost: 7000,  d: "M110,30 Q140,10 170,30 L165,70 Q135,90 105,70 Z" },
@@ -168,7 +168,7 @@ const planetsData = [
         name: 'The Galactic Center',
         color: '#ff33ff',
         energyMax: 10000,
-        energyRegen: 25,
+        energyRegen: 5,
         regions: [
             { id: 'orion_nebula',     name: 'Orion Nebula Birthplace',       buff: 'All Production x25',           type: 'all_prod',   value: 25,     cost: 7000,  d: "M10,20 Q60,5 110,20 L105,40 Q55,25 5,40 Z" },
             { id: 'pillars_creation', name: 'Pillars of Creation',           buff: 'Global Multiplier x5,000',     type: 'mult_total', value: 5000,   cost: 8000,  d: "M130,10 L160,10 L165,90 L125,90 Z" },
@@ -1641,15 +1641,19 @@ function gameLoop(currentTime) {
     lastTime = currentTime;
     
     // Invasion Energy Regen
-    let regen = gameState.invasion.energyRegen || 1;
-    gameState.invasion.conqueredRegions.forEach(rid => {
-        const r = getAllRegions().find(x => x.id === rid);
-        if (r && r.type === 'energy') regen *= (1 + r.value);
-    });
-    
     const currentPlanetData = planetsData[gameState.invasion.currentPlanet];
     const maxE = currentPlanetData ? currentPlanetData.energyMax : 10000;
-    gameState.invasion.energyMax = maxE; // enforce to fix legacy saves
+    const baseRegen = currentPlanetData ? currentPlanetData.energyRegen : 25;
+    gameState.invasion.energyMax = maxE;       // enforce to fix legacy saves
+    gameState.invasion.energyRegen = baseRegen; // enforce to fix legacy saves
+
+    let regen = baseRegen;
+    gameState.invasion.conqueredRegions.forEach(rid => {
+        const r = getAllRegions().find(x => x.id === rid);
+        if (r && r.type === 'energy') regen *= (1 + r.value);       // e.g. +50% regen
+        if (r && r.type === 'energy_mult') regen *= r.value;         // e.g. x2 regen
+    });
+
     gameState.invasion.energy = Math.min(maxE, (gameState.invasion.energy || 0) + regen * dt);
 
     if (gameState.idlePower > 0) {
