@@ -8,8 +8,9 @@ let gameState = {
     rebirthPoints: 0,
     achievements: [],
     timeSkipsUsed: 0,
+    constellation: {},
     invasion: {
-        energy: 10000,
+        energy: 0,
         energyMax: 10000,
         energyRegen: 5,
         currentPlanet: 0,
@@ -20,161 +21,288 @@ let gameState = {
     lastSaveTime: Date.now()
 };
 
+
+const constellationData = [
+    {
+        id: 'c_click',
+        name: 'Starlight Resonance',
+        desc: '+50% Click Power per level',
+        maxLevel: 20,
+        baseCost: 5,
+        costGrowth: 1.5,
+        effect: (level) => 1 + (level * 0.5) // Multiplier
+    },
+    {
+        id: 'c_idle',
+        name: 'Void Harvester',
+        desc: '+50% Idle Power per level',
+        maxLevel: 20,
+        baseCost: 5,
+        costGrowth: 1.5,
+        effect: (level) => 1 + (level * 0.5) // Multiplier
+    },
+    {
+        id: 'c_energy_start',
+        name: 'Cosmic Battery',
+        desc: 'Start with +10% Max Energy after Rebirth',
+        maxLevel: 10,
+        baseCost: 10,
+        costGrowth: 2.0,
+        effect: (level) => level * 0.1 // Additive %
+    },
+    {
+        id: 'c_cost',
+        name: 'Quantum Efficiency',
+        desc: '-2% all Upgrade Costs per level',
+        maxLevel: 25,
+        baseCost: 20,
+        costGrowth: 1.2,
+        effect: (level) => Math.max(0.1, 1 - (level * 0.02)) // Multiplier
+    },
+    {
+        id: 'c_regen',
+        name: 'Dark Matter Reactor',
+        desc: '+1 Base Energy Regen per sec per level',
+        maxLevel: 50,
+        baseCost: 15,
+        costGrowth: 1.3,
+        effect: (level) => level * 1 // Additive
+    }
+];
+
+function getConstellationLevel(id) {
+    if (!gameState.constellation) gameState.constellation = {};
+    return gameState.constellation[id] || 0;
+}
+
+function getConstellationEffect(id) {
+    const level = getConstellationLevel(id);
+    const skill = constellationData.find(s => s.id === id);
+    if (!skill) return 0;
+    return skill.effect(level);
+}
+
+function getConstellationCost(id) {
+    const level = getConstellationLevel(id);
+    const skill = constellationData.find(s => s.id === id);
+    if (!skill) return 999999;
+    return Math.floor(skill.baseCost * Math.pow(skill.costGrowth, level));
+}
+
+function renderConstellation() {
+    document.getElementById('constellation-rp').innerText = formatNumber(gameState.rebirthPoints);
+    const container = document.getElementById('constellation-nodes-container');
+    container.innerHTML = '';
+    
+    constellationData.forEach(skill => {
+        const level = getConstellationLevel(skill.id);
+        const cost = getConstellationCost(skill.id);
+        const isMax = level >= skill.maxLevel;
+        
+        const node = document.createElement('div');
+        node.className = 'constellation-node' + (isMax ? ' max-level' : '');
+        node.innerHTML = `
+            <div class="c-node-info">
+                <h3>${skill.name}</h3>
+                <p>${skill.desc}</p>
+                <div class="c-node-level">Level ${level} / ${skill.maxLevel}</div>
+            </div>
+            <div class="c-node-action">
+                ${isMax ? '<span style="color:#00f2ff; font-weight:bold;">MAXED</span>' : `
+                    <span class="c-node-cost">Cost: ${formatNumber(cost)} RP</span>
+                    <button class="action-btn" ${gameState.rebirthPoints < cost ? 'disabled' : ''}>Unlock</button>
+                `}
+            </div>
+        `;
+        
+        if (!isMax) {
+            const btn = node.querySelector('button');
+            btn.onclick = () => {
+                if (gameState.rebirthPoints >= cost) {
+                    gameState.rebirthPoints -= cost;
+                    gameState.constellation[skill.id] = level + 1;
+                    showToast(`${skill.name} upgraded!`, 'success');
+                    renderConstellation();
+                    updateDisplay();
+                }
+            };
+        }
+        
+        container.appendChild(node);
+    });
+}
+
 const planetsData = [
     {
         id: 'earth',
         name: 'Earth',
         color: '#00f2ff',
-        energyMax: 10000,
+        energyMax: 100,
         energyRegen: 5,
         regions: [
             { id: 'asia',       name: 'Asia',            buff: 'Click Power +50%',          type: 'click',      value: 0.5,  cost: 10,   d: "M138,15 L175,15 L188,35 L180,55 L165,72 L140,68 L128,50 L130,30 Z" },
             { id: 'europe',     name: 'Europe',          buff: 'Upgrade Cost -5%',           type: 'cost',       value: 0.05, cost: 20,   d: "M95,12 L120,10 L128,28 L115,38 L100,35 L90,25 Z" },
-            { id: 'na',        name: 'North America',    buff: 'Idle Power +50%',            type: 'idle',       value: 0.5,  cost: 35,   d: "M12,10 L68,10 L75,28 L70,48 L52,58 L22,55 L8,38 Z" },
-            { id: 'sa',        name: 'South America',    buff: 'RP Gain +20%',               type: 'rp',         value: 0.2,  cost: 50,   d: "M38,62 L65,60 L72,80 L65,94 L48,96 L35,82 Z" },
-            { id: 'africa',    name: 'Africa',           buff: 'Energy Regen +50%',          type: 'energy',     value: 0.5,  cost: 60,   d: "M98,50 L122,48 L130,68 L125,88 L108,92 L94,78 L92,60 Z" },
-            { id: 'oceania',   name: 'Oceania',          buff: 'Global Multiplier +50%',     type: 'mult',       value: 0.5,  cost: 75,   d: "M162,68 L185,65 L190,82 L178,90 L162,84 Z" },
-            { id: 'antarctica',name: 'Antarctica',       buff: 'Global Multiplier x1.5',     type: 'mult_total', value: 1.5,  cost: 80,   d: "M40,90 L160,90 L165,98 L35,98 Z" },
-            { id: 'atlantis',  name: 'Atlantis',         buff: 'All Production x2',          type: 'all_prod',   value: 2.0,  cost: 88,   d: "M75,35 L90,30 L95,50 L80,55 Z" },
-            { id: 'lemuria',   name: 'Lemuria',          buff: 'Click Power +200%',          type: 'click',      value: 2.0,  cost: 94,   d: "M130,70 L150,75 L155,90 L135,85 Z" },
-            { id: 'mu',        name: 'Mu',               buff: 'Global Multiplier x3',       type: 'mult_total', value: 3.0,  cost: 100,  d: "M10,60 L30,55 L35,75 L15,80 Z" }
+            { id: 'na',        name: 'North America',    buff: 'Idle Power +50%',            type: 'idle',       value: 0.5,  cost: 30,   d: "M12,10 L68,10 L75,28 L70,48 L52,58 L22,55 L8,38 Z" },
+            { id: 'sa',        name: 'South America',    buff: 'RP Gain +20%',               type: 'rp',         value: 0.2,  cost: 40,   d: "M38,62 L65,60 L72,80 L65,94 L48,96 L35,82 Z" },
+            { id: 'africa',    name: 'Africa',           buff: 'Energy Regen +100%',         type: 'energy',     value: 1.0,  cost: 50,   d: "M98,50 L122,48 L130,68 L125,88 L108,92 L94,78 L92,60 Z" },
+            { id: 'oceania',   name: 'Oceania',          buff: 'Global Multiplier +10%',     type: 'mult',       value: 0.1,  cost: 60,   d: "M162,68 L185,65 L190,82 L178,90 L162,84 Z" },
+            { id: 'antarctica',name: 'Antarctica',       buff: 'Global Multiplier x1.1',     type: 'mult_total', value: 1.1,  cost: 70,   d: "M40,90 L160,90 L165,98 L35,98 Z" },
+            { id: 'atlantis',  name: 'Atlantis',         buff: 'All Production x1.2',        type: 'all_prod',   value: 1.2,  cost: 80,   d: "M75,35 L90,30 L95,50 L80,55 Z" },
+            { id: 'lemuria',   name: 'Lemuria',          buff: 'Click Power +100%',          type: 'click',      value: 1.0,  cost: 90,   d: "M130,70 L150,75 L155,90 L135,85 Z" },
+            { id: 'mu',        name: 'Mu',               buff: 'Global Multiplier x1.2',     type: 'mult_total', value: 1.2,  cost: 100,  d: "M10,60 L30,55 L35,75 L15,80 Z" }
         ]
     },
     {
         id: 'mars',
         name: 'Mars',
         color: '#ff6633',
-        energyMax: 10000,
+        energyMax: 500,
         energyRegen: 5,
         regions: [
-            { id: 'valles',     name: 'Valles Marineris',  buff: 'Global Multiplier x2',       type: 'mult_total',   value: 2,    cost: 100,  d: "M25,45 L80,32 L135,42 L165,62 L145,80 L75,72 Z" },
-            { id: 'olympus',    name: 'Olympus Mons',      buff: 'Click Power +200%',           type: 'click',        value: 2.0,  cost: 130,  d: "M78,15 L115,8 L128,25 L110,38 L82,35 Z" },
-            { id: 'utopia',     name: 'Utopia Planitia',   buff: 'Idle Power +200%',            type: 'idle',         value: 2.0,  cost: 160,  d: "M138,15 L180,22 L175,45 L145,48 L132,32 Z" },
-            { id: 'hellas',     name: 'Hellas Planitia',   buff: 'Rebirth Points +100%',        type: 'rp',           value: 1.0,  cost: 190,  d: "M38,62 L78,55 L88,82 L65,90 L40,85 Z" },
-            { id: 'mars_poles', name: 'North Polar Cap',   buff: 'Energy Regen x2',             type: 'energy_mult',  value: 2,    cost: 210,  d: "M60,5 L145,5 L148,14 L58,14 Z" },
-            { id: 'south_pole', name: 'South Polar Cap',   buff: 'Energy Regen x2',             type: 'energy_mult',  value: 2,    cost: 230,  d: "M55,90 L148,90 L150,98 L52,98 Z" },
-            { id: 'elysium',    name: 'Elysium Planitia',  buff: 'All Production x1.5',         type: 'all_prod',     value: 1.5,  cost: 250,  d: "M148,48 L182,40 L188,68 L162,72 L145,65 Z" },
-            { id: 'argyre',     name: 'Argyre Basin',      buff: 'Upgrade Cost -15%',           type: 'cost',         value: 0.15, cost: 265,  d: "M30,70 L68,65 L72,85 L42,90 Z" },
-            { id: 'tharsis',    name: 'Tharsis Bulge',     buff: 'Click Power +300%',           type: 'click',        value: 3.0,  cost: 280,  d: "M38,35 L78,30 L82,55 L42,58 Z" },
-            { id: 'mars_core',  name: 'Martian Core',      buff: 'Global Multiplier x5',        type: 'mult_total',   value: 5,    cost: 300,  d: "M82,55 L135,42 L145,65 L88,82 L72,68 Z" }
+            { id: 'valles',     name: 'Valles Marineris',  buff: 'Global Multiplier x1.3',     type: 'mult_total',   value: 1.3,  cost: 120,  d: "M25,45 L80,32 L135,42 L165,62 L145,80 L75,72 Z" },
+            { id: 'olympus',    name: 'Olympus Mons',      buff: 'Click Power +150%',           type: 'click',        value: 1.5,  cost: 150,  d: "M78,15 L115,8 L128,25 L110,38 L82,35 Z" },
+            { id: 'utopia',     name: 'Utopia Planitia',   buff: 'Idle Power +150%',            type: 'idle',         value: 1.5,  cost: 200,  d: "M138,15 L180,22 L175,45 L145,48 L132,32 Z" },
+            { id: 'hellas',     name: 'Hellas Planitia',   buff: 'Rebirth Points +50%',         type: 'rp',           value: 0.5,  cost: 250,  d: "M38,62 L78,55 L88,82 L65,90 L40,85 Z" },
+            { id: 'mars_poles', name: 'North Polar Cap',   buff: 'Energy Regen x2.5',           type: 'energy_mult',  value: 2.5,  cost: 300,  d: "M60,5 L145,5 L148,14 L58,14 Z" },
+            { id: 'south_pole', name: 'South Polar Cap',   buff: 'Energy Regen x2.5',           type: 'energy_mult',  value: 2.5,  cost: 350,  d: "M55,90 L148,90 L150,98 L52,98 Z" },
+            { id: 'elysium',    name: 'Elysium Planitia',  buff: 'All Production x1.3',         type: 'all_prod',     value: 1.3,  cost: 400,  d: "M148,48 L182,40 L188,68 L162,72 L145,65 Z" },
+            { id: 'argyre',     name: 'Argyre Basin',      buff: 'Upgrade Cost -10%',           type: 'cost',         value: 0.1,  cost: 450,  d: "M30,70 L68,65 L72,85 L42,90 Z" },
+            { id: 'tharsis',    name: 'Tharsis Bulge',     buff: 'Click Power +200%',           type: 'click',        value: 2.0,  cost: 480,  d: "M38,35 L78,30 L82,55 L42,58 Z" },
+            { id: 'mars_core',  name: 'Martian Core',      buff: 'Global Multiplier x1.5',      type: 'mult_total',   value: 1.5,  cost: 500,  d: "M82,55 L135,42 L145,65 L88,82 L72,68 Z" }
         ]
     },
     {
         id: 'jupiter',
         name: 'Jupiter',
         color: '#ffcc99',
-        energyMax: 10000,
+        energyMax: 2000,
         energyRegen: 5,
         regions: [
-            { id: 'grs',        name: 'Great Red Spot',         buff: 'Global Multiplier x10',    type: 'mult_total',  value: 10,   cost: 300,  d: "M72,45 Q100,28 145,48 T108,70 Z" },
-            { id: 'europa',     name: 'Europa',                 buff: 'All Production x5',        type: 'all_prod',    value: 5,    cost: 400,  d: "M25,28 L60,18 L70,48 L38,58 Z" },
-            { id: 'ganymede',   name: 'Ganymede',               buff: 'Upgrade Cost -20%',        type: 'cost',        value: 0.2,  cost: 500,  d: "M128,15 L162,25 L155,55 L118,48 Z" },
-            { id: 'io',         name: 'Io',                     buff: 'Click Power +500%',        type: 'click',       value: 5.0,  cost: 600,  d: "M45,68 L80,62 L85,88 L52,94 Z" },
-            { id: 'callisto',   name: 'Callisto',               buff: 'Idle Power +500%',         type: 'idle',        value: 5.0,  cost: 700,  d: "M150,62 L185,55 L188,82 L162,88 Z" },
-            { id: 'band_north', name: 'Northern Bands',         buff: 'Energy Regen x2.5',        type: 'energy_mult', value: 2.5,  cost: 800,  d: "M8,12 L192,12 L190,25 L10,25 Z" },
-            { id: 'band_south', name: 'Southern Bands',         buff: 'Energy Regen x2.5',        type: 'energy_mult', value: 2.5,  cost: 850,  d: "M8,75 L192,75 L190,88 L10,88 Z" },
-            { id: 'polar_hex',  name: 'Polar Hexagon',          buff: 'Global Multiplier x15',    type: 'mult_total',  value: 15,   cost: 900,  d: "M80,5 L120,5 L140,15 L120,25 L80,25 L60,15 Z" },
-            { id: 'storm_belt', name: 'Equatorial Storm Belt',  buff: 'Click Power +800%',        type: 'click',       value: 8.0,  cost: 950,  d: "M10,38 L190,38 L188,52 L12,52 Z" },
-            { id: 'jupiter_core',name:'Metallic Core',          buff: 'Global Multiplier x25',    type: 'mult_total',  value: 25,   cost: 1000, d: "M70,28 L130,28 L140,55 L105,75 L65,55 Z" },
-            { id: 'amalthea',   name: 'Amalthea',               buff: 'RP Gain x2',               type: 'rp_mult',     value: 2,    cost: 1000, d: "M165,28 L188,22 L190,38 L170,42 Z" }
+            { id: 'grs',        name: 'Great Red Spot',         buff: 'Global Multiplier x2',     type: 'mult_total',  value: 2.0,  cost: 600,  d: "M72,45 Q100,28 145,48 T108,70 Z" },
+            { id: 'europa',     name: 'Europa',                 buff: 'All Production x1.5',      type: 'all_prod',    value: 1.5,  cost: 700,  d: "M25,28 L60,18 L70,48 L38,58 Z" },
+            { id: 'ganymede',   name: 'Ganymede',               buff: 'Upgrade Cost -15%',        type: 'cost',        value: 0.15, cost: 800,  d: "M128,15 L162,25 L155,55 L118,48 Z" },
+            { id: 'io',         name: 'Io',                     buff: 'Click Power +300%',        type: 'click',       value: 3.0,  cost: 900,  d: "M45,68 L80,62 L85,88 L52,94 Z" },
+            { id: 'callisto',   name: 'Callisto',               buff: 'Idle Power +300%',         type: 'idle',        value: 3.0,  cost: 1000, d: "M150,62 L185,55 L188,82 L162,88 Z" },
+            { id: 'band_north', name: 'Northern Bands',         buff: 'Energy Regen x1.5',        type: 'energy_mult', value: 1.5,  cost: 1200, d: "M8,12 L192,12 L190,25 L10,25 Z" },
+            { id: 'band_south', name: 'Southern Bands',         buff: 'Energy Regen x1.5',        type: 'energy_mult', value: 1.5,  cost: 1400, d: "M8,75 L192,75 L190,88 L10,88 Z" },
+            { id: 'polar_hex',  name: 'Polar Hexagon',          buff: 'Global Multiplier x2.5',   type: 'mult_total',  value: 2.5,  cost: 1600, d: "M80,5 L120,5 L140,15 L120,25 L80,25 L60,15 Z" },
+            { id: 'storm_belt', name: 'Equatorial Storm Belt',  buff: 'Click Power +400%',        type: 'click',       value: 4.0,  cost: 1800, d: "M10,38 L190,38 L188,52 L12,52 Z" },
+            { id: 'jupiter_core',name:'Metallic Core',          buff: 'Global Multiplier x3',     type: 'mult_total',  value: 3.0,  cost: 1900, d: "M70,28 L130,28 L140,55 L105,75 L65,55 Z" },
+            { id: 'amalthea',   name: 'Amalthea',               buff: 'RP Gain x1.5',             type: 'rp_mult',     value: 1.5,  cost: 2000, d: "M165,28 L188,22 L190,38 L170,42 Z" }
         ]
     },
     {
         id: 'saturn',
         name: 'Saturn',
         color: '#e6e600',
-        energyMax: 10000,
+        energyMax: 8000,
         energyRegen: 5,
         regions: [
-            { id: 'rings_a',    name: 'A Ring',              buff: 'Global Multiplier x30',   type: 'mult_total', value: 30,  cost: 1000,  d: "M8,45 Q50,15 192,45 L190,52 Q50,22 10,52 Z" },
-            { id: 'rings_b',    name: 'B Ring (Brightest)',   buff: 'Global Multiplier x50',   type: 'mult_total', value: 50,  cost: 1500,  d: "M12,55 Q55,28 188,55 L186,62 Q52,35 14,62 Z" },
-            { id: 'rings_c',    name: 'C Ring',              buff: 'Idle Power +800%',         type: 'idle',       value: 8.0, cost: 1800,  d: "M15,38 Q55,8 185,38 L183,45 Q52,15 17,45 Z" },
-            { id: 'titan',      name: 'Titan',               buff: 'Idle Power +1000%',        type: 'idle',       value: 10,  cost: 2200,  d: "M35,18 L72,12 L85,42 L48,48 Z" },
-            { id: 'enceladus',  name: 'Enceladus',           buff: 'Energy Regen x3',          type: 'energy_mult',value: 3,   cost: 2500,  d: "M118,58 L150,52 L158,82 L128,88 Z" },
-            { id: 'mimas',      name: 'Mimas',               buff: 'Upgrade Cost -25%',        type: 'cost',       value: 0.25,cost: 2800,  d: "M158,15 L182,10 L188,30 L165,35 Z" },
-            { id: 'rhea',       name: 'Rhea',                buff: 'Click Power +1000%',       type: 'click',      value: 10.0,cost: 3200,  d: "M38,68 L70,62 L75,88 L42,92 Z" },
-            { id: 'dione',      name: 'Dione',               buff: 'RP Gain x3',               type: 'rp_mult',    value: 3,   cost: 3600,  d: "M155,62 L182,58 L185,80 L158,85 Z" },
-            { id: 'saturn_poles',name:'Saturn Storm Poles',  buff: 'All Production x3',        type: 'all_prod',   value: 3,   cost: 4200,  d: "M70,5 L132,5 L135,15 L68,15 Z" },
-            { id: 'cassini_div',name: 'Cassini Division',    buff: 'Global Multiplier x80',    type: 'mult_total', value: 80,  cost: 4700,  d: "M12,62 Q55,35 188,62 L186,68 Q52,42 14,68 Z" },
-            { id: 'saturn_core',name: 'Saturn Core',         buff: 'Global Multiplier x100',   type: 'mult_total', value: 100, cost: 5000,  d: "M72,25 L128,25 L140,68 L100,80 L60,68 Z" }
+            { id: 'rings_a',    name: 'A Ring',              buff: 'Global Multiplier x3.5',  type: 'mult_total', value: 3.5,  cost: 2500,  d: "M8,45 Q50,15 192,45 L190,52 Q50,22 10,52 Z" },
+            { id: 'rings_b',    name: 'B Ring (Brightest)',   buff: 'Global Multiplier x4',    type: 'mult_total', value: 4.0,  cost: 3000,  d: "M12,55 Q55,28 188,55 L186,62 Q52,35 14,62 Z" },
+            { id: 'rings_c',    name: 'C Ring',              buff: 'Idle Power +500%',         type: 'idle',       value: 5.0,  cost: 3500,  d: "M15,38 Q55,8 185,38 L183,45 Q52,15 17,45 Z" },
+            { id: 'titan',      name: 'Titan',               buff: 'Idle Power +600%',         type: 'idle',       value: 6.0,  cost: 4000,  d: "M35,18 L72,12 L85,42 L48,48 Z" },
+            { id: 'enceladus',  name: 'Enceladus',           buff: 'Energy Regen x1.2',        type: 'energy_mult',value: 1.2,  cost: 4500,  d: "M118,58 L150,52 L158,82 L128,88 Z" },
+            { id: 'mimas',      name: 'Mimas',               buff: 'Upgrade Cost -20%',        type: 'cost',       value: 0.2,  cost: 5000,  d: "M158,15 L182,10 L188,30 L165,35 Z" },
+            { id: 'rhea',       name: 'Rhea',                buff: 'Click Power +600%',        type: 'click',      value: 6.0,  cost: 5500,  d: "M38,68 L70,62 L75,88 L42,92 Z" },
+            { id: 'dione',      name: 'Dione',               buff: 'RP Gain x2',               type: 'rp_mult',    value: 2.0,  cost: 6000,  d: "M155,62 L182,58 L185,80 L158,85 Z" },
+            { id: 'saturn_poles',name:'Saturn Storm Poles',  buff: 'All Production x2',        type: 'all_prod',   value: 2.0,  cost: 7000,  d: "M70,5 L132,5 L135,15 L68,15 Z" },
+            { id: 'cassini_div',name: 'Cassini Division',    buff: 'Global Multiplier x5',     type: 'mult_total', value: 5.0,  cost: 7500,  d: "M12,62 Q55,35 188,62 L186,68 Q52,42 14,68 Z" },
+            { id: 'saturn_core',name: 'Saturn Core',         buff: 'Global Multiplier x6',     type: 'mult_total', value: 6.0,  cost: 8000,  d: "M72,25 L128,25 L140,68 L100,80 L60,68 Z" }
         ]
     },
     {
         id: 'neptune',
         name: 'Neptune',
         color: '#3366ff',
-        energyMax: 10000,
+        energyMax: 25000,
         energyRegen: 5,
         regions: [
-            { id: 'triton',      name: 'Triton',               buff: 'RP Gain x5',               type: 'rp_mult',    value: 5,    cost: 2000,  d: "M45,38 L85,28 L98,58 L58,68 Z" },
-            { id: 'darkspot',    name: 'Great Dark Spot',       buff: 'Global Multiplier x500',   type: 'mult_total', value: 500,  cost: 2500,  d: "M105,38 Q128,18 172,38 T132,58 Z" },
-            { id: 'neptune_core',name: 'Frozen Core',           buff: 'All Costs -50%',           type: 'cost',       value: 0.5,  cost: 2800,  d: "M75,68 L125,68 L122,94 L78,94 Z" },
-            { id: 'nereid',      name: 'Nereid',                buff: 'Click Power +2000%',        type: 'click',      value: 20.0, cost: 3200,  d: "M155,20 L182,15 L188,38 L162,42 Z" },
-            { id: 'proteus',     name: 'Proteus',               buff: 'Idle Power +2000%',         type: 'idle',       value: 20.0, cost: 3500,  d: "M15,50 L48,44 L52,68 L18,72 Z" },
-            { id: 'polar_vortex',name: 'Polar Vortex',          buff: 'Energy Regen x5',           type: 'energy_mult',value: 5,    cost: 3800,  d: "M72,5 L128,5 L132,18 L68,18 Z" },
-            { id: 'nep_ring',    name: 'Adams Ring',            buff: 'Global Multiplier x300',   type: 'mult_total', value: 300,  cost: 4200,  d: "M10,32 Q50,5 190,32 L188,40 Q48,12 12,40 Z" },
-            { id: 'storm_bands', name: 'Methane Storm Bands',   buff: 'All Production x8',        type: 'all_prod',   value: 8,    cost: 4600,  d: "M10,45 L190,45 L188,58 L12,58 Z" },
-            { id: 'nep_magnetic',name: 'Magnetic Pole',         buff: 'Global Multiplier x800',   type: 'mult_total', value: 800,  cost: 4800,  d: "M72,88 L128,88 L132,98 L68,98 Z" },
-            { id: 'deep_ocean',  name: 'Water-Ice Mantle',      buff: 'Global Multiplier x10',    type: 'mult_total', value: 10,   cost: 5000,  d: "M48,20 L152,20 L165,68 L100,80 L35,68 Z" }
+            { id: 'triton',      name: 'Triton',               buff: 'RP Gain x2.5',             type: 'rp_mult',    value: 2.5,  cost: 9000,  d: "M45,38 L85,28 L98,58 L58,68 Z" },
+            { id: 'darkspot',    name: 'Great Dark Spot',       buff: 'Global Multiplier x8',     type: 'mult_total', value: 8.0,  cost: 10000, d: "M105,38 Q128,18 172,38 T132,58 Z" },
+            { id: 'neptune_core',name: 'Frozen Core',           buff: 'All Costs -25%',           type: 'cost',       value: 0.25, cost: 12000, d: "M75,68 L125,68 L122,94 L78,94 Z" },
+            { id: 'nereid',      name: 'Nereid',                buff: 'Click Power +1000%',        type: 'click',      value: 10.0, cost: 14000, d: "M155,20 L182,15 L188,38 L162,42 Z" },
+            { id: 'proteus',     name: 'Proteus',               buff: 'Idle Power +1000%',         type: 'idle',       value: 10.0, cost: 16000, d: "M15,50 L48,44 L52,68 L18,72 Z" },
+            { id: 'polar_vortex',name: 'Polar Vortex',          buff: 'Energy Regen x1.1',         type: 'energy_mult',value: 1.1,  cost: 18000, d: "M72,5 L128,5 L132,18 L68,18 Z" },
+            { id: 'nep_ring',    name: 'Adams Ring',            buff: 'Global Multiplier x7',     type: 'mult_total', value: 7.0,  cost: 20000, d: "M10,32 Q50,5 190,32 L188,40 Q48,12 12,40 Z" },
+            { id: 'storm_bands', name: 'Methane Storm Bands',   buff: 'All Production x2.5',      type: 'all_prod',   value: 2.5,  cost: 22000, d: "M10,45 L190,45 L188,58 L12,58 Z" },
+            { id: 'nep_magnetic',name: 'Magnetic Pole',         buff: 'Global Multiplier x10',    type: 'mult_total', value: 10.0, cost: 24000, d: "M72,88 L128,88 L132,98 L68,98 Z" },
+            { id: 'deep_ocean',  name: 'Water-Ice Mantle',      buff: 'Global Multiplier x3',     type: 'mult_total', value: 3.0,  cost: 25000, d: "M48,20 L152,20 L165,68 L100,80 L35,68 Z" }
         ]
     },
     {
         id: 'pluto',
         name: 'Pluto (Outer Rim)',
         color: '#ccccff',
-        energyMax: 10000,
+        energyMax: 80000,
         energyRegen: 5,
         regions: [
-            { id: 'charon',    name: 'Charon',                      buff: 'Final Multiplier x1000',  type: 'mult_total', value: 1000, cost: 3000,  d: "M25,25 L65,25 L65,62 L25,62 Z" },
-            { id: 'heart',     name: 'Tombaugh Regio (The Heart)',   buff: 'All Production x100',     type: 'all_prod',   value: 100,  cost: 4000,  d: "M95,38 Q118,18 142,38 L100,78 L58,38 Q82,18 95,38 Z" },
-            { id: 'norgay',    name: 'Norgay Montes',               buff: 'Click Power +5000%',       type: 'click',      value: 50.0, cost: 5000,  d: "M148,55 L182,48 L188,75 L158,80 Z" },
-            { id: 'sputnik',   name: 'Sputnik Planitia',            buff: 'Idle Power +5000%',        type: 'idle',       value: 50.0, cost: 6000,  d: "M58,38 L95,38 L100,78 L50,70 Z" },
-            { id: 'pluto_poles',name:'Polar Ice Plains',             buff: 'Energy Regen x10',         type: 'energy_mult',value: 10,   cost: 7000,  d: "M40,5 L165,5 L168,18 L38,18 Z" },
-            { id: 'hydra',     name: 'Hydra Moon',                  buff: 'RP Gain x10',              type: 'rp_mult',    value: 10,   cost: 8000,  d: "M165,22 L190,18 L192,40 L168,44 Z" },
-            { id: 'nix_moon',  name: 'Nix Moon',                    buff: 'Global Multiplier x10',    type: 'mult_total', value: 10,   cost: 9000,  d: "M10,30 L35,25 L38,50 L12,54 Z" },
-            { id: 'pluto_core',name: 'Ancient Frozen Core',         buff: 'Global Multiplier x1000',  type: 'mult_total', value: 1000, cost: 10000, d: "M65,25 L142,38 L158,80 L100,92 L40,70 L25,62 Z" }
+            { id: 'charon',    name: 'Charon',                      buff: 'Final Multiplier x12',    type: 'mult_total', value: 12.0, cost: 30000, d: "M25,25 L65,25 L65,62 L25,62 Z" },
+            { id: 'heart',     name: 'Tombaugh Regio (The Heart)',   buff: 'All Production x3',       type: 'all_prod',   value: 3.0,  cost: 40000, d: "M95,38 Q118,18 142,38 L100,78 L58,38 Q82,18 95,38 Z" },
+            { id: 'norgay',    name: 'Norgay Montes',               buff: 'Click Power +2000%',       type: 'click',      value: 20.0, cost: 50000, d: "M148,55 L182,48 L188,75 L158,80 Z" },
+            { id: 'sputnik',   name: 'Sputnik Planitia',            buff: 'Idle Power +2000%',        type: 'idle',       value: 20.0, cost: 60000, d: "M58,38 L95,38 L100,78 L50,70 Z" },
+            { id: 'pluto_poles',name:'Polar Ice Plains',             buff: 'Energy Regen x1.05',       type: 'energy_mult',value: 1.05, cost: 70000, d: "M40,5 L165,5 L168,18 L38,18 Z" },
+            { id: 'hydra',     name: 'Hydra Moon',                  buff: 'RP Gain x3',               type: 'rp_mult',    value: 3.0,  cost: 75000, d: "M165,22 L190,18 L192,40 L168,44 Z" },
+            { id: 'nix_moon',  name: 'Nix Moon',                    buff: 'Global Multiplier x4',     type: 'mult_total', value: 4.0,  cost: 78000, d: "M10,30 L35,25 L38,50 L12,54 Z" },
+            { id: 'pluto_core',name: 'Ancient Frozen Core',         buff: 'Global Multiplier x15',    type: 'mult_total', value: 15.0, cost: 80000, d: "M65,25 L142,38 L158,80 L100,92 L40,70 L25,62 Z" }
         ]
     },
     {
         id: 'interstellar',
         name: 'Interstellar Space',
         color: '#aaaaaa',
-        energyMax: 10000,
+        energyMax: 200000,
         energyRegen: 5,
         regions: [
-            { id: 'oort_cloud',     name: 'The Oort Cloud',            buff: 'Global Multiplier x10',    type: 'mult_total', value: 10,  cost: 5000,  d: "M10,10 Q50,0 100,10 T190,10 L190,90 Q150,100 100,90 T10,90 Z" },
-            { id: 'voyager_zone',   name: 'Voyager Deadzone',          buff: 'All Production x500',      type: 'all_prod',   value: 500, cost: 6000,  d: "M20,40 L60,35 L65,65 L25,70 Z" },
-            { id: 'rogue_planet',   name: 'Wandering Rogue Planet',    buff: 'Click Power +20,000%',     type: 'click',      value: 200, cost: 7500,  d: "M140,40 L180,35 L185,65 L145,70 Z" },
-            { id: 'heliopause',     name: 'Heliopause Border',         buff: 'Energy Regen x20',         type: 'energy_mult',value: 20,  cost: 8500,  d: "M70,20 L130,20 L135,80 L65,80 Z" },
-            { id: 'dark_matter_sea',name: 'Dark Matter Sea',           buff: 'Global Multiplier x50',    type: 'mult_total', value: 50,  cost: 10000, d: "M80,30 L120,30 L125,70 L75,70 Z" }
+            { id: 'oort_cloud',     name: 'The Oort Cloud',            buff: 'Global Multiplier x5',     type: 'mult_total', value: 5.0,  cost: 100000, d: "M10,10 Q50,0 100,10 T190,10 L190,90 Q150,100 100,90 T10,90 Z" },
+            { id: 'voyager_zone',   name: 'Voyager Deadzone',          buff: 'All Production x4',        type: 'all_prod',   value: 4.0,  cost: 120000, d: "M20,40 L60,35 L65,65 L25,70 Z" },
+            { id: 'rogue_planet',   name: 'Wandering Rogue Planet',    buff: 'Click Power +5000%',       type: 'click',      value: 50.0, cost: 150000, d: "M140,40 L180,35 L185,65 L145,70 Z" },
+            { id: 'heliopause',     name: 'Heliopause Border',         buff: 'Energy Regen x1.02',       type: 'energy_mult',value: 1.02, cost: 180000, d: "M70,20 L130,20 L135,80 L65,80 Z" },
+            { id: 'dark_matter_sea',name: 'Dark Matter Sea',           buff: 'Global Multiplier x10',    type: 'mult_total', value: 10.0, cost: 200000, d: "M80,30 L120,30 L125,70 L75,70 Z" }
         ]
     },
     {
         id: 'alpha_centauri',
         name: 'Alpha Centauri System',
         color: '#ffcc66',
-        energyMax: 10000,
+        energyMax: 450000,
         energyRegen: 5,
         regions: [
-            { id: 'proxima_b',      name: 'Proxima Centauri b',      buff: 'Global Multiplier x200',    type: 'mult_total', value: 200,  cost: 6000,  d: "M30,30 Q60,10 90,30 L85,70 Q55,90 25,70 Z" },
-            { id: 'alpha_a',        name: 'Centauri A Core',         buff: 'Idle Power +100,000%',      type: 'idle',       value: 1000, cost: 7000,  d: "M110,30 Q140,10 170,30 L165,70 Q135,90 105,70 Z" },
-            { id: 'alpha_b',        name: 'Centauri B Core',         buff: 'Click Power +100,000%',     type: 'click',      value: 1000, cost: 8000,  d: "M90,30 L110,30 L105,70 L85,70 Z" },
-            { id: 'binary_bridge',  name: 'Binary Star Bridge',      buff: 'All Production x10',        type: 'all_prod',   value: 10,   cost: 9000,  d: "M70,40 L130,40 L125,60 L65,60 Z" },
-            { id: 'centauri_dyson', name: 'Dyson Sphere Prototype',  buff: 'Global Multiplier x1,000',  type: 'mult_total', value: 1000, cost: 10000, d: "M50,15 L150,15 L155,85 L45,85 Z" }
+            { id: 'proxima_b',      name: 'Proxima Centauri b',      buff: 'Global Multiplier x15',     type: 'mult_total', value: 15.0, cost: 250000, d: "M30,30 Q60,10 90,30 L85,70 Q55,90 25,70 Z" },
+            { id: 'alpha_a',        name: 'Centauri A Core',         buff: 'Idle Power +10000%',        type: 'idle',       value: 100.0,cost: 300000, d: "M110,30 Q140,10 170,30 L165,70 Q135,90 105,70 Z" },
+            { id: 'alpha_b',        name: 'Centauri B Core',         buff: 'Click Power +10000%',       type: 'click',      value: 100.0,cost: 350000, d: "M90,30 L110,30 L105,70 L85,70 Z" },
+            { id: 'binary_bridge',  name: 'Binary Star Bridge',      buff: 'All Production x5',         type: 'all_prod',   value: 5.0,  cost: 400000, d: "M70,40 L130,40 L125,60 L65,60 Z" },
+            { id: 'centauri_dyson', name: 'Dyson Sphere Prototype',  buff: 'Global Multiplier x25',     type: 'mult_total', value: 25.0, cost: 450000, d: "M50,15 L150,15 L155,85 L45,85 Z" }
         ]
     },
     {
         id: 'galactic_center',
         name: 'The Galactic Center',
         color: '#ff33ff',
-        energyMax: 10000,
+        energyMax: 750000,
         energyRegen: 5,
         regions: [
-            { id: 'orion_nebula',     name: 'Orion Nebula Birthplace',       buff: 'All Production x25',           type: 'all_prod',   value: 25,     cost: 7000,  d: "M10,20 Q60,5 110,20 L105,40 Q55,25 5,40 Z" },
-            { id: 'pillars_creation', name: 'Pillars of Creation',           buff: 'Global Multiplier x5,000',     type: 'mult_total', value: 5000,   cost: 8000,  d: "M130,10 L160,10 L165,90 L125,90 Z" },
-            { id: 'neutron_star',     name: 'Pulsar Matrix',                 buff: 'RP Gain x100',                 type: 'rp_mult',    value: 100,    cost: 8500,  d: "M20,60 L80,55 L85,85 L15,90 Z" },
-            { id: 'accretion_disk',   name: 'Accretion Disk',                buff: 'Energy Regen x100',            type: 'energy_mult',value: 100,    cost: 9000,  d: "M40,30 Q100,10 160,30 L155,70 Q95,90 35,70 Z" },
-            { id: 'sagittarius_a',    name: 'Sagittarius A* (Supermassive)', buff: 'Global Multiplier x100,000',   type: 'mult_total', value: 100000, cost: 10000, d: "M70,30 A30,30 0 1,1 130,70 A30,30 0 1,1 70,30 Z" }
+            { id: 'orion_nebula',     name: 'Orion Nebula',                  buff: 'All Production x6',            type: 'all_prod',   value: 6.0,  cost: 500000, d: "M10,20 Q60,5 110,20 L105,40 Q55,25 5,40 Z" },
+            { id: 'pillars_creation', name: 'Pillars of Creation',           buff: 'Global Multiplier x35',        type: 'mult_total', value: 35.0, cost: 550000, d: "M130,10 L160,10 L165,90 L125,90 Z" },
+            { id: 'neutron_star',     name: 'Pulsar Matrix',                 buff: 'RP Gain x10',                  type: 'rp_mult',    value: 10.0, cost: 600000, d: "M20,60 L80,55 L85,85 L15,90 Z" },
+            { id: 'accretion_disk',   name: 'Accretion Disk',                buff: 'Energy Regen x1.01',           type: 'energy_mult',value: 1.01, cost: 650000, d: "M40,30 Q100,10 160,30 L155,70 Q95,90 35,70 Z" },
+            { id: 'sagittarius_a',    name: 'Sagittarius A*',                buff: 'Global Multiplier x50',        type: 'mult_total', value: 50.0, cost: 750000, d: "M70,30 A30,30 0 1,1 130,70 A30,30 0 1,1 70,30 Z" }
+        ]
+    },
+    {
+        id: 'andromeda',
+        name: 'Andromeda Galaxy',
+        color: '#ff00aa',
+        energyMax: 1000000,
+        energyRegen: 5,
+        regions: [
+            { id: 'andromeda_edge',   name: 'Andromeda Edge',                buff: 'Energy Regen x1.01',           type: 'energy_mult',value: 1.01, cost: 800000, d: "M20,20 Q50,0 80,20 T140,20 L140,80 Q110,100 80,80 T20,80 Z" },
+            { id: 'm32',              name: 'M32 Satellite',                 buff: 'All Production x8',            type: 'all_prod',   value: 8.0,  cost: 850000, d: "M150,15 L180,10 L185,40 L155,45 Z" },
+            { id: 'm110',             name: 'M110 Satellite',                buff: 'Global Multiplier x60',        type: 'mult_total', value: 60.0, cost: 900000, d: "M10,80 L40,75 L45,95 L15,100 Z" },
+            { id: 'andromeda_arms',   name: 'Spiral Arms',                   buff: 'Idle Power +20000%',           type: 'idle',       value: 200.0,cost: 930000, d: "M50,50 A40,40 0 0,1 130,50 A40,40 0 0,1 50,50" },
+            { id: 'andromeda_core',   name: 'Andromeda Core',                buff: 'RP Gain x20',                  type: 'rp_mult',    value: 20.0, cost: 960000, d: "M80,40 L100,40 L105,60 L75,60 Z" },
+            { id: 'supermassive',     name: 'Supermassive Black Hole',       buff: 'Click Power +20000%',          type: 'click',      value: 200.0,cost: 980000, d: "M85,45 A5,5 0 1,1 95,45 A5,5 0 1,1 85,45" },
+            { id: 'universal_nexus',  name: 'Universal Nexus',               buff: 'Global Multiplier x100',       type: 'mult_total', value: 100.0,cost: 1000000,d: "M0,0 L200,0 L200,100 L0,100 Z" }
         ]
     }
 ];
@@ -1613,6 +1741,8 @@ document.getElementById('rebirth-btn').addEventListener('click', () => {
     
     if (confirm(`Do you want to rebirth? All progress will be reset and you will receive ${formatNumber(earned)} RP.`)) {
         gameState.rebirthPoints += earned;
+        const startE = gameState.invasion.energyMax * getConstellationEffect('c_energy_start');
+        gameState.invasion.energy = startE;
         
         // Reset everything else
         gameState.raibos = 0;
@@ -1643,7 +1773,7 @@ function gameLoop(currentTime) {
     // Invasion Energy Regen
     const currentPlanetData = planetsData[gameState.invasion.currentPlanet];
     const maxE = currentPlanetData ? currentPlanetData.energyMax : 10000;
-    const baseRegen = currentPlanetData ? currentPlanetData.energyRegen : 25;
+    const baseRegen = (currentPlanetData ? currentPlanetData.energyRegen : 25) + getConstellationEffect('c_regen');
     gameState.invasion.energyMax = maxE;       // enforce to fix legacy saves
     gameState.invasion.energyRegen = baseRegen; // enforce to fix legacy saves
 
@@ -1701,7 +1831,7 @@ function loadGame() {
         // Migration to Invasion 2.0
         if (!parsed.invasion) {
             parsed.invasion = {
-                energy: 10000,
+                energy: 0,
                 energyMax: 10000,
                 energyRegen: 1,
                 currentPlanet: 0,

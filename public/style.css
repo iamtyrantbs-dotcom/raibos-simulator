@@ -806,3 +806,58 @@ body::before {
     text-decoration: line-through;
     opacity: 0.7;
 }
+
+/* Constellation Nodes */
+.constellation-node {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(157, 80, 187, 0.5);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.constellation-node:hover {
+    background: rgba(157, 80, 187, 0.2);
+    border-color: #ffcc00;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+}
+
+.constellation-node.max-level {
+    border-color: #00f2ff;
+    background: rgba(0, 242, 255, 0.1);
+}
+
+.c-node-info h3 {
+    margin: 0 0 5px 0;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.c-node-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #bbb;
+}
+
+.c-node-level {
+    color: #ffcc00;
+    font-weight: bold;
+    margin-top: 5px;
+    font-size: 0.9rem;
+}
+
+.c-node-action {
+    text-align: right;
+}
+
+.c-node-cost {
+    display: block;
+    color: #ffaa00;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
