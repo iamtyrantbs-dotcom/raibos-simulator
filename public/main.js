@@ -67,7 +67,170 @@ const constellationData = [
         baseCost: 15,
         costGrowth: 1.3,
         effect: (level) => level * 1 // Additive
+    },
+    {
+        id: 'c_rp',
+        name: 'Celestial Harvest',
+        desc: '+10% RP gained on each Rebirth per level',
+        maxLevel: 20,
+        baseCost: 25,
+        costGrowth: 1.6,
+        effect: (level) => 1 + (level * 0.1) // Multiplier on RP earned
+    },
+    {
+        id: 'c_global',
+        name: 'Nebula Amplifier',
+        desc: '+5% Global Multiplier per level (permanent)',
+        maxLevel: 30,
+        baseCost: 50,
+        costGrowth: 1.4,
+        effect: (level) => level * 0.05 // Additive to global mult
+    },
+    {
+        id: 'c_invasion_cost',
+        name: 'Warp Infiltration',
+        desc: '-2% Invasion Energy Cost per level',
+        maxLevel: 30,
+        baseCost: 30,
+        costGrowth: 1.3,
+        effect: (level) => Math.max(0.1, 1 - level * 0.02)
+    },
+    {
+        id: 'c_energy_max',
+        name: 'Stellar Capacitor',
+        desc: '+5% Max Energy Capacity per level',
+        maxLevel: 20,
+        baseCost: 40,
+        costGrowth: 1.5,
+        effect: (level) => 1 + (level * 0.05) // Multiplier on energyMax
+    },
+    {
+        id: 'c_invasion_progress',
+        name: 'Quantum Strike',
+        desc: '+5% min invasion progress per level (raises floor)',
+        maxLevel: 10,
+        baseCost: 100,
+        costGrowth: 2.0,
+        effect: (level) => level * 5 // adds % to random floor
+    },
+    {
+        id: 'c_offline',
+        name: 'Chrono Echo',
+        desc: '+10% Offline Production Gain per level',
+        maxLevel: 20,
+        baseCost: 20,
+        costGrowth: 1.4,
+        effect: (level) => 1 + (level * 0.1) // Multiplier
+    },
+    {
+        id: 'c_click_idle_sync',
+        name: 'Harmonic Resonance',
+        desc: '+1% of Idle Power added as Click Power per level',
+        maxLevel: 25,
+        baseCost: 35,
+        costGrowth: 1.5,
+        effect: (level) => level * 0.01 // Fraction of idlePower added
+    },
+    {
+        id: 'c_rp_mult_decay',
+        name: 'Eternal Covenant',
+        desc: 'Each RP gives +0.1% more to Global Multiplier per level',
+        maxLevel: 10,
+        baseCost: 200,
+        costGrowth: 3.0,
+        effect: (level) => 0.05 + (level * 0.001)
+    },
+    {
+        id: 'c_timeskip',
+        name: 'Temporal Rift',
+        desc: '+1 minute added to each Time Skip per level',
+        maxLevel: 10,
+        baseCost: 80,
+        costGrowth: 2.0,
+        effect: (level) => level * 60 // Extra seconds
+    },
+    {
+        id: 'c_achv_bonus',
+        name: 'Cosmic Record',
+        desc: '+5% Achievement bonus multiplier per level',
+        maxLevel: 15,
+        baseCost: 60,
+        costGrowth: 1.7,
+        effect: (level) => 1 + (level * 0.05)
+    },
+    {
+        id: 'c_region_rp',
+        name: 'Conquest Dividend',
+        desc: '+2 RP earned per conquered region on Rebirth per level',
+        maxLevel: 20,
+        baseCost: 30,
+        costGrowth: 1.5,
+        effect: (level) => level * 2
+    },
+    {
+        id: 'c_energy_on_conquest',
+        name: 'Spoils of War',
+        desc: '+5% Max Energy restored on each region conquest per level',
+        maxLevel: 10,
+        baseCost: 50,
+        costGrowth: 1.8,
+        effect: (level) => level * 0.05
+    },
+    {
+        id: 'c_click_multiplier_spike',
+        name: 'Nova Burst',
+        desc: '+10% chance per level to double a click power',
+        maxLevel: 10,
+        baseCost: 75,
+        costGrowth: 2.0,
+        effect: (level) => level * 0.10
+    },
+    {
+        id: 'c_idle_floor',
+        name: 'Void Anchor',
+        desc: 'Prevents Idle Power from going below 1 × level on Rebirth',
+        maxLevel: 5,
+        baseCost: 150,
+        costGrowth: 3.0,
+        effect: (level) => level * 1
+    },
+    {
+        id: 'c_upgrade_speed',
+        name: 'Warp Fabrication',
+        desc: '+3% Raibos production bonus for every upgrade level you own (total)',
+        maxLevel: 10,
+        baseCost: 45,
+        costGrowth: 1.6,
+        effect: (level) => level * 0.03
+    },
+    {
+        id: 'c_conquest_chain',
+        name: 'Orbital Chain',
+        desc: '+1% Global Multiplier per conquered region per level',
+        maxLevel: 10,
+        baseCost: 100,
+        costGrowth: 2.5,
+        effect: (level) => level * 0.01
+    },
+    {
+        id: 'c_rebirth_head_start',
+        name: 'Cosmic Inertia',
+        desc: 'Start each Rebirth with 0.5% of previous total Raibos per level',
+        maxLevel: 10,
+        baseCost: 120,
+        costGrowth: 2.5,
+        effect: (level) => level * 0.005
+    },
+    {
+        id: 'c_energy_regen_mult',
+        name: 'Pulsar Overdrive',
+        desc: '+20% Energy Regen rate per level (permanent)',
+        maxLevel: 20,
+        baseCost: 40,
+        costGrowth: 1.6,
+        effect: (level) => 1 + (level * 0.2)
     }
+
 ];
 
 function getConstellationLevel(id) {
@@ -163,8 +326,8 @@ const planetsData = [
             { id: 'olympus',    name: 'Olympus Mons',      buff: 'Click Power +150%',           type: 'click',        value: 1.5,  cost: 150,  d: "M78,15 L115,8 L128,25 L110,38 L82,35 Z" },
             { id: 'utopia',     name: 'Utopia Planitia',   buff: 'Idle Power +150%',            type: 'idle',         value: 1.5,  cost: 200,  d: "M138,15 L180,22 L175,45 L145,48 L132,32 Z" },
             { id: 'hellas',     name: 'Hellas Planitia',   buff: 'Rebirth Points +50%',         type: 'rp',           value: 0.5,  cost: 250,  d: "M38,62 L78,55 L88,82 L65,90 L40,85 Z" },
-            { id: 'mars_poles', name: 'North Polar Cap',   buff: 'Energy Regen x2.5',           type: 'energy_mult',  value: 2.5,  cost: 300,  d: "M60,5 L145,5 L148,14 L58,14 Z" },
-            { id: 'south_pole', name: 'South Polar Cap',   buff: 'Energy Regen x2.5',           type: 'energy_mult',  value: 2.5,  cost: 350,  d: "M55,90 L148,90 L150,98 L52,98 Z" },
+            { id: 'mars_poles', name: 'North Polar Cap',   buff: 'Energy Regen x5',           type: 'energy_mult',  value: 2.5,  cost: 300,  d: "M60,5 L145,5 L148,14 L58,14 Z" },
+            { id: 'south_pole', name: 'South Polar Cap',   buff: 'Energy Regen x5',           type: 'energy_mult',  value: 2.5,  cost: 350,  d: "M55,90 L148,90 L150,98 L52,98 Z" },
             { id: 'elysium',    name: 'Elysium Planitia',  buff: 'All Production x1.3',         type: 'all_prod',     value: 1.3,  cost: 400,  d: "M148,48 L182,40 L188,68 L162,72 L145,65 Z" },
             { id: 'argyre',     name: 'Argyre Basin',      buff: 'Upgrade Cost -10%',           type: 'cost',         value: 0.1,  cost: 450,  d: "M30,70 L68,65 L72,85 L42,90 Z" },
             { id: 'tharsis',    name: 'Tharsis Bulge',     buff: 'Click Power +200%',           type: 'click',        value: 2.0,  cost: 480,  d: "M38,35 L78,30 L82,55 L42,58 Z" },
@@ -183,8 +346,8 @@ const planetsData = [
             { id: 'ganymede',   name: 'Ganymede',               buff: 'Upgrade Cost -15%',        type: 'cost',        value: 0.15, cost: 800,  d: "M128,15 L162,25 L155,55 L118,48 Z" },
             { id: 'io',         name: 'Io',                     buff: 'Click Power +300%',        type: 'click',       value: 3.0,  cost: 900,  d: "M45,68 L80,62 L85,88 L52,94 Z" },
             { id: 'callisto',   name: 'Callisto',               buff: 'Idle Power +300%',         type: 'idle',        value: 3.0,  cost: 1000, d: "M150,62 L185,55 L188,82 L162,88 Z" },
-            { id: 'band_north', name: 'Northern Bands',         buff: 'Energy Regen x1.5',        type: 'energy_mult', value: 3.0,  cost: 1200, d: "M8,12 L192,12 L190,25 L10,25 Z" },
-            { id: 'band_south', name: 'Southern Bands',         buff: 'Energy Regen x1.5',        type: 'energy_mult', value: 3.0,  cost: 1400, d: "M8,75 L192,75 L190,88 L10,88 Z" },
+            { id: 'band_north', name: 'Northern Bands',         buff: 'Energy Regen x3',        type: 'energy_mult', value: 3.0,  cost: 1200, d: "M8,12 L192,12 L190,25 L10,25 Z" },
+            { id: 'band_south', name: 'Southern Bands',         buff: 'Energy Regen x3',        type: 'energy_mult', value: 3.0,  cost: 1400, d: "M8,75 L192,75 L190,88 L10,88 Z" },
             { id: 'polar_hex',  name: 'Polar Hexagon',          buff: 'Global Multiplier x2.5',   type: 'mult_total',  value: 2.5,  cost: 1600, d: "M80,5 L120,5 L140,15 L120,25 L80,25 L60,15 Z" },
             { id: 'storm_belt', name: 'Equatorial Storm Belt',  buff: 'Click Power +400%',        type: 'click',       value: 4.0,  cost: 1800, d: "M10,38 L190,38 L188,52 L12,52 Z" },
             { id: 'jupiter_core',name:'Metallic Core',          buff: 'Global Multiplier x3',     type: 'mult_total',  value: 3.0,  cost: 1900, d: "M70,28 L130,28 L140,55 L105,75 L65,55 Z" },
@@ -202,7 +365,7 @@ const planetsData = [
             { id: 'rings_b',    name: 'B Ring (Brightest)',   buff: 'Global Multiplier x4',    type: 'mult_total', value: 4.0,  cost: 3000,  d: "M12,55 Q55,28 188,55 L186,62 Q52,35 14,62 Z" },
             { id: 'rings_c',    name: 'C Ring',              buff: 'Idle Power +500%',         type: 'idle',       value: 5.0,  cost: 3500,  d: "M15,38 Q55,8 185,38 L183,45 Q52,15 17,45 Z" },
             { id: 'titan',      name: 'Titan',               buff: 'Idle Power +600%',         type: 'idle',       value: 6.0,  cost: 4000,  d: "M35,18 L72,12 L85,42 L48,48 Z" },
-            { id: 'enceladus',  name: 'Enceladus',           buff: 'Energy Regen x1.2',        type: 'energy_mult',value: 2.0,  cost: 4500,  d: "M118,58 L150,52 L158,82 L128,88 Z" },
+            { id: 'enceladus',  name: 'Enceladus',           buff: 'Energy Regen x2',        type: 'energy_mult',value: 2.0,  cost: 4500,  d: "M118,58 L150,52 L158,82 L128,88 Z" },
             { id: 'mimas',      name: 'Mimas',               buff: 'Upgrade Cost -20%',        type: 'cost',       value: 0.2,  cost: 5000,  d: "M158,15 L182,10 L188,30 L165,35 Z" },
             { id: 'rhea',       name: 'Rhea',                buff: 'Click Power +600%',        type: 'click',      value: 6.0,  cost: 5500,  d: "M38,68 L70,62 L75,88 L42,92 Z" },
             { id: 'dione',      name: 'Dione',               buff: 'RP Gain x2',               type: 'rp_mult',    value: 2.0,  cost: 6000,  d: "M155,62 L182,58 L185,80 L158,85 Z" },
@@ -223,7 +386,7 @@ const planetsData = [
             { id: 'neptune_core',name: 'Frozen Core',           buff: 'All Costs -25%',           type: 'cost',       value: 0.25, cost: 12000, d: "M75,68 L125,68 L122,94 L78,94 Z" },
             { id: 'nereid',      name: 'Nereid',                buff: 'Click Power +1000%',        type: 'click',      value: 10.0, cost: 14000, d: "M155,20 L182,15 L188,38 L162,42 Z" },
             { id: 'proteus',     name: 'Proteus',               buff: 'Idle Power +1000%',         type: 'idle',       value: 10.0, cost: 16000, d: "M15,50 L48,44 L52,68 L18,72 Z" },
-            { id: 'polar_vortex',name: 'Polar Vortex',          buff: 'Energy Regen x1.1',         type: 'energy_mult',value: 2.0,  cost: 18000, d: "M72,5 L128,5 L132,18 L68,18 Z" },
+            { id: 'polar_vortex',name: 'Polar Vortex',          buff: 'Energy Regen x2',         type: 'energy_mult',value: 2.0,  cost: 18000, d: "M72,5 L128,5 L132,18 L68,18 Z" },
             { id: 'nep_ring',    name: 'Adams Ring',            buff: 'Global Multiplier x7',     type: 'mult_total', value: 7.0,  cost: 20000, d: "M10,32 Q50,5 190,32 L188,40 Q48,12 12,40 Z" },
             { id: 'storm_bands', name: 'Methane Storm Bands',   buff: 'All Production x2.5',      type: 'all_prod',   value: 2.5,  cost: 22000, d: "M10,45 L190,45 L188,58 L12,58 Z" },
             { id: 'nep_magnetic',name: 'Magnetic Pole',         buff: 'Global Multiplier x10',    type: 'mult_total', value: 10.0, cost: 24000, d: "M72,88 L128,88 L132,98 L68,98 Z" },
@@ -241,7 +404,7 @@ const planetsData = [
             { id: 'heart',     name: 'Tombaugh Regio (The Heart)',   buff: 'All Production x3',       type: 'all_prod',   value: 3.0,  cost: 40000, d: "M95,38 Q118,18 142,38 L100,78 L58,38 Q82,18 95,38 Z" },
             { id: 'norgay',    name: 'Norgay Montes',               buff: 'Click Power +2000%',       type: 'click',      value: 20.0, cost: 50000, d: "M148,55 L182,48 L188,75 L158,80 Z" },
             { id: 'sputnik',   name: 'Sputnik Planitia',            buff: 'Idle Power +2000%',        type: 'idle',       value: 20.0, cost: 60000, d: "M58,38 L95,38 L100,78 L50,70 Z" },
-            { id: 'pluto_poles',name:'Polar Ice Plains',             buff: 'Energy Regen x1.05',       type: 'energy_mult',value: 2.0, cost: 70000, d: "M40,5 L165,5 L168,18 L38,18 Z" },
+            { id: 'pluto_poles',name:'Polar Ice Plains',             buff: 'Energy Regen x2',       type: 'energy_mult',value: 2.0, cost: 70000, d: "M40,5 L165,5 L168,18 L38,18 Z" },
             { id: 'hydra',     name: 'Hydra Moon',                  buff: 'RP Gain x3',               type: 'rp_mult',    value: 3.0,  cost: 75000, d: "M165,22 L190,18 L192,40 L168,44 Z" },
             { id: 'nix_moon',  name: 'Nix Moon',                    buff: 'Global Multiplier x4',     type: 'mult_total', value: 4.0,  cost: 78000, d: "M10,30 L35,25 L38,50 L12,54 Z" },
             { id: 'pluto_core',name: 'Ancient Frozen Core',         buff: 'Global Multiplier x15',    type: 'mult_total', value: 15.0, cost: 80000, d: "M65,25 L142,38 L158,80 L100,92 L40,70 L25,62 Z" }
@@ -257,7 +420,7 @@ const planetsData = [
             { id: 'oort_cloud',     name: 'The Oort Cloud',            buff: 'Global Multiplier x5',     type: 'mult_total', value: 5.0,  cost: 100000, d: "M10,10 Q50,0 100,10 T190,10 L190,90 Q150,100 100,90 T10,90 Z" },
             { id: 'voyager_zone',   name: 'Voyager Deadzone',          buff: 'All Production x4',        type: 'all_prod',   value: 4.0,  cost: 120000, d: "M20,40 L60,35 L65,65 L25,70 Z" },
             { id: 'rogue_planet',   name: 'Wandering Rogue Planet',    buff: 'Click Power +5000%',       type: 'click',      value: 50.0, cost: 150000, d: "M140,40 L180,35 L185,65 L145,70 Z" },
-            { id: 'heliopause',     name: 'Heliopause Border',         buff: 'Energy Regen x1.02',       type: 'energy_mult',value: 2.0, cost: 180000, d: "M70,20 L130,20 L135,80 L65,80 Z" },
+            { id: 'heliopause',     name: 'Heliopause Border',         buff: 'Energy Regen x2',       type: 'energy_mult',value: 2.0, cost: 180000, d: "M70,20 L130,20 L135,80 L65,80 Z" },
             { id: 'dark_matter_sea',name: 'Dark Matter Sea',           buff: 'Global Multiplier x10',    type: 'mult_total', value: 10.0, cost: 200000, d: "M80,30 L120,30 L125,70 L75,70 Z" }
         ]
     },
@@ -285,7 +448,7 @@ const planetsData = [
             { id: 'orion_nebula',     name: 'Orion Nebula',                  buff: 'All Production x6',            type: 'all_prod',   value: 6.0,  cost: 500000, d: "M10,20 Q60,5 110,20 L105,40 Q55,25 5,40 Z" },
             { id: 'pillars_creation', name: 'Pillars of Creation',           buff: 'Global Multiplier x35',        type: 'mult_total', value: 35.0, cost: 550000, d: "M130,10 L160,10 L165,90 L125,90 Z" },
             { id: 'neutron_star',     name: 'Pulsar Matrix',                 buff: 'RP Gain x10',                  type: 'rp_mult',    value: 10.0, cost: 600000, d: "M20,60 L80,55 L85,85 L15,90 Z" },
-            { id: 'accretion_disk',   name: 'Accretion Disk',                buff: 'Energy Regen x1.01',           type: 'energy_mult',value: 2.0, cost: 650000, d: "M40,30 Q100,10 160,30 L155,70 Q95,90 35,70 Z" },
+            { id: 'accretion_disk',   name: 'Accretion Disk',                buff: 'Energy Regen x2',           type: 'energy_mult',value: 2.0, cost: 650000, d: "M40,30 Q100,10 160,30 L155,70 Q95,90 35,70 Z" },
             { id: 'sagittarius_a',    name: 'Sagittarius A*',                buff: 'Global Multiplier x50',        type: 'mult_total', value: 50.0, cost: 750000, d: "M70,30 A30,30 0 1,1 130,70 A30,30 0 1,1 70,30 Z" }
         ]
     },
@@ -296,7 +459,7 @@ const planetsData = [
         energyMax: 1000000,
         energyRegen: 25,
         regions: [
-            { id: 'andromeda_edge',   name: 'Andromeda Edge',                buff: 'Energy Regen x1.01',           type: 'energy_mult',value: 2.0, cost: 800000, d: "M20,20 Q50,0 80,20 T140,20 L140,80 Q110,100 80,80 T20,80 Z" },
+            { id: 'andromeda_edge',   name: 'Andromeda Edge',                buff: 'Energy Regen x2',           type: 'energy_mult',value: 2.0, cost: 800000, d: "M20,20 Q50,0 80,20 T140,20 L140,80 Q110,100 80,80 T20,80 Z" },
             { id: 'm32',              name: 'M32 Satellite',                 buff: 'All Production x8',            type: 'all_prod',   value: 8.0,  cost: 850000, d: "M150,15 L180,10 L185,40 L155,45 Z" },
             { id: 'm110',             name: 'M110 Satellite',                buff: 'Global Multiplier x60',        type: 'mult_total', value: 60.0, cost: 900000, d: "M10,80 L40,75 L45,95 L15,100 Z" },
             { id: 'andromeda_arms',   name: 'Spiral Arms',                   buff: 'Idle Power +20000%',           type: 'idle',       value: 200.0,cost: 930000, d: "M50,50 A40,40 0 0,1 130,50 A40,40 0 0,1 50,50" },
@@ -1515,11 +1678,18 @@ function getPointsToEarn(total) {
 // Core Logic
 function getGlobalMultiplier() {
     let mult = 1.0;
-    mult += gameState.rebirthPoints * 0.05;
+    const rpRate = getConstellationEffect('c_rp_mult_decay') || 0.05;
+    mult += gameState.rebirthPoints * rpRate;
+    mult += getConstellationEffect('c_global'); // Nebula Amplifier
+    const chainBonus = getConstellationEffect('c_conquest_chain') || 0;
+    mult += chainBonus * (gameState.invasion.conqueredRegions.length || 0);
     
     gameState.achievements.forEach(achId => {
         const ach = achievementsData.find(a => a.id === achId);
-        if (ach) mult += ach.bonus;
+        if (ach) {
+            const achvBoostMult = getConstellationEffect('c_achv_bonus') || 1;
+            mult += ach.bonus * achvBoostMult;
+        }
     });
 
     // Regional Multipliers
@@ -1558,8 +1728,9 @@ function recalculatePowers() {
 
     const mult = getGlobalMultiplier();
     
-    gameState.clickPower = cp * mult;
+    const syncBonus = getConstellationEffect('c_click_idle_sync') || 0;
     gameState.idlePower = ip * mult;
+    gameState.clickPower = (cp + ip * syncBonus) * mult;
 }
 
 // UI
@@ -1740,8 +1911,16 @@ document.getElementById('rebirth-btn').addEventListener('click', () => {
     if (earned <= 0) return;
     
     if (confirm(`Do you want to rebirth? All progress will be reset and you will receive ${formatNumber(earned)} RP.`)) {
-        gameState.rebirthPoints += earned;
+        const rpMult = getConstellationEffect('c_rp') || 1;
+        const regionBonus = getConstellationEffect('c_region_rp') || 0;
+        const regionBonusRP = regionBonus * (gameState.invasion.conqueredRegions.length || 0);
+        gameState.rebirthPoints += Math.floor((earned + regionBonusRP) * rpMult);
         const startE = gameState.invasion.energyMax * getConstellationEffect('c_energy_start');
+        const headStartFraction = getConstellationEffect('c_rebirth_head_start') || 0;
+        if (headStartFraction > 0) {
+            const prevTotal = gameState.totalRaibos || 0;
+            gameState.raibos = Math.max(gameState.raibos, prevTotal * headStartFraction);
+        }
         gameState.invasion.energy = startE;
         
         // Reset everything else
@@ -1772,8 +1951,10 @@ function gameLoop(currentTime) {
     
     // Invasion Energy Regen
     const currentPlanetData = planetsData[gameState.invasion.currentPlanet];
-    const maxE = currentPlanetData ? currentPlanetData.energyMax : 10000;
-    const baseRegen = (currentPlanetData ? currentPlanetData.energyRegen : 25) + getConstellationEffect('c_regen');
+    const rawMax = currentPlanetData ? currentPlanetData.energyMax : 10000;
+    const maxE = Math.floor(rawMax * (getConstellationEffect('c_energy_max') || 1));
+    const regenMultiplier = getConstellationEffect('c_energy_regen_mult') || 1;
+    const baseRegen = ((currentPlanetData ? currentPlanetData.energyRegen : 25) + getConstellationEffect('c_regen')) * regenMultiplier;
     gameState.invasion.energyMax = maxE;       // enforce to fix legacy saves
     gameState.invasion.energyRegen = baseRegen; // enforce to fix legacy saves
 
@@ -2163,9 +2344,12 @@ function updateInvasionUI() {
 document.getElementById('start-invasion-btn').addEventListener('click', () => {
     if (!selectedRegionId) return;
     const region = planetsData[gameState.invasion.currentPlanet].regions.find(r => r.id === selectedRegionId);
-    if (!region || gameState.invasion.energy < region.cost) return;
+    const invasionCostMult = getConstellationEffect('c_invasion_cost') || 1;
+    const actualCost = Math.floor(region.cost * invasionCostMult);
+    if (!region || gameState.invasion.energy < actualCost) return;
+    gameState.invasion.energy -= actualCost;
 
-    gameState.invasion.energy -= region.cost;
+    // cost already deducted above with constellation modifier
     let progress = gameState.invasion.regionProgress[region.id] || 0;
     
     // Random invasion progress between 1 and 30
@@ -2224,7 +2408,8 @@ if (crBtn) {
         }
         
         // Standardized to 5 minutes for everyone now
-        const seconds = 300; 
+        const extraSeconds = getConstellationEffect('c_timeskip') || 0;
+        const seconds = 300 + extraSeconds; 
         const gain = gameState.idlePower * seconds;
         
         gameState.raibos += gain;
