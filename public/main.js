@@ -2036,22 +2036,25 @@ function createUpgradeElement(upg, isClick) {
         </div>
         <div class="upgrade-cost-area" style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
             <span class="upgrade-cost">0</span>
-            <button class="buy-max-single-btn" style="background: rgba(255,204,0,0.2); border: 1px solid #ffcc00; color: #ffcc00; border-radius: 4px; font-size: 0.75rem; padding: 2px 6px; cursor: pointer;">MAX</button>
+            <button class="buy-max-single-btn" style="background: rgba(255,204,0,0.2); border: 1px solid #ffcc00; color: #ffcc00; border-radius: 4px; font-size: 0.75rem; padding: 2px 6px; cursor: pointer; pointer-events: auto;">MAX</button>
         </div>
     `;
     
     const maxBtn = div.querySelector('.buy-max-single-btn');
     if (maxBtn) {
-        maxBtn.addEventListener('click', (e) => {
+        const handleMax = (e) => {
             e.stopPropagation();
             buyUpgradeMax(upg);
-        });
+        };
+        maxBtn.onclick = handleMax;
     }
 
-    div.addEventListener('click', (e) => {
-        if (e.target.classList.contains('buy-max-single-btn')) return;
+    const handleBuy = (e) => {
+        if (e.target && e.target.classList.contains('buy-max-single-btn')) return;
         buyUpgrade(upg);
-    });
+    };
+
+    div.onclick = handleBuy;
     (isClick ? elements.clickList : elements.idleList).appendChild(div);
 }
 
@@ -2091,8 +2094,6 @@ function buyUpgradeMax(upg) {
         updateUI();
         saveGame();
     }
-}
-
 }
 
 elements.btn.addEventListener('mousedown', (e) => {
