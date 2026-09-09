@@ -17,12 +17,13 @@ let gameState = {
         regionProgress: {}, // regionId -> 0-100
         conqueredRegions: [] // list of regionIds
     },
-    username: null,
-    lastSaveTime: Date.now()
+    multiverse: 1, // new multiverse counter
+    buffNerf: 1 // multiplier for non‑energy buffs (1 = no nerf)
 };
 
 
 const constellationData = [
+    // Root Level Skills (Tier 1: No prerequisite)
     {
         id: 'c_click',
         name: 'Starlight Resonance',
@@ -30,7 +31,8 @@ const constellationData = [
         maxLevel: 20,
         baseCost: 5,
         costGrowth: 1.5,
-        effect: (level) => 1 + (level * 0.5) // Multiplier
+        requires: [],
+        effect: (level) => 1 + (level * 0.5)
     },
     {
         id: 'c_idle',
@@ -39,7 +41,8 @@ const constellationData = [
         maxLevel: 20,
         baseCost: 5,
         costGrowth: 1.5,
-        effect: (level) => 1 + (level * 0.5) // Multiplier
+        requires: [],
+        effect: (level) => 1 + (level * 0.5)
     },
     {
         id: 'c_energy_start',
@@ -48,8 +51,11 @@ const constellationData = [
         maxLevel: 10,
         baseCost: 10,
         costGrowth: 2.0,
-        effect: (level) => level * 0.1 // Additive %
+        requires: [],
+        effect: (level) => level * 0.1
     },
+
+    // Tier 2: Requires Tier 1
     {
         id: 'c_cost',
         name: 'Quantum Efficiency',
@@ -57,7 +63,8 @@ const constellationData = [
         maxLevel: 25,
         baseCost: 20,
         costGrowth: 1.2,
-        effect: (level) => Math.max(0.1, 1 - (level * 0.02)) // Multiplier
+        requires: ['c_click'],
+        effect: (level) => Math.max(0.1, 1 - (level * 0.02))
     },
     {
         id: 'c_regen',
@@ -66,7 +73,8 @@ const constellationData = [
         maxLevel: 50,
         baseCost: 15,
         costGrowth: 1.3,
-        effect: (level) => level * 1 // Additive
+        requires: ['c_energy_start'],
+        effect: (level) => level * 1
     },
     {
         id: 'c_rp',
@@ -75,7 +83,8 @@ const constellationData = [
         maxLevel: 20,
         baseCost: 25,
         costGrowth: 1.6,
-        effect: (level) => 1 + (level * 0.1) // Multiplier on RP earned
+        requires: ['c_idle'],
+        effect: (level) => 1 + (level * 0.1)
     },
     {
         id: 'c_global',
@@ -84,8 +93,11 @@ const constellationData = [
         maxLevel: 30,
         baseCost: 50,
         costGrowth: 1.4,
-        effect: (level) => level * 0.05 // Additive to global mult
+        requires: ['c_click', 'c_idle'],
+        effect: (level) => level * 0.05
     },
+
+    // Tier 3: Requires Tier 2
     {
         id: 'c_invasion_cost',
         name: 'Warp Infiltration',
@@ -93,6 +105,7 @@ const constellationData = [
         maxLevel: 30,
         baseCost: 30,
         costGrowth: 1.3,
+        requires: ['c_regen'],
         effect: (level) => Math.max(0.1, 1 - level * 0.02)
     },
     {
@@ -102,7 +115,8 @@ const constellationData = [
         maxLevel: 20,
         baseCost: 40,
         costGrowth: 1.5,
-        effect: (level) => 1 + (level * 0.05) // Multiplier on energyMax
+        requires: ['c_regen'],
+        effect: (level) => 1 + (level * 0.05)
     },
     {
         id: 'c_invasion_progress',
@@ -111,7 +125,8 @@ const constellationData = [
         maxLevel: 10,
         baseCost: 100,
         costGrowth: 2.0,
-        effect: (level) => level * 5 // adds % to random floor
+        requires: ['c_invasion_cost'],
+        effect: (level) => level * 5
     },
     {
         id: 'c_offline',
@@ -120,7 +135,8 @@ const constellationData = [
         maxLevel: 20,
         baseCost: 20,
         costGrowth: 1.4,
-        effect: (level) => 1 + (level * 0.1) // Multiplier
+        requires: ['c_rp'],
+        effect: (level) => 1 + (level * 0.1)
     },
     {
         id: 'c_click_idle_sync',
@@ -129,8 +145,11 @@ const constellationData = [
         maxLevel: 25,
         baseCost: 35,
         costGrowth: 1.5,
-        effect: (level) => level * 0.01 // Fraction of idlePower added
+        requires: ['c_global'],
+        effect: (level) => level * 0.01
     },
+
+    // Tier 4: Requires Tier 3
     {
         id: 'c_rp_mult_decay',
         name: 'Eternal Covenant',
@@ -138,6 +157,7 @@ const constellationData = [
         maxLevel: 10,
         baseCost: 200,
         costGrowth: 3.0,
+        requires: ['c_global'],
         effect: (level) => 0.05 + (level * 0.001)
     },
     {
@@ -147,7 +167,8 @@ const constellationData = [
         maxLevel: 10,
         baseCost: 80,
         costGrowth: 2.0,
-        effect: (level) => level * 60 // Extra seconds
+        requires: ['c_offline'],
+        effect: (level) => level * 60
     },
     {
         id: 'c_achv_bonus',
@@ -156,6 +177,7 @@ const constellationData = [
         maxLevel: 15,
         baseCost: 60,
         costGrowth: 1.7,
+        requires: ['c_global'],
         effect: (level) => 1 + (level * 0.05)
     },
     {
@@ -165,6 +187,7 @@ const constellationData = [
         maxLevel: 20,
         baseCost: 30,
         costGrowth: 1.5,
+        requires: ['c_invasion_progress'],
         effect: (level) => level * 2
     },
     {
@@ -174,8 +197,11 @@ const constellationData = [
         maxLevel: 10,
         baseCost: 50,
         costGrowth: 1.8,
+        requires: ['c_energy_max'],
         effect: (level) => level * 0.05
     },
+
+    // Tier 5: Requires Tier 4
     {
         id: 'c_click_multiplier_spike',
         name: 'Nova Burst',
@@ -183,6 +209,7 @@ const constellationData = [
         maxLevel: 10,
         baseCost: 75,
         costGrowth: 2.0,
+        requires: ['c_click_idle_sync'],
         effect: (level) => level * 0.10
     },
     {
@@ -192,6 +219,7 @@ const constellationData = [
         maxLevel: 5,
         baseCost: 150,
         costGrowth: 3.0,
+        requires: ['c_offline'],
         effect: (level) => level * 1
     },
     {
@@ -201,6 +229,7 @@ const constellationData = [
         maxLevel: 10,
         baseCost: 45,
         costGrowth: 1.6,
+        requires: ['c_cost'],
         effect: (level) => level * 0.03
     },
     {
@@ -210,6 +239,7 @@ const constellationData = [
         maxLevel: 10,
         baseCost: 100,
         costGrowth: 2.5,
+        requires: ['c_region_rp'],
         effect: (level) => level * 0.01
     },
     {
@@ -219,6 +249,7 @@ const constellationData = [
         maxLevel: 10,
         baseCost: 120,
         costGrowth: 2.5,
+        requires: ['c_rp_mult_decay'],
         effect: (level) => level * 0.005
     },
     {
@@ -228,9 +259,73 @@ const constellationData = [
         maxLevel: 20,
         baseCost: 40,
         costGrowth: 1.6,
+        requires: ['c_energy_on_conquest'],
         effect: (level) => 1 + (level * 0.2)
-    }
+    },
 
+    // Tier 6 (Ultimate / Multiverse Skills): Requires Tier 5
+    {
+        id: 'c_super_click',
+        name: 'Cosmic Singularity Click',
+        desc: '+100% Click Power multiplier per level',
+        maxLevel: 25,
+        baseCost: 100,
+        costGrowth: 1.6,
+        requires: ['c_click_multiplier_spike'],
+        effect: (level) => 1 + (level * 1.0)
+    },
+    {
+        id: 'c_super_idle',
+        name: 'Hyperdrive Automation',
+        desc: '+100% Idle Power multiplier per level',
+        maxLevel: 25,
+        baseCost: 100,
+        costGrowth: 1.6,
+        requires: ['c_idle_floor'],
+        effect: (level) => 1 + (level * 1.0)
+    },
+    {
+        id: 'c_conquest_energy_mastery',
+        name: 'Galactic Overlord',
+        desc: '+2 Base Energy Regen per sec per planet cleared',
+        maxLevel: 15,
+        baseCost: 150,
+        costGrowth: 1.7,
+        requires: ['c_energy_regen_mult'],
+        effect: (level) => level * 2 * (gameState.invasion ? gameState.invasion.currentPlanet : 0)
+    },
+
+    // Tier 7 (Multiverse Apex): Requires Tier 6
+    {
+        id: 'c_multiverse_power',
+        name: 'Multiverse Synergy',
+        desc: '+50% All Production per Multiverse cleared per level',
+        maxLevel: 20,
+        baseCost: 250,
+        costGrowth: 1.8,
+        requires: ['c_super_click', 'c_super_idle'],
+        effect: (level) => 1 + ((gameState.multiverse || 1) - 1) * level * 0.5
+    },
+    {
+        id: 'c_multiverse_cost_mitigation',
+        name: 'Diminishing Singularity',
+        desc: 'Reduces the Multiverse cost scale increase by -2% per level',
+        maxLevel: 15,
+        baseCost: 300,
+        costGrowth: 2.0,
+        requires: ['c_conquest_energy_mastery'],
+        effect: (level) => Math.max(0.5, 1 - (level * 0.02))
+    },
+    {
+        id: 'c_buff_nerf_shield',
+        name: 'Dimensional Anchor',
+        desc: 'Mitigates Multiverse non-energy buff nerf by +2% per level',
+        maxLevel: 10,
+        baseCost: 500,
+        costGrowth: 2.5,
+        requires: ['c_multiverse_power'],
+        effect: (level) => level * 0.02
+    }
 ];
 
 function getConstellationLevel(id) {
@@ -252,47 +347,187 @@ function getConstellationCost(id) {
     return Math.floor(skill.baseCost * Math.pow(skill.costGrowth, level));
 }
 
+function isSkillUnlocked(skill) {
+    if (!skill.requires || skill.requires.length === 0) return true;
+    // Unlocked if AT LEAST ONE prerequisite skill has been upgraded (level >= 1)
+    return skill.requires.some(reqId => getConstellationLevel(reqId) >= 1);
+}
+
+function buyMaxConstellation() {
+    let totalBought = 0;
+    let boughtAnyInLoop = true;
+
+    while (boughtAnyInLoop) {
+        boughtAnyInLoop = false;
+        for (const skill of constellationData) {
+            if (!isSkillUnlocked(skill)) continue;
+            const level = getConstellationLevel(skill.id);
+            if (level < skill.maxLevel) {
+                const cost = getConstellationCost(skill.id);
+                if (gameState.rebirthPoints >= cost) {
+                    gameState.rebirthPoints -= cost;
+                    gameState.constellation[skill.id] = level + 1;
+                    totalBought++;
+                    boughtAnyInLoop = true;
+                }
+            }
+        }
+    }
+
+    if (totalBought > 0) {
+        showToast(`BUY MAX SKILLS!`, `Upgraded ${totalBought} skill levels!`);
+        renderConstellation();
+        recalculatePowers();
+        updateUI();
+        saveGame();
+    }
+}
+
 function renderConstellation() {
     document.getElementById('constellation-rp').innerText = formatNumber(gameState.rebirthPoints);
     const container = document.getElementById('constellation-nodes-container');
     container.innerHTML = '';
     
-    constellationData.forEach(skill => {
-        const level = getConstellationLevel(skill.id);
-        const cost = getConstellationCost(skill.id);
-        const isMax = level >= skill.maxLevel;
-        
-        const node = document.createElement('div');
-        node.className = 'constellation-node' + (isMax ? ' max-level' : '');
-        node.innerHTML = `
-            <div class="c-node-info">
-                <h3>${skill.name}</h3>
-                <p>${skill.desc}</p>
-                <div class="c-node-level">Level ${level} / ${skill.maxLevel}</div>
-            </div>
-            <div class="c-node-action">
-                ${isMax ? '<span style="color:#00f2ff; font-weight:bold;">MAXED</span>' : `
-                    <span class="c-node-cost">Cost: ${formatNumber(cost)} RP</span>
-                    <button class="action-btn" ${gameState.rebirthPoints < cost ? 'disabled' : ''}>Unlock</button>
-                `}
-            </div>
-        `;
-        
-        if (!isMax) {
-            const btn = node.querySelector('button');
-            btn.onclick = () => {
-                if (gameState.rebirthPoints >= cost) {
-                    gameState.rebirthPoints -= cost;
-                    gameState.constellation[skill.id] = level + 1;
-                    showToast(`${skill.name} upgraded!`, 'success');
-                    renderConstellation();
-                    updateDisplay();
-                }
-            };
+    // Group skills by tier / prerequisites depth
+    const tiers = {};
+    const skillTierMap = {};
+
+    function getSkillTier(skill) {
+        if (skillTierMap[skill.id] !== undefined) return skillTierMap[skill.id];
+        if (!skill.requires || skill.requires.length === 0) {
+            skillTierMap[skill.id] = 1;
+            return 1;
         }
-        
-        container.appendChild(node);
+        let maxReqTier = 0;
+        skill.requires.forEach(reqId => {
+            const reqSkill = constellationData.find(s => s.id === reqId);
+            if (reqSkill) {
+                maxReqTier = Math.max(maxReqTier, getSkillTier(reqSkill));
+            }
+        });
+        const tier = maxReqTier + 1;
+        skillTierMap[skill.id] = tier;
+        return tier;
+    }
+
+    constellationData.forEach(skill => {
+        const tier = getSkillTier(skill);
+        if (!tiers[tier]) tiers[tier] = [];
+        tiers[tier].push(skill);
     });
+
+    const maxTier = Math.max(...Object.keys(tiers).map(Number));
+
+    for (let t = 1; t <= maxTier; t++) {
+        const tierRow = document.createElement('div');
+        tierRow.style.display = 'flex';
+        tierRow.style.justifyContent = 'center';
+        tierRow.style.flexWrap = 'wrap';
+        tierRow.style.gap = '15px';
+        tierRow.style.marginBottom = '25px';
+        tierRow.style.position = 'relative';
+
+        const tierHeader = document.createElement('div');
+        tierHeader.style.width = '100%';
+        tierHeader.style.textAlign = 'center';
+        tierHeader.style.color = '#ffcc00';
+        tierHeader.style.fontSize = '0.9rem';
+        tierHeader.style.letterSpacing = '1px';
+        tierHeader.style.marginBottom = '8px';
+        tierHeader.style.textTransform = 'uppercase';
+        tierHeader.style.opacity = '0.8';
+        tierHeader.innerText = `Tier ${t}`;
+        tierRow.appendChild(tierHeader);
+
+        (tiers[t] || []).forEach(skill => {
+            const level = getConstellationLevel(skill.id);
+            const cost = getConstellationCost(skill.id);
+            const isMax = level >= skill.maxLevel;
+            const unlocked = isSkillUnlocked(skill);
+
+            const reqSkillNames = (skill.requires || []).map(reqId => {
+                const s = constellationData.find(item => item.id === reqId);
+                return s ? s.name : reqId;
+            });
+
+            const node = document.createElement('div');
+            node.className = 'constellation-node' + (isMax ? ' max-level' : '') + (!unlocked ? ' locked' : '');
+            node.style.minWidth = '240px';
+            node.style.maxWidth = '280px';
+            node.style.background = unlocked ? (level > 0 ? 'rgba(157, 80, 187, 0.25)' : 'rgba(20, 20, 45, 0.9)') : 'rgba(10, 10, 20, 0.6)';
+            node.style.border = unlocked ? (level > 0 ? '1px solid #00f2ff' : '1px solid #9d50bb') : '1px dashed #444';
+            node.style.opacity = unlocked ? '1' : '0.5';
+            node.style.borderRadius = '12px';
+            node.style.padding = '12px';
+            node.style.display = 'flex';
+            node.style.flexDirection = 'column';
+            node.style.justifyContent = 'space-between';
+
+            node.innerHTML = `
+                <div class="c-node-info">
+                    <h3 style="color: ${unlocked ? (level > 0 ? '#00f2ff' : '#ffcc00') : '#777'}; margin: 0 0 5px 0;">${skill.name}</h3>
+                    <p style="font-size: 0.8rem; color: #bbb; margin-bottom: 8px;">${skill.desc}</p>
+                    ${!unlocked ? `<div style="color:#ff6666; font-size:0.75rem; margin-bottom:5px;">🔒 Requires: ${reqSkillNames.join(' OR ')}</div>` : ''}
+                    <div class="c-node-level" style="font-size:0.85rem; font-weight:bold; color: #ffaa00;">Level ${level} / ${skill.maxLevel}</div>
+                </div>
+                <div class="c-node-action" style="margin-top: 10px;">
+                    ${!unlocked ? '<span style="color:#666; font-size:0.85rem;">LOCKED</span>' : (isMax ? '<span style="color:#00f2ff; font-weight:bold;">MAXED</span>' : `
+                        <span class="c-node-cost" style="display:block; font-size:0.85rem; margin-bottom:5px;">Cost: ${formatNumber(cost)} RP</span>
+                        <button class="action-btn" style="width:100%;" ${gameState.rebirthPoints < cost ? 'disabled' : ''}>Unlock</button>
+                    `)}
+                </div>
+            `;
+
+            if (unlocked && !isMax) {
+                const btn = node.querySelector('button');
+                const handleUpgrade = (e) => {
+                    if (e && (e.shiftKey || e.ctrlKey)) {
+                        let bought = 0;
+                        while (true) {
+                            const curLevel = getConstellationLevel(skill.id);
+                            if (curLevel >= skill.maxLevel) break;
+                            const c = getConstellationCost(skill.id);
+                            if (gameState.rebirthPoints >= c) {
+                                gameState.rebirthPoints -= c;
+                                gameState.constellation[skill.id] = curLevel + 1;
+                                bought++;
+                            } else {
+                                break;
+                            }
+                        }
+                        if (bought > 0) {
+                            showToast(`${skill.name} +${bought} Levels!`, 'success');
+                            renderConstellation();
+                            recalculatePowers();
+                            updateUI();
+                            saveGame();
+                        }
+                        return;
+                    }
+                    const c = getConstellationCost(skill.id);
+                    if (gameState.rebirthPoints >= c) {
+                        gameState.rebirthPoints -= c;
+                        gameState.constellation[skill.id] = level + 1;
+                        showToast(`${skill.name} upgraded!`, 'success');
+                        renderConstellation();
+                        recalculatePowers();
+                        updateUI();
+                        saveGame();
+                    }
+                };
+                btn.onclick = handleUpgrade;
+            }
+
+            tierRow.appendChild(node);
+        });
+
+        container.appendChild(tierRow);
+    }
+
+    const buyMaxSkillsBtn = document.getElementById('buy-max-skills-btn');
+    if (buyMaxSkillsBtn) {
+        buyMaxSkillsBtn.onclick = buyMaxConstellation;
+    }
 }
 
 const planetsData = [
@@ -1692,6 +1927,15 @@ function getGlobalMultiplier() {
         }
     });
 
+    // Multiverse Synergy Skill
+    const multiverseSynergy = getConstellationEffect('c_multiverse_power') || 1;
+    mult *= multiverseSynergy;
+
+    // Multiverse scaling for region rewards & global nerfing
+    const multiverseScale = Math.pow(1.3, (gameState.multiverse || 1) - 1);
+    const nerfShield = getConstellationEffect('c_buff_nerf_shield') || 0;
+    const nerf = Math.min(1.0, (gameState.buffNerf || 1) + nerfShield);
+
     // Regional Multipliers
     const allConquered = gameState.invasion.conqueredRegions;
     const allRegions = getAllRegions();
@@ -1699,12 +1943,12 @@ function getGlobalMultiplier() {
     allConquered.forEach(regionId => {
         const region = allRegions.find(r => r.id === regionId);
         if (region) {
-            if (region.type === 'mult') mult += region.value;
-            if (region.type === 'mult_total') mult *= region.value;
+            if (region.type === 'mult') mult += region.value * multiverseScale;
+            if (region.type === 'mult_total') mult *= (1 + (region.value - 1) * multiverseScale);
         }
     });
 
-    return mult;
+    return mult * nerf;
 }
 
 function recalculatePowers() {
@@ -1714,23 +1958,32 @@ function recalculatePowers() {
     clickUpgrades.forEach(u => { cp += u.value * (gameState.upgradeLevels[u.id] || 0); });
     idleUpgrades.forEach(u => { ip += u.value * (gameState.upgradeLevels[u.id] || 0); });
     
+    // Apply Super Click & Super Idle Skills
+    const superClick = getConstellationEffect('c_super_click') || 1;
+    const superIdle = getConstellationEffect('c_super_idle') || 1;
+    cp *= superClick;
+    ip *= superIdle;
+
+    const multiverseScale = Math.pow(1.3, (gameState.multiverse || 1) - 1);
+    const nerfShield = getConstellationEffect('c_buff_nerf_shield') || 0;
+    const nerf = Math.min(1.0, (gameState.buffNerf || 1) + nerfShield);
     const allConquered = gameState.invasion.conqueredRegions;
     const allRegions = getAllRegions();
 
     allConquered.forEach(regionId => {
         const region = allRegions.find(r => r.id === regionId);
         if (region) {
-            if (region.type === 'click') cp *= (1 + region.value);
-            if (region.type === 'idle') ip *= (1 + region.value);
-            if (region.type === 'all_prod') { cp *= region.value; ip *= region.value; }
+            if (region.type === 'click') cp *= (1 + region.value * multiverseScale);
+            if (region.type === 'idle') ip *= (1 + region.value * multiverseScale);
+            if (region.type === 'all_prod') { cp *= (1 + (region.value - 1) * multiverseScale); ip *= (1 + (region.value - 1) * multiverseScale); }
         }
     });
 
     const mult = getGlobalMultiplier();
     
     const syncBonus = getConstellationEffect('c_click_idle_sync') || 0;
-    gameState.idlePower = ip * mult;
-    gameState.clickPower = (cp + ip * syncBonus) * mult;
+    gameState.idlePower = ip * mult * nerf;
+    gameState.clickPower = (cp + ip * syncBonus) * mult * nerf;
 }
 
 // UI
@@ -1777,7 +2030,13 @@ function createUpgradeElement(upg, isClick) {
             <span class="upgrade-cost">0</span>
         </div>
     `;
-    div.addEventListener('mousedown', () => buyUpgrade(upg));
+    div.addEventListener('mousedown', (e) => {
+        if (e.shiftKey || e.ctrlKey) {
+            buyUpgradeMax(upg);
+        } else {
+            buyUpgrade(upg);
+        }
+    });
     (isClick ? elements.clickList : elements.idleList).appendChild(div);
 }
 
@@ -1798,6 +2057,56 @@ function buyUpgrade(upg) {
         updateUI();
         saveGame();
     }
+}
+
+function buyUpgradeMax(upg) {
+    let bought = 0;
+    while (true) {
+        const cost = getUpgradeCost(upg);
+        if (gameState.raibos >= cost) {
+            gameState.raibos -= cost;
+            gameState.upgradeLevels[upg.id] = (gameState.upgradeLevels[upg.id] || 0) + 1;
+            bought++;
+        } else {
+            break;
+        }
+    }
+    if (bought > 0) {
+        recalculatePowers();
+        updateUI();
+        saveGame();
+    }
+}
+
+function buyMaxAllUpgrades() {
+    let totalBought = 0;
+    const allUpgrades = [...clickUpgrades, ...idleUpgrades];
+    let boughtAnyInLoop = true;
+
+    while (boughtAnyInLoop) {
+        boughtAnyInLoop = false;
+        for (const upg of allUpgrades) {
+            const cost = getUpgradeCost(upg);
+            if (gameState.raibos >= cost) {
+                gameState.raibos -= cost;
+                gameState.upgradeLevels[upg.id] = (gameState.upgradeLevels[upg.id] || 0) + 1;
+                totalBought++;
+                boughtAnyInLoop = true;
+            }
+        }
+    }
+
+    if (totalBought > 0) {
+        showToast('BUY MAX!', `Bought ${totalBought} total upgrade levels!`);
+        recalculatePowers();
+        updateUI();
+        saveGame();
+    }
+}
+
+const buyMaxBtn = document.getElementById('buy-max-btn');
+if (buyMaxBtn) {
+    buyMaxBtn.addEventListener('click', buyMaxAllUpgrades);
 }
 
 elements.btn.addEventListener('mousedown', (e) => {
@@ -2261,13 +2570,18 @@ function updateInvasionUI() {
     const planet = planetsData[gameState.invasion.currentPlanet];
     if (!planet) return;
 
-    document.getElementById('planet-name').innerText = planet.name;
+    const costMitigation = getConstellationEffect('c_multiverse_cost_mitigation') || 1;
+    const baseMultiverseScale = Math.pow(1.5, (gameState.multiverse || 1) - 1);
+    const multiverseScale = 1 + (baseMultiverseScale - 1) * costMitigation;
+    gameState.invasion.energyMax = Math.floor(planet.energyMax * multiverseScale);
+
+    document.getElementById('planet-name').innerText = `${planet.name} (Multiverse ${gameState.multiverse || 1})`;
     document.getElementById('planet-name').style.color = planet.color;
 
     const energy = gameState.invasion.energy;
     const maxEnergy = gameState.invasion.energyMax;
     document.getElementById('energy-value').innerText = `${Math.floor(energy)} / ${maxEnergy}`;
-    document.getElementById('energy-bar-fill').style.width = `${(energy / maxEnergy) * 100}%`;
+    document.getElementById('energy-bar-fill').style.width = `${Math.min(100, (energy / maxEnergy) * 100)}%`;
 
     // Dynamic map generation
     const mapSvg = document.getElementById('invasion-map-svg');
@@ -2308,9 +2622,12 @@ function updateInvasionUI() {
                 div.classList.add('selected');
             }
             
+            const invasionCostMult = getConstellationEffect('c_invasion_cost') || 1;
+            const actualCost = Math.floor(r.cost * invasionCostMult * multiverseScale);
+
             div.innerHTML = `
                 <div class="region-list-item-name">${r.name}</div>
-                <div>${isConquered ? 'Conquered' : `Cost: ${r.cost}`}</div>
+                <div>${isConquered ? 'Conquered' : `Cost: ${actualCost}`}</div>
             `;
             
             div.addEventListener('click', () => selectRegion(r.id));
@@ -2326,50 +2643,74 @@ function updateInvasionUI() {
             
             const btn = document.getElementById('start-invasion-btn');
             const isConquered = gameState.invasion.conqueredRegions.includes(region.id);
+            const invasionCostMult = getConstellationEffect('c_invasion_cost') || 1;
+            const actualCost = Math.floor(region.cost * invasionCostMult * multiverseScale);
             
             if (isConquered) {
                 btn.disabled = true;
                 btn.innerText = 'CONQUERED';
-            } else if (gameState.invasion.energy < region.cost) {
+            } else if (gameState.invasion.energy < actualCost) {
                 btn.disabled = true;
-                btn.innerText = `ENERGY: ${region.cost}`;
+                btn.innerText = `ENERGY: ${actualCost}`;
             } else {
                 btn.disabled = false;
-                btn.innerText = `INVADE (${region.cost})`;
+                btn.innerText = `INVADE (${actualCost})`;
             }
         }
     }
 }
 
-document.getElementById('start-invasion-btn').addEventListener('click', () => {
-    if (!selectedRegionId) return;
-    const region = planetsData[gameState.invasion.currentPlanet].regions.find(r => r.id === selectedRegionId);
-    const invasionCostMult = getConstellationEffect('c_invasion_cost') || 1;
-    const actualCost = Math.floor(region.cost * invasionCostMult);
-    if (!region || gameState.invasion.energy < actualCost) return;
-    gameState.invasion.energy -= actualCost;
-
-    // cost already deducted above with constellation modifier
-    let progress = gameState.invasion.regionProgress[region.id] || 0;
-    
-    // Random invasion progress between 1 and 30
-    const progressGain = Math.floor(Math.random() * 30) + 1;
-    progress += progressGain;
-    if (progress > 100) progress = 100;
-    if (progress >= 100) {
-        progress = 100;
-        if (!gameState.invasion.conqueredRegions.includes(region.id)) {
-            gameState.invasion.conqueredRegions.push(region.id);
-            showToast('Region Conquered!', `${region.name} has fallen. Buff applied: ${region.buff}`);
-            recalculatePowers();
-            checkPlanetClear();
+const startInvasionBtn = document.getElementById('start-invasion-btn');
+if (startInvasionBtn) {
+    const triggerInvasion = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
-    }
-    
-    gameState.invasion.regionProgress[region.id] = progress;
-    updateInvasionUI();
-    saveGame();
-});
+        if (!selectedRegionId) return;
+        const planet = planetsData[gameState.invasion.currentPlanet];
+        if (!planet) return;
+        const region = planet.regions.find(r => r.id === selectedRegionId);
+        if (!region) return;
+        
+        const costMitigation = getConstellationEffect('c_multiverse_cost_mitigation') || 1;
+        const baseMultiverseScale = Math.pow(1.5, (gameState.multiverse || 1) - 1);
+        const multiverseScale = 1 + (baseMultiverseScale - 1) * costMitigation;
+        const invasionCostMult = getConstellationEffect('c_invasion_cost') || 1;
+        const actualCost = Math.floor(region.cost * invasionCostMult * multiverseScale);
+        
+        if (gameState.invasion.energy < actualCost) return;
+        
+        gameState.invasion.energy -= actualCost;
+        gameState.invasion.energyMax = Math.floor(planet.energyMax * multiverseScale);
+        
+        let progress = gameState.invasion.regionProgress[region.id] || 0;
+        const progressGain = Math.floor(Math.random() * 30) + 1;
+        progress += progressGain;
+        if (progress > 100) progress = 100;
+        if (progress >= 100) {
+            progress = 100;
+            if (!gameState.invasion.conqueredRegions.includes(region.id)) {
+                gameState.invasion.conqueredRegions.push(region.id);
+                showToast('Region Conquered!', `${region.name} has fallen. Buff applied: ${region.buff}`);
+                recalculatePowers();
+                checkPlanetClear();
+            }
+        }
+        
+        gameState.invasion.regionProgress[region.id] = progress;
+        updateInvasionUI();
+        saveGame();
+    };
+
+    startInvasionBtn.addEventListener('click', triggerInvasion);
+    startInvasionBtn.addEventListener('pointerdown', (e) => {
+        // Prevent duplicate trigger if browser also fires click
+        if (e.pointerType === 'touch' || e.pointerType === 'mouse' || e.pointerType === 'pen') {
+            // normal click handles mouse, pointerdown handles laptop touchpads and touchscreens smoothly
+        }
+    });
+}
 
 function checkPlanetClear() {
     const planet = planetsData[gameState.invasion.currentPlanet];
@@ -2389,14 +2730,38 @@ function checkPlanetClear() {
                     }, 1500);
                 }
             }, 1000);
+        } else {
+            // Last planet conquered -> Enter Next Multiverse!
+            setTimeout(() => {
+                showToast('Multiverse Conquered!', `All planets in Multiverse ${gameState.multiverse || 1} secured! Preparing Multiverse Jump...`);
+                setTimeout(() => {
+                    gameState.multiverse = (gameState.multiverse || 1) + 1;
+                    // Reset invasion state to Earth
+                    gameState.invasion.currentPlanet = 0;
+                    gameState.invasion.regionProgress = {};
+                    gameState.invasion.conqueredRegions = [];
+                    gameState.invasion.energy = 0;
+                    
+                    // Nerf non-energy buffs by multiplying buffNerf by 0.85
+                    gameState.buffNerf = (gameState.buffNerf || 1) * 0.85;
+
+                    recalculatePowers();
+                    updateInvasionUI();
+                    saveGame();
+                    showToast('Welcome to Multiverse ' + gameState.multiverse, 'All planets reset. Non-energy buffs nerfed, but scaling buffs & energy caps increased!');
+                }, 1500);
+            }, 1000);
         }
     }
 }
 
 // SVG click listeners are now handled dynamically in updateInvasionUI()
 
-setInterval(saveGame, 10000); // 5초에서 10초로 간격 상향
-document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+document.addEventListener('dblclick', e => {
+    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && !e.target.closest('.action-btn')) {
+        e.preventDefault();
+    }
+}, { passive: false });
 
 const crBtn = document.getElementById('chrono-raibos');
 if (crBtn) {
@@ -2442,8 +2807,23 @@ if (elements.hrBtn) {
 // Init
 renderLists();
 loadGame();
-updateUI();
-updateInvasionUI();
+    updateUI();
+    updateInvasionUI();
+
+    // Music toggle setup
+    const music = document.getElementById('bg-music');
+    const musicToggle = document.getElementById('music-toggle');
+    if (music && musicToggle) {
+        musicToggle.addEventListener('click', () => {
+            if (music.paused) {
+                music.play();
+                musicToggle.textContent = 'Mute Music';
+            } else {
+                music.pause();
+                musicToggle.textContent = 'Play Music';
+            }
+        });
+    }
 
 // Ranking Events
 const refreshRankBtn = document.getElementById('refresh-ranking-raibos');
