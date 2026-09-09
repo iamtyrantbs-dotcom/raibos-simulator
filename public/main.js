@@ -2288,7 +2288,9 @@ function gameLoop(currentTime) {
     }
     
     gameState.lastSaveTime = Date.now();
-    
+    requestAnimationFrame(gameLoop);
+}
+
 // Constellation UI Listeners
 const openCBtn = document.getElementById('open-constellation-btn');
 if (openCBtn) {
@@ -2301,11 +2303,8 @@ const closeCBtn = document.getElementById('close-constellation-btn');
 if (closeCBtn) {
     closeCBtn.addEventListener('click', () => {
         document.getElementById('constellation-modal').style.display = 'none';
-        updateDisplay();
+        updateUI();
     });
-}
-
-requestAnimationFrame(gameLoop);
 }
 
 // Data
