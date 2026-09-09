@@ -108,8 +108,13 @@
                 <!-- INVASION TAB (2.0) -->
                 <div id="invasion-panel" class="upgrade-list">
                     <div class="planet-header">
-                        <div id="planet-name" class="planet-name">Earth</div>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+                            <button id="prev-planet-btn" class="action-btn" style="padding: 4px 12px; font-size: 1.2rem; cursor: pointer;">◀</button>
+                            <div id="planet-name" class="planet-name">Earth</div>
+                            <button id="next-planet-btn" class="action-btn" style="padding: 4px 12px; font-size: 1.2rem; cursor: pointer;">▶</button>
+                        </div>
                         <div id="planet-status" class="planet-status">Conquest in progress...</div>
+                        <button id="multiverse-jump-btn" class="action-btn" style="display: none; margin: 10px auto 0 auto; background: linear-gradient(135deg, #ff007f, #7928ca); border: 1px solid #ff007f; box-shadow: 0 0 15px #ff007f; color: #fff; font-weight: bold; padding: 8px 16px;">🌌 MULTIVERSE JUMP 🌌</button>
                     </div>
 
                     <div class="energy-container">

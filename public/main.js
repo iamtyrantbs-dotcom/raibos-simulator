@@ -2347,19 +2347,18 @@ function loadGame() {
         // Force update energyMax for legacy saves
         
         if (gameState.invasion && planetsData[gameState.invasion.currentPlanet]) {
-            let curr = gameState.invasion.currentPlanet;
-            while (curr < planetsData.length - 1) {
-                const planet = planetsData[curr];
-                const allConquered = planet.regions.every(r => gameState.invasion.conqueredRegions.includes(r.id));
-                if (allConquered) {
-                    curr++;
-                } else {
-                    break;
+            let maxUnlocked = gameState.invasion.maxPlanetUnlocked || 0;
+            planetsData.forEach((p, idx) => {
+                const cleared = p.regions.every(r => gameState.invasion.conqueredRegions.includes(r.id));
+                if (cleared) {
+                    if (idx + 1 > maxUnlocked && idx + 1 < planetsData.length) {
+                        maxUnlocked = idx + 1;
+                    } else if (idx === planetsData.length - 1) {
+                        maxUnlocked = idx;
+                    }
                 }
-            }
-            if (curr !== gameState.invasion.currentPlanet) {
-                gameState.invasion.currentPlanet = curr;
-            }
+            });
+            gameState.invasion.maxPlanetUnlocked = Math.max(maxUnlocked, gameState.invasion.currentPlanet);
             gameState.invasion.energyMax = planetsData[gameState.invasion.currentPlanet].energyMax;
         }
 
@@ -2561,13 +2560,73 @@ function updateInvasionUI() {
     const multiverseScale = 1 + (baseMultiverseScale - 1) * costMitigation;
     gameState.invasion.energyMax = Math.floor(planet.energyMax * multiverseScale);
 
-    document.getElementById('planet-name').innerText = `${planet.name} (Multiverse ${gameState.multiverse || 1})`;
+    document.getElementById('planet-name').innerText = `${planet.name} (MV ${gameState.multiverse || 1})`;
     document.getElementById('planet-name').style.color = planet.color;
+
+    // Prev / Next button states
+    const prevBtn = document.getElementById('prev-planet-btn');
+    const nextBtn = document.getElementById('next-planet-btn');
+    if (prevBtn) {
+        prevBtn.disabled = gameState.invasion.currentPlanet <= 0;
+        prevBtn.onclick = () => {
+            if (gameState.invasion.currentPlanet > 0) {
+                gameState.invasion.currentPlanet--;
+                selectedRegionId = null;
+                updateInvasionUI();
+                saveGame();
+            }
+        };
+    }
+    if (nextBtn) {
+        // Unlock next planet if current planet is fully conquered or maxPlanetUnlocked allows it
+        const currentPlanetCleared = planet.regions.every(r => gameState.invasion.conqueredRegions.includes(r.id));
+        const maxUnlocked = gameState.invasion.maxPlanetUnlocked || 0;
+        const canGoNext = gameState.invasion.currentPlanet < planetsData.length - 1 && 
+                          (currentPlanetCleared || gameState.invasion.currentPlanet < maxUnlocked);
+        nextBtn.disabled = !canGoNext;
+        nextBtn.onclick = () => {
+            if (canGoNext) {
+                gameState.invasion.currentPlanet++;
+                if (gameState.invasion.currentPlanet > (gameState.invasion.maxPlanetUnlocked || 0)) {
+                    gameState.invasion.maxPlanetUnlocked = gameState.invasion.currentPlanet;
+                }
+                selectedRegionId = null;
+                updateInvasionUI();
+                saveGame();
+            }
+        };
+    }
+
+    // Multiverse Jump Button visibility
+    const mvJumpBtn = document.getElementById('multiverse-jump-btn');
+    if (mvJumpBtn) {
+        const lastPlanet = planetsData[planetsData.length - 1];
+        const lastPlanetCleared = lastPlanet.regions.every(r => gameState.invasion.conqueredRegions.includes(r.id));
+        if (lastPlanetCleared) {
+            mvJumpBtn.style.display = 'block';
+            mvJumpBtn.onclick = triggerMultiverseJump;
+        } else {
+            mvJumpBtn.style.display = 'none';
+        }
+    }
 
     const energy = gameState.invasion.energy;
     const maxEnergy = gameState.invasion.energyMax;
     document.getElementById('energy-value').innerText = `${Math.floor(energy)} / ${maxEnergy}`;
     document.getElementById('energy-bar-fill').style.width = `${Math.min(100, (energy / maxEnergy) * 100)}%`;
+
+    // Planet Status text update
+    const planetStatusEl = document.getElementById('planet-status');
+    const isPlanetCleared = planet.regions.every(r => gameState.invasion.conqueredRegions.includes(r.id));
+    if (planetStatusEl) {
+        if (isPlanetCleared) {
+            planetStatusEl.innerText = `✨ Fully Conquered! (You can navigate freely)`;
+            planetStatusEl.style.color = '#00ffaa';
+        } else {
+            planetStatusEl.innerText = `Conquest in progress...`;
+            planetStatusEl.style.color = 'var(--text-secondary)';
+        }
+    }
 
     // Auto select first unconquered region if none selected or selected is conquered
     if (!selectedRegionId || gameState.invasion.conqueredRegions.includes(selectedRegionId)) {
@@ -2708,6 +2767,28 @@ function updateInvasionUI() {
     }
 }
 
+function triggerMultiverseJump() {
+    if (confirm(`🌌 Multiverse Jump to Multiverse ${(gameState.multiverse || 1) + 1}? (All planets reset, non-energy buffs nerfed by 15%, but scaling & max energy will increase!)`)) {
+        document.getElementById('invasion-panel').classList.add('hyperdrive-active');
+        setTimeout(() => {
+            gameState.multiverse = (gameState.multiverse || 1) + 1;
+            gameState.invasion.currentPlanet = 0;
+            gameState.invasion.maxPlanetUnlocked = 0;
+            gameState.invasion.regionProgress = {};
+            gameState.invasion.conqueredRegions = [];
+            gameState.invasion.energy = 0;
+            
+            gameState.buffNerf = (gameState.buffNerf || 1) * 0.85;
+
+            document.getElementById('invasion-panel').classList.remove('hyperdrive-active');
+            recalculatePowers();
+            updateInvasionUI();
+            saveGame();
+            showToast('Welcome to Multiverse ' + gameState.multiverse, 'All planets reset. Prepared for higher tier conquests!');
+        }, 1500);
+    }
+}
+
 function checkPlanetClear() {
     const planet = planetsData[gameState.invasion.currentPlanet];
     const allConquered = planet.regions.every(r => gameState.invasion.conqueredRegions.includes(r.id));
@@ -2715,37 +2796,27 @@ function checkPlanetClear() {
     if (allConquered) {
         showToast('Planet Secured!', `${planet.name} is now under Raibos control.`);
         if (gameState.invasion.currentPlanet < planetsData.length - 1) {
+            // Unlock next planet
+            if (gameState.invasion.currentPlanet + 1 > (gameState.invasion.maxPlanetUnlocked || 0)) {
+                gameState.invasion.maxPlanetUnlocked = gameState.invasion.currentPlanet + 1;
+            }
             setTimeout(() => {
-                if (confirm(`${planet.name} cleared! Prepare for hyperspace jump to the next planet?`)) {
+                if (confirm(`${planet.name} cleared! Move to next planet immediately?`)) {
                     document.getElementById('invasion-panel').classList.add('hyperdrive-active');
                     setTimeout(() => {
                         gameState.invasion.currentPlanet++;
                         document.getElementById('invasion-panel').classList.remove('hyperdrive-active');
+                        selectedRegionId = null;
                         updateInvasionUI();
                         saveGame();
                     }, 1500);
                 }
             }, 1000);
         } else {
-            // Last planet conquered -> Enter Next Multiverse!
+            // Last planet (Andromeda Galaxy) cleared!
             setTimeout(() => {
-                showToast('Multiverse Conquered!', `All planets in Multiverse ${gameState.multiverse || 1} secured! Preparing Multiverse Jump...`);
-                setTimeout(() => {
-                    gameState.multiverse = (gameState.multiverse || 1) + 1;
-                    // Reset invasion state to Earth
-                    gameState.invasion.currentPlanet = 0;
-                    gameState.invasion.regionProgress = {};
-                    gameState.invasion.conqueredRegions = [];
-                    gameState.invasion.energy = 0;
-                    
-                    // Nerf non-energy buffs by multiplying buffNerf by 0.85
-                    gameState.buffNerf = (gameState.buffNerf || 1) * 0.85;
-
-                    recalculatePowers();
-                    updateInvasionUI();
-                    saveGame();
-                    showToast('Welcome to Multiverse ' + gameState.multiverse, 'All planets reset. Non-energy buffs nerfed, but scaling buffs & energy caps increased!');
-                }, 1500);
+                showToast('Multiverse Conquered!', `All planets in Multiverse ${gameState.multiverse || 1} secured! Use the Multiverse Jump button or navigate completed planets freely!`);
+                updateInvasionUI();
             }, 1000);
         }
     }
