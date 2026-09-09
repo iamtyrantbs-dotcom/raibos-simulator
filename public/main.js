@@ -255,12 +255,12 @@ const constellationData = [
     {
         id: 'c_energy_regen_mult',
         name: 'Pulsar Overdrive',
-        desc: '+20% Energy Regen rate per level (permanent)',
+        desc: '+10% Energy Regen rate per level (permanent)',
         maxLevel: 20,
         baseCost: 40,
         costGrowth: 1.6,
         requires: ['c_energy_on_conquest'],
-        effect: (level) => 1 + (level * 0.2)
+        effect: (level) => 1 + (level * 0.1)
     },
 
     // Tier 6 (Ultimate / Multiverse Skills): Requires Tier 5
@@ -544,13 +544,13 @@ const planetsData = [
         name: 'Earth',
         color: '#00f2ff',
         energyMax: 100,
-        energyRegen: 25,
+        energyRegen: 12.5,
         regions: [
             { id: 'asia',       name: 'Asia',            buff: 'Click Power +50%',          type: 'click',      value: 0.5,  cost: 10,   d: "M138,15 L175,15 L188,35 L180,55 L165,72 L140,68 L128,50 L130,30 Z" },
             { id: 'europe',     name: 'Europe',          buff: 'Upgrade Cost -5%',           type: 'cost',       value: 0.05, cost: 20,   d: "M95,12 L120,10 L128,28 L115,38 L100,35 L90,25 Z" },
             { id: 'na',        name: 'North America',    buff: 'Idle Power +50%',            type: 'idle',       value: 0.5,  cost: 30,   d: "M12,10 L68,10 L75,28 L70,48 L52,58 L22,55 L8,38 Z" },
             { id: 'sa',        name: 'South America',    buff: 'RP Gain +20%',               type: 'rp',         value: 0.2,  cost: 40,   d: "M38,62 L65,60 L72,80 L65,94 L48,96 L35,82 Z" },
-            { id: 'africa',    name: 'Africa',           buff: 'Energy Regen +100%',         type: 'energy',     value: 1.0,  cost: 50,   d: "M98,50 L122,48 L130,68 L125,88 L108,92 L94,78 L92,60 Z" },
+            { id: 'africa',    name: 'Africa',           buff: 'Energy Regen +50%',          type: 'energy',     value: 0.5,  cost: 50,   d: "M98,50 L122,48 L130,68 L125,88 L108,92 L94,78 L92,60 Z" },
             { id: 'oceania',   name: 'Oceania',          buff: 'Global Multiplier +10%',     type: 'mult',       value: 0.1,  cost: 60,   d: "M162,68 L185,65 L190,82 L178,90 L162,84 Z" },
             { id: 'antarctica',name: 'Antarctica',       buff: 'Global Multiplier x1.1',     type: 'mult_total', value: 1.1,  cost: 70,   d: "M40,90 L160,90 L165,98 L35,98 Z" },
             { id: 'atlantis',  name: 'Atlantis',         buff: 'All Production x1.2',        type: 'all_prod',   value: 1.2,  cost: 80,   d: "M75,35 L90,30 L95,50 L80,55 Z" },
@@ -563,7 +563,7 @@ const planetsData = [
         name: 'Mars',
         color: '#ff6633',
         energyMax: 500,
-        energyRegen: 25,
+        energyRegen: 12.5,
         regions: [
             { id: 'valles',     name: 'Valles Marineris',  buff: 'Global Multiplier x1.3',     type: 'mult_total',   value: 1.3,  cost: 120,  d: "M25,45 L80,32 L135,42 L165,62 L145,80 L75,72 Z" },
             { id: 'olympus',    name: 'Olympus Mons',      buff: 'Click Power +150%',           type: 'click',        value: 1.5,  cost: 150,  d: "M78,15 L115,8 L128,25 L110,38 L82,35 Z" },
@@ -582,7 +582,7 @@ const planetsData = [
         name: 'Jupiter',
         color: '#ffcc99',
         energyMax: 2000,
-        energyRegen: 25,
+        energyRegen: 12.5,
         regions: [
             { id: 'grs',        name: 'Great Red Spot',         buff: 'Global Multiplier x2',     type: 'mult_total',  value: 2.0,  cost: 600,  d: "M72,45 Q100,28 145,48 T108,70 Z" },
             { id: 'europa',     name: 'Europa',                 buff: 'All Production x1.5',      type: 'all_prod',    value: 1.5,  cost: 700,  d: "M25,28 L60,18 L70,48 L38,58 Z" },
@@ -602,7 +602,7 @@ const planetsData = [
         name: 'Saturn',
         color: '#e6e600',
         energyMax: 8000,
-        energyRegen: 25,
+        energyRegen: 12.5,
         regions: [
             { id: 'rings_a',    name: 'A Ring',              buff: 'Global Multiplier x3.5',  type: 'mult_total', value: 3.5,  cost: 2500,  d: "M8,45 Q50,15 192,45 L190,52 Q50,22 10,52 Z" },
             { id: 'rings_b',    name: 'B Ring (Brightest)',   buff: 'Global Multiplier x4',    type: 'mult_total', value: 4.0,  cost: 3000,  d: "M12,55 Q55,28 188,55 L186,62 Q52,35 14,62 Z" },
@@ -622,7 +622,7 @@ const planetsData = [
         name: 'Neptune',
         color: '#3366ff',
         energyMax: 25000,
-        energyRegen: 25,
+        energyRegen: 12.5,
         regions: [
             { id: 'triton',      name: 'Triton',               buff: 'RP Gain x2.5',             type: 'rp_mult',    value: 2.5,  cost: 9000,  d: "M45,38 L85,28 L98,58 L58,68 Z" },
             { id: 'darkspot',    name: 'Great Dark Spot',       buff: 'Global Multiplier x8',     type: 'mult_total', value: 8.0,  cost: 10000, d: "M105,38 Q128,18 172,38 T132,58 Z" },
@@ -641,7 +641,7 @@ const planetsData = [
         name: 'Pluto (Outer Rim)',
         color: '#ccccff',
         energyMax: 80000,
-        energyRegen: 25,
+        energyRegen: 12.5,
         regions: [
             { id: 'charon',    name: 'Charon',                      buff: 'Final Multiplier x12',    type: 'mult_total', value: 12.0, cost: 30000, d: "M25,25 L65,25 L65,62 L25,62 Z" },
             { id: 'heart',     name: 'Tombaugh Regio (The Heart)',   buff: 'All Production x3',       type: 'all_prod',   value: 3.0,  cost: 40000, d: "M95,38 Q118,18 142,38 L100,78 L58,38 Q82,18 95,38 Z" },
@@ -658,7 +658,7 @@ const planetsData = [
         name: 'Interstellar Space',
         color: '#aaaaaa',
         energyMax: 200000,
-        energyRegen: 25,
+        energyRegen: 12.5,
         regions: [
             { id: 'oort_cloud',     name: 'The Oort Cloud',            buff: 'Global Multiplier x5',     type: 'mult_total', value: 5.0,  cost: 100000, d: "M10,10 Q50,0 100,10 T190,10 L190,90 Q150,100 100,90 T10,90 Z" },
             { id: 'voyager_zone',   name: 'Voyager Deadzone',          buff: 'All Production x4',        type: 'all_prod',   value: 4.0,  cost: 120000, d: "M20,40 L60,35 L65,65 L25,70 Z" },
@@ -672,7 +672,7 @@ const planetsData = [
         name: 'Alpha Centauri System',
         color: '#ffcc66',
         energyMax: 450000,
-        energyRegen: 25,
+        energyRegen: 12.5,
         regions: [
             { id: 'proxima_b',      name: 'Proxima Centauri b',      buff: 'Global Multiplier x15',     type: 'mult_total', value: 15.0, cost: 250000, d: "M30,30 Q60,10 90,30 L85,70 Q55,90 25,70 Z" },
             { id: 'alpha_a',        name: 'Centauri A Core',         buff: 'Idle Power +10000%',        type: 'idle',       value: 100.0,cost: 300000, d: "M110,30 Q140,10 170,30 L165,70 Q135,90 105,70 Z" },
@@ -686,7 +686,7 @@ const planetsData = [
         name: 'The Galactic Center',
         color: '#ff33ff',
         energyMax: 750000,
-        energyRegen: 25,
+        energyRegen: 12.5,
         regions: [
             { id: 'orion_nebula',     name: 'Orion Nebula',                  buff: 'All Production x6',            type: 'all_prod',   value: 6.0,  cost: 500000, d: "M10,20 Q60,5 110,20 L105,40 Q55,25 5,40 Z" },
             { id: 'pillars_creation', name: 'Pillars of Creation',           buff: 'Global Multiplier x35',        type: 'mult_total', value: 35.0, cost: 550000, d: "M130,10 L160,10 L165,90 L125,90 Z" },
@@ -700,7 +700,7 @@ const planetsData = [
         name: 'Andromeda Galaxy',
         color: '#ff00aa',
         energyMax: 1000000,
-        energyRegen: 25,
+        energyRegen: 12.5,
         regions: [
             { id: 'andromeda_edge',   name: 'Andromeda Edge',                buff: 'Energy Regen x2',           type: 'energy_mult',value: 2.0, cost: 800000, d: "M20,20 Q50,0 80,20 T140,20 L140,80 Q110,100 80,80 T20,80 Z" },
             { id: 'm32',              name: 'M32 Satellite',                 buff: 'All Production x8',            type: 'all_prod',   value: 8.0,  cost: 850000, d: "M150,15 L180,10 L185,40 L155,45 Z" },
@@ -1939,10 +1939,8 @@ function getGlobalMultiplier() {
     const multiverseSynergy = getConstellationEffect('c_multiverse_power') || 1;
     mult *= multiverseSynergy;
 
-    // Multiverse scaling for region rewards & global nerfing
-    const multiverseScale = Math.pow(1.3, (gameState.multiverse || 1) - 1);
-    const nerfShield = getConstellationEffect('c_buff_nerf_shield') || 0;
-    const nerf = Math.min(1.0, (gameState.buffNerf || 1) + nerfShield);
+    // Multiverse scaling for region rewards
+    const multiverseScale = Math.pow(1.5, (gameState.multiverse || 1) - 1);
 
     // Regional Multipliers
     const allConquered = gameState.invasion.conqueredRegions;
@@ -1956,7 +1954,7 @@ function getGlobalMultiplier() {
         }
     });
 
-    return mult * nerf;
+    return mult;
 }
 
 function recalculatePowers() {
@@ -1972,9 +1970,7 @@ function recalculatePowers() {
     cp *= superClick;
     ip *= superIdle;
 
-    const multiverseScale = Math.pow(1.3, (gameState.multiverse || 1) - 1);
-    const nerfShield = getConstellationEffect('c_buff_nerf_shield') || 0;
-    const nerf = Math.min(1.0, (gameState.buffNerf || 1) + nerfShield);
+    const multiverseScale = Math.pow(1.5, (gameState.multiverse || 1) - 1);
     const allConquered = gameState.invasion.conqueredRegions;
     const allRegions = getAllRegions();
 
@@ -1990,8 +1986,8 @@ function recalculatePowers() {
     const mult = getGlobalMultiplier();
     
     const syncBonus = getConstellationEffect('c_click_idle_sync') || 0;
-    gameState.idlePower = ip * mult * nerf;
-    gameState.clickPower = (cp + ip * syncBonus) * mult * nerf;
+    gameState.idlePower = ip * mult;
+    gameState.clickPower = (cp + ip * syncBonus) * mult;
 }
 
 // UI
@@ -2257,8 +2253,8 @@ function gameLoop(currentTime) {
     let regen = baseRegen;
     gameState.invasion.conqueredRegions.forEach(rid => {
         const r = getAllRegions().find(x => x.id === rid);
-        if (r && r.type === 'energy') regen *= (1 + r.value);       // e.g. +50% regen
-        if (r && r.type === 'energy_mult') regen *= r.value;         // e.g. x2 regen
+        if (r && r.type === 'energy') regen *= (1 + r.value);                  // e.g. +50% regen
+        if (r && r.type === 'energy_mult') regen *= (1 + (r.value - 1) * 0.5); // halved multiplier boost (e.g. x2 -> x1.5)
     });
 
     gameState.invasion.energy = Math.min(maxE, (gameState.invasion.energy || 0) + regen * dt);
@@ -2768,7 +2764,7 @@ function updateInvasionUI() {
 }
 
 function triggerMultiverseJump() {
-    if (confirm(`🌌 Multiverse Jump to Multiverse ${(gameState.multiverse || 1) + 1}? (All planets reset, non-energy buffs nerfed by 15%, but scaling & max energy will increase!)`)) {
+    if (confirm(`🌌 Multiverse Jump to Multiverse ${(gameState.multiverse || 1) + 1}? (All planets reset, but region buffs scale up by +50% permanently!)`)) {
         document.getElementById('invasion-panel').classList.add('hyperdrive-active');
         setTimeout(() => {
             gameState.multiverse = (gameState.multiverse || 1) + 1;
@@ -2777,14 +2773,12 @@ function triggerMultiverseJump() {
             gameState.invasion.regionProgress = {};
             gameState.invasion.conqueredRegions = [];
             gameState.invasion.energy = 0;
-            
-            gameState.buffNerf = (gameState.buffNerf || 1) * 0.85;
 
             document.getElementById('invasion-panel').classList.remove('hyperdrive-active');
             recalculatePowers();
             updateInvasionUI();
             saveGame();
-            showToast('Welcome to Multiverse ' + gameState.multiverse, 'All planets reset. Prepared for higher tier conquests!');
+            showToast('Welcome to Multiverse ' + gameState.multiverse, 'All planets reset! Regional rewards and energy scaling are now significantly boosted!');
         }, 1500);
     }
 }
