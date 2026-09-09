@@ -15,7 +15,8 @@ let gameState = {
         energyRegen: 25,
         currentPlanet: 0,
         regionProgress: {}, // regionId -> 0-100
-        conqueredRegions: [] // list of regionIds
+        conqueredRegions: [], // list of regionIds in current multiverse
+        retainedConqueredRegions: [] // list of regionIds retained from past multiverses
     },
     multiverse: 1, // new multiverse counter
     buffNerf: 1 // multiplier for non‑energy buffs (1 = no nerf)
@@ -1942,13 +1943,15 @@ function getGlobalMultiplier() {
     // Multiverse scaling for region rewards
     const multiverseScale = Math.pow(1.5, (gameState.multiverse || 1) - 1);
 
-    // Regional Multipliers
-    const allConquered = gameState.invasion.conqueredRegions;
+    // Regional Multipliers (Current Multiverse conquered + Past Multiverse retained non-energy)
+    const currentConquered = gameState.invasion.conqueredRegions || [];
+    const retainedConquered = gameState.invasion.retainedConqueredRegions || [];
+    const allConquered = Array.from(new Set([...currentConquered, ...retainedConquered]));
     const allRegions = getAllRegions();
 
     allConquered.forEach(regionId => {
         const region = allRegions.find(r => r.id === regionId);
-        if (region) {
+        if (region && region.type !== 'energy' && region.type !== 'energy_mult') {
             if (region.type === 'mult') mult += region.value * multiverseScale;
             if (region.type === 'mult_total') mult *= (1 + (region.value - 1) * multiverseScale);
         }
@@ -1971,12 +1974,14 @@ function recalculatePowers() {
     ip *= superIdle;
 
     const multiverseScale = Math.pow(1.5, (gameState.multiverse || 1) - 1);
-    const allConquered = gameState.invasion.conqueredRegions;
+    const currentConquered = gameState.invasion.conqueredRegions || [];
+    const retainedConquered = gameState.invasion.retainedConqueredRegions || [];
+    const allConquered = Array.from(new Set([...currentConquered, ...retainedConquered]));
     const allRegions = getAllRegions();
 
     allConquered.forEach(regionId => {
         const region = allRegions.find(r => r.id === regionId);
-        if (region) {
+        if (region && region.type !== 'energy' && region.type !== 'energy_mult') {
             if (region.type === 'click') cp *= (1 + region.value * multiverseScale);
             if (region.type === 'idle') ip *= (1 + region.value * multiverseScale);
             if (region.type === 'all_prod') { cp *= (1 + (region.value - 1) * multiverseScale); ip *= (1 + (region.value - 1) * multiverseScale); }
@@ -2764,9 +2769,24 @@ function updateInvasionUI() {
 }
 
 function triggerMultiverseJump() {
-    if (confirm(`🌌 Multiverse Jump to Multiverse ${(gameState.multiverse || 1) + 1}? (All planets reset, but region buffs scale up by +50% permanently!)`)) {
+    if (confirm(`🌌 Multiverse Jump to Multiverse ${(gameState.multiverse || 1) + 1}? (All planets reset, but all non-energy region buffs are PERMANENTLY RETAINED and boosted!)`)) {
         document.getElementById('invasion-panel').classList.add('hyperdrive-active');
         setTimeout(() => {
+            const allRegions = getAllRegions();
+            if (!gameState.invasion.retainedConqueredRegions) {
+                gameState.invasion.retainedConqueredRegions = [];
+            }
+            
+            // Retain non-energy conquered regions from the current multiverse
+            (gameState.invasion.conqueredRegions || []).forEach(rid => {
+                const r = allRegions.find(x => x.id === rid);
+                if (r && r.type !== 'energy' && r.type !== 'energy_mult') {
+                    if (!gameState.invasion.retainedConqueredRegions.includes(rid)) {
+                        gameState.invasion.retainedConqueredRegions.push(rid);
+                    }
+                }
+            });
+
             gameState.multiverse = (gameState.multiverse || 1) + 1;
             gameState.invasion.currentPlanet = 0;
             gameState.invasion.maxPlanetUnlocked = 0;
@@ -2778,7 +2798,7 @@ function triggerMultiverseJump() {
             recalculatePowers();
             updateInvasionUI();
             saveGame();
-            showToast('Welcome to Multiverse ' + gameState.multiverse, 'All planets reset! Regional rewards and energy scaling are now significantly boosted!');
+            showToast('Welcome to Multiverse ' + gameState.multiverse, 'All planets reset! All non-energy regional buffs have been permanently retained and scaled up!');
         }, 1500);
     }
 }
