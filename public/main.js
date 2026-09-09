@@ -2093,35 +2093,6 @@ function buyUpgradeMax(upg) {
     }
 }
 
-function buyMaxAllUpgrades() {
-    let totalBought = 0;
-    const allUpgrades = [...clickUpgrades, ...idleUpgrades];
-    let boughtAnyInLoop = true;
-
-    while (boughtAnyInLoop) {
-        boughtAnyInLoop = false;
-        for (const upg of allUpgrades) {
-            const cost = getUpgradeCost(upg);
-            if (gameState.raibos >= cost) {
-                gameState.raibos -= cost;
-                gameState.upgradeLevels[upg.id] = (gameState.upgradeLevels[upg.id] || 0) + 1;
-                totalBought++;
-                boughtAnyInLoop = true;
-            }
-        }
-    }
-
-    if (totalBought > 0) {
-        showToast('BUY MAX!', `Bought ${totalBought} total upgrade levels!`);
-        recalculatePowers();
-        updateUI();
-        saveGame();
-    }
-}
-
-const buyMaxBtn = document.getElementById('buy-max-btn');
-if (buyMaxBtn) {
-    buyMaxBtn.addEventListener('click', buyMaxAllUpgrades);
 }
 
 elements.btn.addEventListener('mousedown', (e) => {
@@ -2824,6 +2795,28 @@ renderLists();
 loadGame();
     updateUI();
     updateInvasionUI();
+
+// Tab navigation
+elements.tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        elements.tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        const targetId = tab.getAttribute('data-target');
+        document.querySelectorAll('.upgrade-list').forEach(panel => {
+            panel.classList.remove('active');
+        });
+        
+        const targetPanel = document.getElementById(targetId);
+        if (targetPanel) {
+            targetPanel.classList.add('active');
+        }
+        
+        if (targetId === 'ranking-upgrades') {
+            fetchRaibosLeaderboard();
+        }
+    });
+});
 
 // Ranking Events
 const refreshRankBtn = document.getElementById('refresh-ranking-raibos');
