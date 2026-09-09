@@ -24,309 +24,88 @@ let gameState = {
 
 
 const constellationData = [
-    // Root Level Skills (Tier 1: No prerequisite)
-    {
-        id: 'c_click',
-        name: 'Starlight Resonance',
-        desc: '+50% Click Power per level',
-        maxLevel: 20,
-        baseCost: 5,
-        costGrowth: 1.5,
-        requires: [],
-        effect: (level) => 1 + (level * 0.5)
-    },
-    {
-        id: 'c_idle',
-        name: 'Void Harvester',
-        desc: '+50% Idle Power per level',
-        maxLevel: 20,
-        baseCost: 5,
-        costGrowth: 1.5,
-        requires: [],
-        effect: (level) => 1 + (level * 0.5)
-    },
-    {
-        id: 'c_energy_start',
-        name: 'Cosmic Battery',
-        desc: 'Start with +10% Max Energy after Rebirth',
-        maxLevel: 10,
-        baseCost: 10,
-        costGrowth: 2.0,
-        requires: [],
-        effect: (level) => level * 0.1
-    },
+    // Tier 1: Base Cost ~10
+    { id: 'c_click', name: 'Starlight Resonance', desc: '+50% Click Power per level', maxLevel: 25, baseCost: 10, costGrowth: 1.5, requires: [], effect: (level) => 1 + (level * 0.5) },
+    { id: 'c_idle', name: 'Void Harvester', desc: '+50% Idle Power per level', maxLevel: 25, baseCost: 10, costGrowth: 1.5, requires: [], effect: (level) => 1 + (level * 0.5) },
+    { id: 'c_energy_start', name: 'Cosmic Battery', desc: 'Start with +10% Max Energy after Rebirth', maxLevel: 10, baseCost: 15, costGrowth: 2.0, requires: [], effect: (level) => level * 0.1 },
 
-    // Tier 2: Requires Tier 1
-    {
-        id: 'c_cost',
-        name: 'Quantum Efficiency',
-        desc: '-2% all Upgrade Costs per level',
-        maxLevel: 25,
-        baseCost: 20,
-        costGrowth: 1.2,
-        requires: ['c_click'],
-        effect: (level) => Math.max(0.1, 1 - (level * 0.02))
-    },
-    {
-        id: 'c_regen',
-        name: 'Dark Matter Reactor',
-        desc: '+1 Base Energy Regen per sec per level',
-        maxLevel: 50,
-        baseCost: 15,
-        costGrowth: 1.3,
-        requires: ['c_energy_start'],
-        effect: (level) => level * 1
-    },
-    {
-        id: 'c_rp',
-        name: 'Celestial Harvest',
-        desc: '+10% RP gained on each Rebirth per level',
-        maxLevel: 20,
-        baseCost: 25,
-        costGrowth: 1.6,
-        requires: ['c_idle'],
-        effect: (level) => 1 + (level * 0.1)
-    },
-    {
-        id: 'c_global',
-        name: 'Nebula Amplifier',
-        desc: '+5% Global Multiplier per level (permanent)',
-        maxLevel: 30,
-        baseCost: 50,
-        costGrowth: 1.4,
-        requires: ['c_click', 'c_idle'],
-        effect: (level) => level * 0.05
-    },
+    // Tier 2: Base Cost ~100
+    { id: 'c_cost', name: 'Quantum Efficiency', desc: '-2% all Upgrade Costs per level', maxLevel: 25, baseCost: 100, costGrowth: 1.3, requires: ['c_click'], effect: (level) => Math.max(0.1, 1 - (level * 0.02)) },
+    { id: 'c_regen', name: 'Dark Matter Reactor', desc: '+1 Base Energy Regen per sec per level', maxLevel: 50, baseCost: 120, costGrowth: 1.3, requires: ['c_energy_start'], effect: (level) => level * 1 },
+    { id: 'c_rp', name: 'Celestial Harvest', desc: '+10% RP gained on each Rebirth per level', maxLevel: 25, baseCost: 100, costGrowth: 1.6, requires: ['c_idle'], effect: (level) => 1 + (level * 0.1) },
 
-    // Tier 3: Requires Tier 2
-    {
-        id: 'c_invasion_cost',
-        name: 'Warp Infiltration',
-        desc: '-2% Invasion Energy Cost per level',
-        maxLevel: 30,
-        baseCost: 30,
-        costGrowth: 1.3,
-        requires: ['c_regen'],
-        effect: (level) => Math.max(0.1, 1 - level * 0.02)
-    },
-    {
-        id: 'c_energy_max',
-        name: 'Stellar Capacitor',
-        desc: '+5% Max Energy Capacity per level',
-        maxLevel: 20,
-        baseCost: 40,
-        costGrowth: 1.5,
-        requires: ['c_regen'],
-        effect: (level) => 1 + (level * 0.05)
-    },
-    {
-        id: 'c_invasion_progress',
-        name: 'Quantum Strike',
-        desc: '+5% min invasion progress per level (raises floor)',
-        maxLevel: 10,
-        baseCost: 100,
-        costGrowth: 2.0,
-        requires: ['c_invasion_cost'],
-        effect: (level) => level * 5
-    },
-    {
-        id: 'c_offline',
-        name: 'Chrono Echo',
-        desc: '+10% Offline Production Gain per level',
-        maxLevel: 20,
-        baseCost: 20,
-        costGrowth: 1.4,
-        requires: ['c_rp'],
-        effect: (level) => 1 + (level * 0.1)
-    },
-    {
-        id: 'c_click_idle_sync',
-        name: 'Harmonic Resonance',
-        desc: '+1% of Idle Power added as Click Power per level',
-        maxLevel: 25,
-        baseCost: 35,
-        costGrowth: 1.5,
-        requires: ['c_global'],
-        effect: (level) => level * 0.01
-    },
+    // Tier 3: Base Cost ~500
+    { id: 'c_global', name: 'Nebula Amplifier', desc: '+5% Global Multiplier per level', maxLevel: 30, baseCost: 500, costGrowth: 1.4, requires: ['c_click', 'c_idle'], effect: (level) => level * 0.05 },
+    { id: 'c_invasion_cost', name: 'Warp Infiltration', desc: '-2% Invasion Energy Cost per level', maxLevel: 30, baseCost: 500, costGrowth: 1.3, requires: ['c_regen'], effect: (level) => Math.max(0.1, 1 - level * 0.02) },
+    { id: 'c_energy_max', name: 'Stellar Capacitor', desc: '+5% Max Energy Capacity per level', maxLevel: 25, baseCost: 600, costGrowth: 1.5, requires: ['c_regen'], effect: (level) => 1 + (level * 0.05) },
 
-    // Tier 4: Requires Tier 3
-    {
-        id: 'c_rp_mult_decay',
-        name: 'Eternal Covenant',
-        desc: 'Each RP gives +0.1% more to Global Multiplier per level',
-        maxLevel: 10,
-        baseCost: 200,
-        costGrowth: 3.0,
-        requires: ['c_global'],
-        effect: (level) => 0.05 + (level * 0.001)
-    },
-    {
-        id: 'c_timeskip',
-        name: 'Temporal Rift',
-        desc: '+1 minute added to each Time Skip per level',
-        maxLevel: 10,
-        baseCost: 80,
-        costGrowth: 2.0,
-        requires: ['c_offline'],
-        effect: (level) => level * 60
-    },
-    {
-        id: 'c_achv_bonus',
-        name: 'Cosmic Record',
-        desc: '+5% Achievement bonus multiplier per level',
-        maxLevel: 15,
-        baseCost: 60,
-        costGrowth: 1.7,
-        requires: ['c_global'],
-        effect: (level) => 1 + (level * 0.05)
-    },
-    {
-        id: 'c_region_rp',
-        name: 'Conquest Dividend',
-        desc: '+2 RP earned per conquered region on Rebirth per level',
-        maxLevel: 20,
-        baseCost: 30,
-        costGrowth: 1.5,
-        requires: ['c_invasion_progress'],
-        effect: (level) => level * 2
-    },
-    {
-        id: 'c_energy_on_conquest',
-        name: 'Spoils of War',
-        desc: '+5% Max Energy restored on each region conquest per level',
-        maxLevel: 10,
-        baseCost: 50,
-        costGrowth: 1.8,
-        requires: ['c_energy_max'],
-        effect: (level) => level * 0.05
-    },
+    // Tier 4: Base Cost ~2,500 (2.5k)
+    { id: 'c_invasion_progress', name: 'Quantum Strike', desc: '+5% min invasion progress per level', maxLevel: 10, baseCost: 2500, costGrowth: 2.0, requires: ['c_invasion_cost'], effect: (level) => level * 5 },
+    { id: 'c_offline', name: 'Chrono Echo', desc: '+10% Offline Production Gain per level', maxLevel: 25, baseCost: 2500, costGrowth: 1.4, requires: ['c_rp'], effect: (level) => 1 + (level * 0.1) },
+    { id: 'c_click_idle_sync', name: 'Harmonic Resonance', desc: '+1% Idle Power added as Click Power', maxLevel: 25, baseCost: 3000, costGrowth: 1.5, requires: ['c_global'], effect: (level) => level * 0.01 },
 
-    // Tier 5: Requires Tier 4
-    {
-        id: 'c_click_multiplier_spike',
-        name: 'Nova Burst',
-        desc: '+10% chance per level to double a click power',
-        maxLevel: 10,
-        baseCost: 75,
-        costGrowth: 2.0,
-        requires: ['c_click_idle_sync'],
-        effect: (level) => level * 0.10
-    },
-    {
-        id: 'c_idle_floor',
-        name: 'Void Anchor',
-        desc: 'Prevents Idle Power from going below 1 × level on Rebirth',
-        maxLevel: 5,
-        baseCost: 150,
-        costGrowth: 3.0,
-        requires: ['c_offline'],
-        effect: (level) => level * 1
-    },
-    {
-        id: 'c_upgrade_speed',
-        name: 'Warp Fabrication',
-        desc: '+3% Raibos production bonus for every upgrade level you own (total)',
-        maxLevel: 10,
-        baseCost: 45,
-        costGrowth: 1.6,
-        requires: ['c_cost'],
-        effect: (level) => level * 0.03
-    },
-    {
-        id: 'c_conquest_chain',
-        name: 'Orbital Chain',
-        desc: '+1% Global Multiplier per conquered region per level',
-        maxLevel: 10,
-        baseCost: 100,
-        costGrowth: 2.5,
-        requires: ['c_region_rp'],
-        effect: (level) => level * 0.01
-    },
-    {
-        id: 'c_rebirth_head_start',
-        name: 'Cosmic Inertia',
-        desc: 'Start each Rebirth with 0.5% of previous total Raibos per level',
-        maxLevel: 10,
-        baseCost: 120,
-        costGrowth: 2.5,
-        requires: ['c_rp_mult_decay'],
-        effect: (level) => level * 0.005
-    },
-    {
-        id: 'c_energy_regen_mult',
-        name: 'Pulsar Overdrive',
-        desc: '+10% Energy Regen rate per level (permanent)',
-        maxLevel: 20,
-        baseCost: 40,
-        costGrowth: 1.6,
-        requires: ['c_energy_on_conquest'],
-        effect: (level) => 1 + (level * 0.1)
-    },
+    // Tier 5: Base Cost ~12,000 (12k)
+    { id: 'c_rp_mult_decay', name: 'Eternal Covenant', desc: 'Each RP gives +0.1% more to Global Multiplier', maxLevel: 15, baseCost: 12000, costGrowth: 2.5, requires: ['c_global'], effect: (level) => 0.05 + (level * 0.001) },
+    { id: 'c_timeskip', name: 'Temporal Rift', desc: '+1 minute added to each Time Skip per level', maxLevel: 10, baseCost: 10000, costGrowth: 2.0, requires: ['c_offline'], effect: (level) => level * 60 },
+    { id: 'c_achv_bonus', name: 'Cosmic Record', desc: '+5% Achievement bonus multiplier per level', maxLevel: 20, baseCost: 15000, costGrowth: 1.7, requires: ['c_global'], effect: (level) => 1 + (level * 0.05) },
 
-    // Tier 6 (Ultimate / Multiverse Skills): Requires Tier 5
-    {
-        id: 'c_super_click',
-        name: 'Cosmic Singularity Click',
-        desc: '+100% Click Power multiplier per level',
-        maxLevel: 25,
-        baseCost: 100,
-        costGrowth: 1.6,
-        requires: ['c_click_multiplier_spike'],
-        effect: (level) => 1 + (level * 1.0)
-    },
-    {
-        id: 'c_super_idle',
-        name: 'Hyperdrive Automation',
-        desc: '+100% Idle Power multiplier per level',
-        maxLevel: 25,
-        baseCost: 100,
-        costGrowth: 1.6,
-        requires: ['c_idle_floor'],
-        effect: (level) => 1 + (level * 1.0)
-    },
-    {
-        id: 'c_conquest_energy_mastery',
-        name: 'Galactic Overlord',
-        desc: '+2 Base Energy Regen per sec per planet cleared',
-        maxLevel: 15,
-        baseCost: 150,
-        costGrowth: 1.7,
-        requires: ['c_energy_regen_mult'],
-        effect: (level) => level * 2 * (gameState.invasion ? gameState.invasion.currentPlanet : 0)
-    },
+    // Tier 6: Base Cost ~60,000 (60k)
+    { id: 'c_region_rp', name: 'Conquest Dividend', desc: '+2 RP earned per conquered region on Rebirth', maxLevel: 25, baseCost: 60000, costGrowth: 1.5, requires: ['c_invasion_progress'], effect: (level) => level * 2 },
+    { id: 'c_energy_on_conquest', name: 'Spoils of War', desc: '+5% Max Energy restored on region conquest', maxLevel: 10, baseCost: 50000, costGrowth: 1.8, requires: ['c_energy_max'], effect: (level) => level * 0.05 },
+    { id: 'c_click_multiplier_spike', name: 'Nova Burst', desc: '+10% chance per level to double click power', maxLevel: 10, baseCost: 75000, costGrowth: 2.0, requires: ['c_click_idle_sync'], effect: (level) => level * 0.10 },
 
-    // Tier 7 (Multiverse Apex): Requires Tier 6
-    {
-        id: 'c_multiverse_power',
-        name: 'Multiverse Synergy',
-        desc: '+50% All Production per Multiverse cleared per level',
-        maxLevel: 20,
-        baseCost: 250,
-        costGrowth: 1.8,
-        requires: ['c_super_click', 'c_super_idle'],
-        effect: (level) => 1 + ((gameState.multiverse || 1) - 1) * level * 0.5
-    },
-    {
-        id: 'c_multiverse_cost_mitigation',
-        name: 'Diminishing Singularity',
-        desc: 'Reduces the Multiverse cost scale increase by -2% per level',
-        maxLevel: 15,
-        baseCost: 300,
-        costGrowth: 2.0,
-        requires: ['c_conquest_energy_mastery'],
-        effect: (level) => Math.max(0.5, 1 - (level * 0.02))
-    },
-    {
-        id: 'c_buff_nerf_shield',
-        name: 'Dimensional Anchor',
-        desc: 'Mitigates Multiverse non-energy buff nerf by +2% per level',
-        maxLevel: 10,
-        baseCost: 500,
-        costGrowth: 2.5,
-        requires: ['c_multiverse_power'],
-        effect: (level) => level * 0.02
-    }
+    // Tier 7: Base Cost ~300,000 (300k)
+    { id: 'c_idle_floor', name: 'Void Anchor', desc: 'Prevents Idle Power from going below 1 × level', maxLevel: 10, baseCost: 300000, costGrowth: 2.5, requires: ['c_offline'], effect: (level) => level * 1 },
+    { id: 'c_upgrade_speed', name: 'Warp Fabrication', desc: '+3% Raibos production bonus per upgrade level', maxLevel: 15, baseCost: 250000, costGrowth: 1.6, requires: ['c_cost'], effect: (level) => level * 0.03 },
+    { id: 'c_conquest_chain', name: 'Orbital Chain', desc: '+1% Global Multiplier per conquered region', maxLevel: 15, baseCost: 350000, costGrowth: 2.2, requires: ['c_region_rp'], effect: (level) => level * 0.01 },
+
+    // Tier 8: Base Cost ~1,500,000 (1.5M)
+    { id: 'c_rebirth_head_start', name: 'Cosmic Inertia', desc: 'Start Rebirth with 0.5% of previous total Raibos', maxLevel: 15, baseCost: 1500000, costGrowth: 2.2, requires: ['c_rp_mult_decay'], effect: (level) => level * 0.005 },
+    { id: 'c_energy_regen_mult', name: 'Pulsar Overdrive', desc: '+10% Energy Regen rate per level', maxLevel: 25, baseCost: 1200000, costGrowth: 1.6, requires: ['c_energy_on_conquest'], effect: (level) => 1 + (level * 0.1) },
+
+    // Tier 9: Base Cost ~8,000,000 (8M)
+    { id: 'c_super_click', name: 'Cosmic Singularity Click', desc: '+100% Click Power multiplier per level', maxLevel: 30, baseCost: 8000000, costGrowth: 1.6, requires: ['c_click_multiplier_spike'], effect: (level) => 1 + (level * 1.0) },
+    { id: 'c_super_idle', name: 'Hyperdrive Automation', desc: '+100% Idle Power multiplier per level', maxLevel: 30, baseCost: 8000000, costGrowth: 1.6, requires: ['c_idle_floor'], effect: (level) => 1 + (level * 1.0) },
+    { id: 'c_conquest_energy_mastery', name: 'Galactic Overlord', desc: '+2 Base Energy Regen per sec per planet cleared', maxLevel: 20, baseCost: 10000000, costGrowth: 1.7, requires: ['c_energy_regen_mult'], effect: (level) => level * 2 * (gameState.invasion ? gameState.invasion.currentPlanet : 0) },
+
+    // Tier 10: Base Cost ~40,000,000 (40M)
+    { id: 'c_multiverse_power', name: 'Multiverse Synergy', desc: '+50% All Production per Multiverse cleared', maxLevel: 25, baseCost: 40000000, costGrowth: 1.8, requires: ['c_super_click', 'c_super_idle'], effect: (level) => 1 + ((gameState.multiverse || 1) - 1) * level * 0.5 },
+    { id: 'c_multiverse_cost_mitigation', name: 'Diminishing Singularity', desc: 'Reduces Multiverse cost scale increase by -2%', maxLevel: 20, baseCost: 50000000, costGrowth: 2.0, requires: ['c_conquest_energy_mastery'], effect: (level) => Math.max(0.5, 1 - (level * 0.02)) },
+
+    // Tier 11: Base Cost ~200,000,000 (200M)
+    { id: 'c_hyper_rebirth', name: 'Hyper Rebirth Engine', desc: '+100% Rebirth Points output per level', maxLevel: 20, baseCost: 200000000, costGrowth: 1.8, requires: ['c_multiverse_power'], effect: (level) => 1 + level * 1.0 },
+    { id: 'c_quantum_energy_core', name: 'Quantum Energy Core', desc: '+20% Energy Capacity and +2 Base Regen per level', maxLevel: 20, baseCost: 250000000, costGrowth: 1.8, requires: ['c_multiverse_cost_mitigation'], effect: (level) => level },
+
+    // Tier 12: Base Cost ~1,000,000,000 (1B)
+    { id: 'c_astral_projection', name: 'Astral Projection', desc: '+200% Click & Idle Power per level', maxLevel: 25, baseCost: 1000000000, costGrowth: 1.7, requires: ['c_hyper_rebirth'], effect: (level) => 1 + level * 2.0 },
+    { id: 'c_chrono_warp', name: 'Chrono Warp', desc: 'Time Skips give +20% additional Raibos per level', maxLevel: 20, baseCost: 1200000000, costGrowth: 1.7, requires: ['c_quantum_energy_core'], effect: (level) => 1 + level * 0.20 },
+
+    // Tier 13: Base Cost ~5,000,000,000 (5B)
+    { id: 'c_dark_energy_harness', name: 'Dark Energy Harnessing', desc: '+150% Global Multiplier per level', maxLevel: 30, baseCost: 5000000000, costGrowth: 1.8, requires: ['c_astral_projection'], effect: (level) => 1 + level * 1.5 },
+    { id: 'c_invasion_overdrive', name: 'Invasion Overdrive', desc: '+10% Invasion Progress gain on click per level', maxLevel: 15, baseCost: 6000000000, costGrowth: 1.9, requires: ['c_chrono_warp'], effect: (level) => level * 10 },
+
+    // Tier 14: Base Cost ~25,000,000,000 (25B)
+    { id: 'c_galactic_sovereign', name: 'Galactic Sovereign', desc: '+300% Idle Power per Multiverse per level', maxLevel: 20, baseCost: 25000000000, costGrowth: 1.8, requires: ['c_dark_energy_harness'], effect: (level) => 1 + ((gameState.multiverse || 1) - 1) * level * 3.0 },
+    { id: 'c_energy_singularity', name: 'Energy Singularity', desc: 'Energy Regen speed x1.5 per level', maxLevel: 15, baseCost: 30000000000, costGrowth: 2.0, requires: ['c_invasion_overdrive'], effect: (level) => Math.pow(1.5, level) },
+
+    // Tier 15: Base Cost ~120,000,000,000 (120B)
+    { id: 'c_omega_click', name: 'Omega Clicker', desc: 'Clicks trigger 5% of your current Idle Power per level', maxLevel: 20, baseCost: 120000000000, costGrowth: 1.8, requires: ['c_galactic_sovereign'], effect: (level) => level * 0.05 },
+    { id: 'c_universal_nexus_skill', name: 'Universal Nexus Field', desc: '+500% Global Multiplier per level', maxLevel: 20, baseCost: 150000000000, costGrowth: 1.9, requires: ['c_energy_singularity'], effect: (level) => 1 + level * 5.0 },
+
+    // Tier 16: Base Cost ~600,000,000,000 (600B)
+    { id: 'c_multiverse_dominance', name: 'Multiverse Dominance', desc: '+500% All Production for every retained region buff', maxLevel: 20, baseCost: 600000000000, costGrowth: 2.0, requires: ['c_omega_click', 'c_universal_nexus_skill'], effect: (level) => 1 + (gameState.invasion.retainedConqueredRegions ? gameState.invasion.retainedConqueredRegions.length : 0) * level * 5.0 },
+
+    // Tier 17: Base Cost ~3,000,000,000,000 (3T)
+    { id: 'c_cosmic_transcendence', name: 'Cosmic Transcendence', desc: 'RP gained on Rebirth multiplied by x2 per level', maxLevel: 15, baseCost: 3000000000000, costGrowth: 2.2, requires: ['c_multiverse_dominance'], effect: (level) => Math.pow(2.0, level) },
+
+    // Tier 18: Base Cost ~15,000,000,000,000 (15T)
+    { id: 'c_reality_warp', name: 'Reality Warp Engine', desc: '+1000% Global Multiplier per level', maxLevel: 20, baseCost: 15000000000000, costGrowth: 2.0, requires: ['c_cosmic_transcendence'], effect: (level) => 1 + level * 10.0 },
+
+    // Tier 19: Base Cost ~80,000,000,000,000 (80T)
+    { id: 'c_eternity_catalyst', name: 'Eternity Catalyst', desc: '+2000% Click & Idle Power per level', maxLevel: 20, baseCost: 80000000000000, costGrowth: 2.2, requires: ['c_reality_warp'], effect: (level) => 1 + level * 20.0 },
+
+    // Tier 20 (Supreme God Tier): Base Cost ~500,000,000,000,000 (500T)
+    { id: 'c_god_of_raibos', name: 'God of Raibos', desc: 'Supreme Power: All Production, RP, and Energy x10 per level!', maxLevel: 10, baseCost: 500000000000000, costGrowth: 3.0, requires: ['c_eternity_catalyst'], effect: (level) => Math.pow(10.0, level) }
 ];
 
 function getConstellationLevel(id) {
@@ -1957,6 +1736,14 @@ function getGlobalMultiplier() {
         }
     });
 
+    // Dark Energy Harnessing & Universal Nexus Field & Reality Warp Engine & God of Raibos
+    const darkEnergyHarness = getConstellationEffect('c_dark_energy_harness') || 1;
+    const universalNexusSkill = getConstellationEffect('c_universal_nexus_skill') || 1;
+    const realityWarp = getConstellationEffect('c_reality_warp') || 1;
+    const godOfRaibos = getConstellationEffect('c_god_of_raibos') || 1;
+    
+    mult *= darkEnergyHarness * universalNexusSkill * realityWarp * godOfRaibos;
+
     return mult;
 }
 
@@ -1967,11 +1754,16 @@ function recalculatePowers() {
     clickUpgrades.forEach(u => { cp += u.value * (gameState.upgradeLevels[u.id] || 0); });
     idleUpgrades.forEach(u => { ip += u.value * (gameState.upgradeLevels[u.id] || 0); });
     
-    // Apply Super Click & Super Idle Skills
+    // Apply Super Click & Super Idle Skills & Tier 12/14/19 Skills
     const superClick = getConstellationEffect('c_super_click') || 1;
     const superIdle = getConstellationEffect('c_super_idle') || 1;
-    cp *= superClick;
-    ip *= superIdle;
+    const astralProj = getConstellationEffect('c_astral_projection') || 1;
+    const galacticSovereign = getConstellationEffect('c_galactic_sovereign') || 1;
+    const eternityCatalyst = getConstellationEffect('c_eternity_catalyst') || 1;
+    const multiverseDominance = getConstellationEffect('c_multiverse_dominance') || 1;
+
+    cp *= superClick * astralProj * eternityCatalyst * multiverseDominance;
+    ip *= superIdle * astralProj * galacticSovereign * eternityCatalyst * multiverseDominance;
 
     const multiverseScale = Math.pow(1.5, (gameState.multiverse || 1) - 1);
     const currentConquered = gameState.invasion.conqueredRegions || [];
@@ -1990,7 +1782,7 @@ function recalculatePowers() {
 
     const mult = getGlobalMultiplier();
     
-    const syncBonus = getConstellationEffect('c_click_idle_sync') || 0;
+    const syncBonus = (getConstellationEffect('c_click_idle_sync') || 0) + (getConstellationEffect('c_omega_click') || 0);
     gameState.idlePower = ip * mult;
     gameState.clickPower = (cp + ip * syncBonus) * mult;
 }
@@ -2209,9 +2001,12 @@ document.getElementById('rebirth-btn').addEventListener('click', () => {
     
     if (confirm(`Do you want to rebirth? All progress will be reset and you will receive ${formatNumber(earned)} RP.`)) {
         const rpMult = getConstellationEffect('c_rp') || 1;
+        const hyperRebirth = getConstellationEffect('c_hyper_rebirth') || 1;
+        const cosmicTranscendence = getConstellationEffect('c_cosmic_transcendence') || 1;
         const regionBonus = getConstellationEffect('c_region_rp') || 0;
         const regionBonusRP = regionBonus * (gameState.invasion.conqueredRegions.length || 0);
-        gameState.rebirthPoints += Math.floor((earned + regionBonusRP) * rpMult);
+        
+        gameState.rebirthPoints += Math.floor((earned + regionBonusRP) * rpMult * hyperRebirth * cosmicTranscendence);
         const startE = gameState.invasion.energyMax * getConstellationEffect('c_energy_start');
         const headStartFraction = getConstellationEffect('c_rebirth_head_start') || 0;
         if (headStartFraction > 0) {
@@ -2249,9 +2044,10 @@ function gameLoop(currentTime) {
     // Invasion Energy Regen
     const currentPlanetData = planetsData[gameState.invasion.currentPlanet];
     const rawMax = currentPlanetData ? currentPlanetData.energyMax : 10000;
-    const maxE = Math.floor(rawMax * (getConstellationEffect('c_energy_max') || 1));
-    const regenMultiplier = getConstellationEffect('c_energy_regen_mult') || 1;
-    const baseRegen = ((currentPlanetData ? currentPlanetData.energyRegen : 25) + getConstellationEffect('c_regen')) * regenMultiplier;
+    const qCore = getConstellationEffect('c_quantum_energy_core') || 0;
+    const maxE = Math.floor(rawMax * (getConstellationEffect('c_energy_max') || 1) * (1 + qCore * 0.2));
+    const regenMultiplier = (getConstellationEffect('c_energy_regen_mult') || 1) * (getConstellationEffect('c_energy_singularity') || 1);
+    const baseRegen = ((currentPlanetData ? currentPlanetData.energyRegen : 25) + getConstellationEffect('c_regen') + qCore * 2) * regenMultiplier;
     gameState.invasion.energyMax = maxE;       // enforce to fix legacy saves
     gameState.invasion.energyRegen = baseRegen; // enforce to fix legacy saves
 
