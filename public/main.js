@@ -473,15 +473,35 @@ function renderConstellation() {
                 <div class="c-node-action" style="margin-top: 10px;">
                     ${!unlocked ? '<span style="color:#666; font-size:0.85rem;">LOCKED</span>' : (isMax ? '<span style="color:#00f2ff; font-weight:bold;">MAXED</span>' : `
                         <span class="c-node-cost" style="display:block; font-size:0.85rem; margin-bottom:5px;">Cost: ${formatNumber(cost)} RP</span>
-                        <button class="action-btn" style="width:100%;" ${gameState.rebirthPoints < cost ? 'disabled' : ''}>Unlock</button>
+                        <div style="display:flex; gap:5px;">
+                            <button class="action-btn c-buy-one-btn" style="flex:1;" ${gameState.rebirthPoints < cost ? 'disabled' : ''}>+1 Level</button>
+                            <button class="action-btn c-buy-max-btn" style="flex:1; background:rgba(255,204,0,0.2); border:1px solid #ffcc00; color:#ffcc00;" ${gameState.rebirthPoints < cost ? 'disabled' : ''}>MAX</button>
+                        </div>
                     `)}
                 </div>
             `;
 
             if (unlocked && !isMax) {
-                const btn = node.querySelector('button');
-                const handleUpgrade = (e) => {
-                    if (e && (e.shiftKey || e.ctrlKey)) {
+                const buyOneBtn = node.querySelector('.c-buy-one-btn');
+                const buyMaxBtn = node.querySelector('.c-buy-max-btn');
+
+                if (buyOneBtn) {
+                    buyOneBtn.onclick = () => {
+                        const c = getConstellationCost(skill.id);
+                        if (gameState.rebirthPoints >= c) {
+                            gameState.rebirthPoints -= c;
+                            gameState.constellation[skill.id] = level + 1;
+                            showToast(`${skill.name} upgraded!`, 'success');
+                            renderConstellation();
+                            recalculatePowers();
+                            updateUI();
+                            saveGame();
+                        }
+                    };
+                }
+
+                if (buyMaxBtn) {
+                    buyMaxBtn.onclick = () => {
                         let bought = 0;
                         while (true) {
                             const curLevel = getConstellationLevel(skill.id);
@@ -502,20 +522,8 @@ function renderConstellation() {
                             updateUI();
                             saveGame();
                         }
-                        return;
-                    }
-                    const c = getConstellationCost(skill.id);
-                    if (gameState.rebirthPoints >= c) {
-                        gameState.rebirthPoints -= c;
-                        gameState.constellation[skill.id] = level + 1;
-                        showToast(`${skill.name} upgraded!`, 'success');
-                        renderConstellation();
-                        recalculatePowers();
-                        updateUI();
-                        saveGame();
-                    }
-                };
-                btn.onclick = handleUpgrade;
+                    };
+                }
             }
 
             tierRow.appendChild(node);
@@ -2026,16 +2034,23 @@ function createUpgradeElement(upg, isClick) {
             <span class="upgrade-desc">${upg.desc}</span>
             <span class="upgrade-level">Lv. 0</span>
         </div>
-        <div class="upgrade-cost-area">
+        <div class="upgrade-cost-area" style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
             <span class="upgrade-cost">0</span>
+            <button class="buy-max-single-btn" style="background: rgba(255,204,0,0.2); border: 1px solid #ffcc00; color: #ffcc00; border-radius: 4px; font-size: 0.75rem; padding: 2px 6px; cursor: pointer;">MAX</button>
         </div>
     `;
-    div.addEventListener('mousedown', (e) => {
-        if (e.shiftKey || e.ctrlKey) {
+    
+    const maxBtn = div.querySelector('.buy-max-single-btn');
+    if (maxBtn) {
+        maxBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             buyUpgradeMax(upg);
-        } else {
-            buyUpgrade(upg);
-        }
+        });
+    }
+
+    div.addEventListener('click', (e) => {
+        if (e.target.classList.contains('buy-max-single-btn')) return;
+        buyUpgrade(upg);
     });
     (isClick ? elements.clickList : elements.idleList).appendChild(div);
 }
@@ -2809,21 +2824,6 @@ renderLists();
 loadGame();
     updateUI();
     updateInvasionUI();
-
-    // Music toggle setup
-    const music = document.getElementById('bg-music');
-    const musicToggle = document.getElementById('music-toggle');
-    if (music && musicToggle) {
-        musicToggle.addEventListener('click', () => {
-            if (music.paused) {
-                music.play();
-                musicToggle.textContent = 'Mute Music';
-            } else {
-                music.pause();
-                musicToggle.textContent = 'Play Music';
-            }
-        });
-    }
 
 // Ranking Events
 const refreshRankBtn = document.getElementById('refresh-ranking-raibos');
