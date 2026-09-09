@@ -2569,6 +2569,17 @@ function updateInvasionUI() {
     document.getElementById('energy-value').innerText = `${Math.floor(energy)} / ${maxEnergy}`;
     document.getElementById('energy-bar-fill').style.width = `${Math.min(100, (energy / maxEnergy) * 100)}%`;
 
+    // Auto select first unconquered region if none selected or selected is conquered
+    if (!selectedRegionId || gameState.invasion.conqueredRegions.includes(selectedRegionId)) {
+        const firstUnconquered = planet.regions.find(r => !gameState.invasion.conqueredRegions.includes(r.id));
+        if (firstUnconquered) {
+            selectedRegionId = firstUnconquered.id;
+            document.getElementById('region-details').style.display = 'block';
+            document.getElementById('selected-region-name').innerText = firstUnconquered.name;
+            document.getElementById('selected-region-buff').innerText = `Reward: ${firstUnconquered.buff}`;
+        }
+    }
+
     // Dynamic map generation
     const mapSvg = document.getElementById('invasion-map-svg');
     if (mapSvg) {
@@ -2587,7 +2598,12 @@ function updateInvasionUI() {
                 path.classList.add('selected');
             }
             
-            path.addEventListener('click', () => selectRegion(r.id));
+            const onSelect = (e) => {
+                if (e) e.stopPropagation();
+                selectRegion(r.id);
+            };
+            path.onclick = onSelect;
+            path.onpointerdown = onSelect;
             mapSvg.appendChild(path);
         });
     }
@@ -2616,7 +2632,12 @@ function updateInvasionUI() {
                 <div>${isConquered ? 'Conquered' : `Cost: ${actualCost}`}</div>
             `;
             
-            div.addEventListener('click', () => selectRegion(r.id));
+            const onSelect = (e) => {
+                if (e) e.stopPropagation();
+                selectRegion(r.id);
+            };
+            div.onclick = onSelect;
+            div.onpointerdown = onSelect;
             listContainer.appendChild(div);
         });
     }
@@ -2642,50 +2663,49 @@ function updateInvasionUI() {
                 btn.disabled = false;
                 btn.innerText = `INVADE (${actualCost})`;
             }
+
+            const triggerInvasion = (e) => {
+                if (e) e.stopPropagation();
+                if (!selectedRegionId) return;
+                const planetData = planetsData[gameState.invasion.currentPlanet];
+                if (!planetData) return;
+                const rData = planetData.regions.find(r => r.id === selectedRegionId);
+                if (!rData) return;
+                
+                const cMit = getConstellationEffect('c_multiverse_cost_mitigation') || 1;
+                const bScale = Math.pow(1.5, (gameState.multiverse || 1) - 1);
+                const mScale = 1 + (bScale - 1) * cMit;
+                const invCostM = getConstellationEffect('c_invasion_cost') || 1;
+                const actCost = Math.floor(rData.cost * invCostM * mScale);
+                
+                if (gameState.invasion.energy < actCost) return;
+                
+                gameState.invasion.energy -= actCost;
+                gameState.invasion.energyMax = Math.floor(planetData.energyMax * mScale);
+                
+                let progress = gameState.invasion.regionProgress[rData.id] || 0;
+                const progressGain = Math.floor(Math.random() * 30) + 1;
+                progress += progressGain;
+                if (progress > 100) progress = 100;
+                if (progress >= 100) {
+                    progress = 100;
+                    if (!gameState.invasion.conqueredRegions.includes(rData.id)) {
+                        gameState.invasion.conqueredRegions.push(rData.id);
+                        showToast('Region Conquered!', `${rData.name} has fallen. Buff applied: ${rData.buff}`);
+                        recalculatePowers();
+                        checkPlanetClear();
+                    }
+                }
+                
+                gameState.invasion.regionProgress[rData.id] = progress;
+                updateInvasionUI();
+                saveGame();
+            };
+
+            btn.onclick = triggerInvasion;
+            btn.onpointerdown = triggerInvasion;
         }
     }
-}
-
-const startInvasionBtn = document.getElementById('start-invasion-btn');
-if (startInvasionBtn) {
-    const triggerInvasion = () => {
-        if (!selectedRegionId) return;
-        const planet = planetsData[gameState.invasion.currentPlanet];
-        if (!planet) return;
-        const region = planet.regions.find(r => r.id === selectedRegionId);
-        if (!region) return;
-        
-        const costMitigation = getConstellationEffect('c_multiverse_cost_mitigation') || 1;
-        const baseMultiverseScale = Math.pow(1.5, (gameState.multiverse || 1) - 1);
-        const multiverseScale = 1 + (baseMultiverseScale - 1) * costMitigation;
-        const invasionCostMult = getConstellationEffect('c_invasion_cost') || 1;
-        const actualCost = Math.floor(region.cost * invasionCostMult * multiverseScale);
-        
-        if (gameState.invasion.energy < actualCost) return;
-        
-        gameState.invasion.energy -= actualCost;
-        gameState.invasion.energyMax = Math.floor(planet.energyMax * multiverseScale);
-        
-        let progress = gameState.invasion.regionProgress[region.id] || 0;
-        const progressGain = Math.floor(Math.random() * 30) + 1;
-        progress += progressGain;
-        if (progress > 100) progress = 100;
-        if (progress >= 100) {
-            progress = 100;
-            if (!gameState.invasion.conqueredRegions.includes(region.id)) {
-                gameState.invasion.conqueredRegions.push(region.id);
-                showToast('Region Conquered!', `${region.name} has fallen. Buff applied: ${region.buff}`);
-                recalculatePowers();
-                checkPlanetClear();
-            }
-        }
-        
-        gameState.invasion.regionProgress[region.id] = progress;
-        updateInvasionUI();
-        saveGame();
-    };
-
-    startInvasionBtn.onclick = triggerInvasion;
 }
 
 function checkPlanetClear() {
