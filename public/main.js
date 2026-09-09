@@ -2648,11 +2648,7 @@ function updateInvasionUI() {
 
 const startInvasionBtn = document.getElementById('start-invasion-btn');
 if (startInvasionBtn) {
-    const triggerInvasion = (e) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
+    const triggerInvasion = () => {
         if (!selectedRegionId) return;
         const planet = planetsData[gameState.invasion.currentPlanet];
         if (!planet) return;
@@ -2689,13 +2685,7 @@ if (startInvasionBtn) {
         saveGame();
     };
 
-    startInvasionBtn.addEventListener('click', triggerInvasion);
-    startInvasionBtn.addEventListener('pointerdown', (e) => {
-        // Prevent duplicate trigger if browser also fires click
-        if (e.pointerType === 'touch' || e.pointerType === 'mouse' || e.pointerType === 'pen') {
-            // normal click handles mouse, pointerdown handles laptop touchpads and touchscreens smoothly
-        }
-    });
+    startInvasionBtn.onclick = triggerInvasion;
 }
 
 function checkPlanetClear() {
