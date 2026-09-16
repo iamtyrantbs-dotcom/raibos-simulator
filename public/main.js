@@ -9,6 +9,10 @@ let gameState = {
     achievements: [],
     timeSkipsUsed: 0,
     constellation: {},
+    asteroids: {
+        totalPulls: 0,
+        inventory: {} // asteroidId -> count
+    },
     invasion: {
         energy: 0,
         energyMax: 10000,
@@ -21,6 +25,15 @@ let gameState = {
     multiverse: 1, // new multiverse counter
     buffNerf: 1 // multiplier for non‑energy buffs (1 = no nerf)
 };
+
+const ASTEROID_POOL = [
+    { id: 'ast_stony', name: 'Stony Chondrite', rarity: 'Common', color: '#aaaaaa', chance: 0.45, icon: '🪨', desc: '+10% Click Power & Idle Power per owned', effect: (count) => ({ click: count * 0.10, idle: count * 0.10 }) },
+    { id: 'ast_metallic', name: 'Iron Meteorite', rarity: 'Uncommon', color: '#00ddff', chance: 0.30, icon: '⚙️', desc: '+5% Global Production Multiplier per owned', effect: (count) => ({ global: count * 0.05 }) },
+    { id: 'ast_crystal', name: 'Crystal Pallasite', rarity: 'Rare', color: '#ffcc00', chance: 0.15, icon: '💎', desc: '+10% Rebirth Points Gained per owned', effect: (count) => ({ rp: count * 0.10 }) },
+    { id: 'ast_plasma', name: 'Plasma Comet', rarity: 'Epic', color: '#ff55ff', chance: 0.07, icon: '🔥', desc: '+15% Max Energy & +15% Energy Regen per owned', effect: (count) => ({ energyMax: count * 0.15, energyRegen: count * 0.15 }) },
+    { id: 'ast_darkmatter', name: 'Dark Matter Asteroid', rarity: 'Legendary', color: '#aa00ff', chance: 0.025, icon: '🌌', desc: '+50% All Production & +20% Time Skip Efficiency per owned', effect: (count) => ({ global: count * 0.50, timeSkip: count * 0.20 }) },
+    { id: 'ast_singularity', name: 'Singularity Core Asteroid', rarity: 'Mythic', color: '#ff0055', chance: 0.005, icon: '👑', desc: 'x2 Global Multiplier & +100% Rebirth Points per owned', effect: (count) => ({ globalMultScale: Math.pow(2, count), rp: count * 1.0 }) }
+];
 
 
 const constellationData = [
@@ -354,12 +367,12 @@ const constellationData = [
     {
         id: 'c_t9_energy_overload',
         name: 'Hyper-Charged Core',
-        desc: '+20% Energy Max & +20% Energy Regen per level',
+        desc: '+5% Energy Max & +5% Energy Regen per level',
         maxLevel: 15,
         baseCost: 5000000,
         costGrowth: 2.4,
         requires: ['c_multiverse_cost_mitigation'],
-        effect: (level) => 1 + (level * 0.2)
+        effect: (level) => 1 + (level * 0.05)
     },
     {
         id: 'c_t9_rp_overflow',
@@ -386,12 +399,12 @@ const constellationData = [
     {
         id: 'c_t10_cosmic_battery_overcharge',
         name: 'Hyperdrive Battery Core',
-        desc: '+100% Max Energy Capacity & +25% Energy Regen per level',
+        desc: '+10% Max Energy Capacity & +5% Energy Regen per level',
         maxLevel: 10,
         baseCost: 30000000,
         costGrowth: 2.8,
         requires: ['c_t9_energy_overload'],
-        effect: (level) => 1 + (level * 1.0)
+        effect: (level) => 1 + (level * 0.10)
     },
 
     // Tier 11 (Base Cost ~100,000,000 RP)
@@ -498,12 +511,12 @@ const constellationData = [
     {
         id: 'c_t16_dark_energy_hyperdrive',
         name: 'Dark Energy Engine',
-        desc: '+50% Base Energy Regen & Max Energy per level',
+        desc: '+10% Base Energy Regen & Max Energy per level',
         maxLevel: 10,
         baseCost: 250000000000,
         costGrowth: 4.0,
         requires: ['c_t14_multiverse_dominator'],
-        effect: (level) => 1 + (level * 0.5)
+        effect: (level) => 1 + (level * 0.10)
     },
 
     // Tier 17 (Base Cost ~1,000,000,000,000 RP)
@@ -576,12 +589,12 @@ const constellationData = [
     {
         id: 'c_t20_infinity_overlord',
         name: 'Infinity Overlord Sovereign',
-        desc: '+1000% Energy Regen & Unlimited Invasion Warp per level',
+        desc: '+25% Energy Regen & Max Energy per level',
         maxLevel: 10,
         baseCost: 150000000000000,
         costGrowth: 6.0,
         requires: ['c_t19_godhead_harvest'],
-        effect: (level) => 1 + (level * 10.0)
+        effect: (level) => 1 + (level * 0.25)
     }
 ];
 
@@ -2167,12 +2180,31 @@ function formatTime(sec) {
 }
 
 function getPointsToEarn(total) {
-    if (total < 1000000000) return 0;
-    // 대폭 너프: 지수를 0.34에서 0.22로 대폭 하향, 최소 요구치 10억으로 상향
-    // Formula: (Total / 1B) ^ 0.22
-    let base = total / 1000000000;
-    let points = Math.pow(base, 0.22);
+    if (total < 5000000000) return 0; // 최소 요구치 50억 Raibos로 상향 (하드코어 난이도)
+    // Formula: (Total / 5B) ^ 0.18 (가혹하고 도전적인 RP 획득 곡선)
+    let base = total / 5000000000;
+    let points = Math.pow(base, 0.18);
     return Math.floor(points);
+}
+
+function getAsteroidBuffs() {
+    let buffs = { click: 1, idle: 1, globalAdd: 0, globalScale: 1, rp: 1, energyMax: 1, energyRegen: 1 };
+    if (!gameState.asteroids || !gameState.asteroids.inventory) return buffs;
+
+    ASTEROID_POOL.forEach(ast => {
+        const count = gameState.asteroids.inventory[ast.id] || 0;
+        if (count > 0 && ast.effect) {
+            const eff = ast.effect(count);
+            if (eff.click) buffs.click += eff.click;
+            if (eff.idle) buffs.idle += eff.idle;
+            if (eff.global) buffs.globalAdd += eff.global;
+            if (eff.globalMultScale) buffs.globalScale *= eff.globalMultScale;
+            if (eff.rp) buffs.rp += eff.rp;
+            if (eff.energyMax) buffs.energyMax += eff.energyMax;
+            if (eff.energyRegen) buffs.energyRegen += eff.energyRegen;
+        }
+    });
+    return buffs;
 }
 
 // Core Logic
@@ -2184,6 +2216,10 @@ function getGlobalMultiplier() {
     const chainBonus = getConstellationEffect('c_conquest_chain') || 0;
     mult += chainBonus * (gameState.invasion.conqueredRegions.length || 0);
     
+    // Asteroid Global Multiplier Buffs
+    const astBuffs = getAsteroidBuffs();
+    mult += astBuffs.globalAdd;
+
     gameState.achievements.forEach(achId => {
         const ach = achievementsData.find(a => a.id === achId);
         if (ach) {
@@ -2196,11 +2232,12 @@ function getGlobalMultiplier() {
     const multiverseSynergy = (getConstellationEffect('c_multiverse_power') || 1) * (getConstellationEffect('c_t14_multiverse_dominator') || 1) * (getConstellationEffect('c_t17_omniverse_resonance') || 1);
     mult *= multiverseSynergy;
 
-    // High Tier Multipliers (Tier 10, 15, 19, 20)
+    // High Tier Multipliers (Tier 10, 15, 19, 20) & Asteroid Scaling
     mult *= (getConstellationEffect('c_t10_cosmic_multiplier') || 1);
     mult *= (getConstellationEffect('c_t15_infinity_core') || 1);
     mult *= (getConstellationEffect('c_t19_primordial_singularity') || 1);
     mult *= (getConstellationEffect('c_t20_absolute_apex') || 1);
+    mult *= astBuffs.globalScale;
 
     // Multiverse scaling for region rewards (Multiverse 2부터 50%씩 증가: MV1=1.0, MV2=1.5, MV3=2.0...)
     const multiverseScale = 1 + 0.5 * ((gameState.multiverse || 1) - 1);
@@ -2229,9 +2266,10 @@ function recalculatePowers() {
     clickUpgrades.forEach(u => { cp += u.value * (gameState.upgradeLevels[u.id] || 0); });
     idleUpgrades.forEach(u => { ip += u.value * (gameState.upgradeLevels[u.id] || 0); });
     
-    // Apply Super Click & Super Idle & High-tier Skills
-    const superClick = (getConstellationEffect('c_super_click') || 1) * (getConstellationEffect('c_t8_click_fury') || 1) * (getConstellationEffect('c_t12_stellar_fusion') || 1) * (getConstellationEffect('c_t17_transcendence') || 1);
-    const superIdle = (getConstellationEffect('c_super_idle') || 1) * (getConstellationEffect('c_t8_idle_reactor') || 1) * (getConstellationEffect('c_t12_stellar_fusion') || 1) * (getConstellationEffect('c_t17_transcendence') || 1);
+    // Apply Super Click & Super Idle & High-tier Skills & Asteroid Buffs
+    const astBuffs = getAsteroidBuffs();
+    const superClick = (getConstellationEffect('c_super_click') || 1) * (getConstellationEffect('c_t8_click_fury') || 1) * (getConstellationEffect('c_t12_stellar_fusion') || 1) * (getConstellationEffect('c_t17_transcendence') || 1) * astBuffs.click;
+    const superIdle = (getConstellationEffect('c_super_idle') || 1) * (getConstellationEffect('c_t8_idle_reactor') || 1) * (getConstellationEffect('c_t12_stellar_fusion') || 1) * (getConstellationEffect('c_t17_transcendence') || 1) * astBuffs.idle;
     cp *= superClick;
     ip *= superIdle;
 
@@ -2255,6 +2293,101 @@ function recalculatePowers() {
     const syncBonus = getConstellationEffect('c_click_idle_sync') || 0;
     gameState.idlePower = ip * mult;
     gameState.clickPower = (cp + ip * syncBonus) * mult;
+}
+
+function getGachaCost() {
+    const total = (gameState.asteroids && gameState.asteroids.totalPulls) || 0;
+    // Cost starts at 1,000 and scales with total pulls
+    return Math.floor(1000 * Math.pow(1.25, total));
+}
+
+function pullAsteroid() {
+    const cost = getGachaCost();
+    if (gameState.raibos < cost) {
+        showToast('Not Enough Raibos!', `You need ${formatNumber(cost)} Raibos to extract an Asteroid.`);
+        return;
+    }
+
+    gameState.raibos -= cost;
+    if (!gameState.asteroids) {
+        gameState.asteroids = { totalPulls: 0, inventory: {} };
+    }
+    gameState.asteroids.totalPulls = (gameState.asteroids.totalPulls || 0) + 1;
+
+    // Roll RNG based on probabilities
+    const rand = Math.random();
+    let cumulative = 0;
+    let pulledAsteroid = ASTEROID_POOL[0];
+
+    for (const ast of ASTEROID_POOL) {
+        cumulative += ast.chance;
+        if (rand <= cumulative) {
+            pulledAsteroid = ast;
+            break;
+        }
+    }
+
+    gameState.asteroids.inventory[pulledAsteroid.id] = (gameState.asteroids.inventory[pulledAsteroid.id] || 0) + 1;
+
+    // UI Feedback
+    const iconEl = document.getElementById('gacha-icon');
+    const nameEl = document.getElementById('gacha-name');
+    const buffEl = document.getElementById('gacha-buff');
+
+    if (iconEl) iconEl.innerText = pulledAsteroid.icon;
+    if (nameEl) {
+        nameEl.innerText = `${pulledAsteroid.name} (${pulledAsteroid.rarity})`;
+        nameEl.style.color = pulledAsteroid.color;
+    }
+    if (buffEl) buffEl.innerText = pulledAsteroid.desc;
+
+    showToast('Asteroid Extracted!', `${pulledAsteroid.icon} Got ${pulledAsteroid.name} (${pulledAsteroid.rarity})!`);
+    
+    recalculatePowers();
+    updateUI();
+    saveGame();
+}
+
+function updateGachaUI() {
+    const costBtn = document.getElementById('gacha-cost-1');
+    const pullBtn = document.getElementById('gacha-pull-1-btn');
+    const cost = getGachaCost();
+
+    if (costBtn) costBtn.innerText = `${formatNumber(cost)} Raibos`;
+    if (pullBtn) {
+        pullBtn.disabled = gameState.raibos < cost;
+        pullBtn.style.opacity = gameState.raibos >= cost ? '1' : '0.5';
+    }
+
+    const container = document.getElementById('asteroid-inventory');
+    if (container) {
+        container.innerHTML = '';
+        let hasAny = false;
+
+        ASTEROID_POOL.forEach(ast => {
+            const owned = (gameState.asteroids && gameState.asteroids.inventory[ast.id]) || 0;
+            if (owned > 0) {
+                hasAny = true;
+                const div = document.createElement('div');
+                div.style.cssText = `display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.4); padding:8px 12px; border-radius:8px; border:1px solid ${ast.color};`;
+                div.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.4rem;">${ast.icon}</span>
+                        <div>
+                            <div style="font-weight:bold; color:${ast.color}; font-size:0.9rem;">${ast.name} <span style="font-size:0.75rem; color:#aaa;">(${ast.rarity})</span></div>
+                            <div style="font-size:0.75rem; color:#ddd;">${ast.desc}</div>
+                        </div>
+                    </div>
+                    <div style="font-weight:bold; color:#ffcc00; font-size:1rem; margin-left:10px;">x${owned}</div>
+                `;
+                container.appendChild(div);
+            }
+        });
+
+        if (!hasAny) {
+            container.innerHTML = '<div style="text-align:center; padding:15px; color:#888; font-size:0.85rem;">No asteroids extracted yet. Try your luck!</div>';
+        }
+    }
 }
 
 // UI
@@ -2285,6 +2418,7 @@ function updateUI() {
     updateRebirthUI();
     renderAchievements();
     updateInvasionUI();
+    updateGachaUI();
 }
 
 function createUpgradeElement(upg, isClick) {
@@ -2470,7 +2604,8 @@ document.getElementById('rebirth-btn').addEventListener('click', () => {
     if (earned <= 0) return;
     
     if (confirm(`Do you want to rebirth? All progress will be reset and you will receive ${formatNumber(earned)} RP.`)) {
-        const rpMult = (getConstellationEffect('c_rp') || 1) * (getConstellationEffect('c_t9_rp_overflow') || 1) * (getConstellationEffect('c_t12_singularity_harvester') || 1) * (getConstellationEffect('c_t18_omniverse_warp') || 1) * (getConstellationEffect('c_t19_godhead_harvest') || 1);
+        const astBuffs = getAsteroidBuffs();
+        const rpMult = (getConstellationEffect('c_rp') || 1) * (getConstellationEffect('c_t9_rp_overflow') || 1) * (getConstellationEffect('c_t12_singularity_harvester') || 1) * (getConstellationEffect('c_t18_omniverse_warp') || 1) * (getConstellationEffect('c_t19_godhead_harvest') || 1) * astBuffs.rp;
         const regionBonus = getConstellationEffect('c_region_rp') || 0;
         const regionBonusRP = regionBonus * (gameState.invasion.conqueredRegions.length || 0);
         gameState.rebirthPoints += Math.floor((earned + regionBonusRP) * rpMult);
@@ -2509,11 +2644,12 @@ function gameLoop(currentTime) {
     lastTime = currentTime;
     
     // Invasion Energy Regen
+    const astBuffs = getAsteroidBuffs();
     const currentPlanetData = planetsData[gameState.invasion.currentPlanet];
     const rawMax = currentPlanetData ? currentPlanetData.energyMax : 10000;
     const darkEnergyBoost = (getConstellationEffect('c_t9_energy_overload') || 1) * (getConstellationEffect('c_t10_cosmic_battery_overcharge') || 1) * (getConstellationEffect('c_t16_dark_energy_hyperdrive') || 1) * (getConstellationEffect('c_t20_infinity_overlord') || 1);
-    const maxE = Math.floor(rawMax * (getConstellationEffect('c_energy_max') || 1) * darkEnergyBoost);
-    const regenMultiplier = (getConstellationEffect('c_energy_regen_mult') || 1) * darkEnergyBoost;
+    const maxE = Math.floor(rawMax * (getConstellationEffect('c_energy_max') || 1) * darkEnergyBoost * astBuffs.energyMax);
+    const regenMultiplier = (getConstellationEffect('c_energy_regen_mult') || 1) * darkEnergyBoost * astBuffs.energyRegen;
     const baseRegen = ((currentPlanetData ? currentPlanetData.energyRegen : 25) + getConstellationEffect('c_regen')) * regenMultiplier;
     gameState.invasion.energyMax = maxE;       // enforce to fix legacy saves
     gameState.invasion.energyRegen = baseRegen; // enforce to fix legacy saves
@@ -2646,6 +2782,11 @@ function loadGame() {
 }
 
 // Events
+const gachaPullBtn = document.getElementById('gacha-pull-1-btn');
+if (gachaPullBtn) {
+    gachaPullBtn.addEventListener('click', pullAsteroid);
+}
+
 elements.offClose.addEventListener('click', () => {
     elements.offModal.style.display = 'none';
 });
@@ -2820,7 +2961,7 @@ function updateInvasionUI() {
     if (!planet) return;
 
     const costMitigation = getConstellationEffect('c_multiverse_cost_mitigation') || 1;
-    const rawMultiverseScale = Math.pow(1.2, (gameState.multiverse || 1) - 1);
+    const rawMultiverseScale = Math.pow(1.35, (gameState.multiverse || 1) - 1);
     const multiverseScale = 1 + (rawMultiverseScale - 1) * costMitigation;
     gameState.invasion.energyMax = Math.floor(planet.energyMax * multiverseScale);
 
@@ -2996,7 +3137,7 @@ function updateInvasionUI() {
                 if (!rData) return;
                 
                 const cMit = getConstellationEffect('c_multiverse_cost_mitigation') || 1;
-                const bScale = Math.pow(1.2, (gameState.multiverse || 1) - 1);
+                const bScale = Math.pow(1.35, (gameState.multiverse || 1) - 1);
                 const mScale = 1 + (bScale - 1) * cMit;
                 const invCostM = getConstellationEffect('c_invasion_cost') || 1;
                 const actCost = Math.floor(rData.cost * invCostM * mScale);

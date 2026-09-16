@@ -64,6 +64,7 @@
                 <div class="tabs">
                     <button class="tab active" data-target="click-upgrades">Click</button>
                     <button class="tab" data-target="idle-upgrades">Idle</button>
+                    <button class="tab" data-target="asteroid-gacha-panel" style="color: #ff55ff; font-weight: bold; text-shadow: 0 0 10px #ff55ff;">Gacha ☄️</button>
                     <button class="tab" data-target="rebirth-panel" style="color: #ffaa00;">Rebirth</button>
                     <button class="tab" data-target="achievements-panel">Trophies</button>
                     <button class="tab" data-target="invasion-panel" style="color: #00f2ff; font-weight: bold; text-shadow: 0 0 10px cyan;">Invasion</button>
@@ -78,6 +79,31 @@
                 <!-- IDLE TAB -->
                 <div id="idle-upgrades" class="upgrade-list">
                     <!-- Javascript will populate here -->
+                </div>
+
+                <!-- ASTEROID GACHA TAB -->
+                <div id="asteroid-gacha-panel" class="upgrade-list">
+                    <div style="text-align: center; padding: 15px; background: rgba(255, 0, 255, 0.08); border-radius: 12px; border: 1px solid rgba(255, 0, 255, 0.3);">
+                        <h3 style="color: #ff77ff; margin-bottom: 5px; text-shadow: 0 0 10px #ff77ff;">☄️ Asteroid Core Extraction</h3>
+                        <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 15px;">Spend Raibos to extract Rare Asteroids! Higher rarity asteroids grant game-wide permanent buffs.</p>
+                        
+                        <div id="gacha-display" style="min-height: 120px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 15px; margin-bottom: 15px;">
+                            <div id="gacha-icon" style="font-size: 3rem; margin-bottom: 5px; filter: drop-shadow(0 0 15px #ff55ff);">☄️</div>
+                            <div id="gacha-name" style="font-size: 1.2rem; font-weight: bold; color: #ffffff;">Extract an Asteroid</div>
+                            <div id="gacha-buff" style="font-size: 0.9rem; color: #ffaa00; margin-top: 4px;">Cost scaling with total extractions</div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
+                            <button id="gacha-pull-1-btn" class="action-btn" style="flex: 1; background: linear-gradient(135deg, rgba(255,0,255,0.3), rgba(120,0,255,0.3)); border: 1px solid #ff55ff; color: #fff; font-weight: bold; padding: 10px;">
+                                Extract 1x<br><span id="gacha-cost-1" style="font-size: 0.8rem; color: #ffcc00;">1,000 Raibos</span>
+                            </button>
+                        </div>
+
+                        <h4 style="color: #fff; margin-top: 15px; margin-bottom: 10px; font-size: 0.95rem;">Extracted Asteroids Collection</h4>
+                        <div id="asteroid-inventory" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; text-align: left;">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
                 </div>
 
                 <!-- REBIRTH TAB -->
