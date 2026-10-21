@@ -3400,17 +3400,18 @@ if (rankHelpBtn) {
     });
 }
 
-// --- BGM System (Audio File + Procedural Cosmic Ambient Synth) ---
+// --- BGM System (Multi-track: Space Audio File + Procedural Synth) ---
 const bgmManager = {
     isPlaying: false,
     volume: 0.3,
+    currentTrack: 'track1',
     audioEl: document.getElementById('game-bgm'),
     toggleBtn: document.getElementById('bgm-toggle-btn'),
+    trackSelect: document.getElementById('bgm-track-select'),
     volSlider: document.getElementById('bgm-volume'),
     audioCtx: null,
     synthGain: null,
     synthInterval: null,
-    mode: 'file', // 'file' or 'synth'
 
     init() {
         const savedVol = localStorage.getItem('raibos_bgm_volume');
@@ -3419,6 +3420,12 @@ const bgmManager = {
             if (this.volSlider) this.volSlider.value = this.volume;
         }
         if (this.audioEl) this.audioEl.volume = this.volume;
+
+        const savedTrack = localStorage.getItem('raibos_bgm_track');
+        if (savedTrack) {
+            this.currentTrack = savedTrack;
+            if (this.trackSelect) this.trackSelect.value = this.currentTrack;
+        }
 
         if (this.volSlider) {
             this.volSlider.addEventListener('input', (e) => {
@@ -3429,6 +3436,12 @@ const bgmManager = {
         if (this.toggleBtn) {
             this.toggleBtn.addEventListener('click', () => {
                 this.toggle();
+            });
+        }
+
+        if (this.trackSelect) {
+            this.trackSelect.addEventListener('change', (e) => {
+                this.switchTrack(e.target.value);
             });
         }
 
@@ -3456,6 +3469,15 @@ const bgmManager = {
         localStorage.setItem('raibos_bgm_volume', this.volume);
     },
 
+    switchTrack(trackId) {
+        this.currentTrack = trackId;
+        localStorage.setItem('raibos_bgm_track', trackId);
+        if (this.isPlaying) {
+            this.stopAllAudio();
+            this.playCurrentTrack();
+        }
+    },
+
     toggle() {
         if (this.isPlaying) {
             this.stop();
@@ -3472,22 +3494,39 @@ const bgmManager = {
             this.toggleBtn.style.color = '#00ffaa';
             this.toggleBtn.style.borderColor = '#00ffaa';
         }
+        this.playCurrentTrack();
+    },
 
-        // Try playing audio file first
-        if (this.audioEl && this.audioEl.src) {
-            this.audioEl.volume = this.volume;
-            const playPromise = this.audioEl.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    this.mode = 'file';
-                }).catch(() => {
-                    // Audio file not found or autoplay restricted -> Procedural Cosmic Synth fallback
-                    this.startCosmicSynth();
-                });
+    playCurrentTrack() {
+        if (this.currentTrack === 'track1') {
+            // Track 1: Space Flight (MP3 File)
+            if (this.audioEl) {
+                this.audioEl.currentTime = 0;
+                this.audioEl.volume = this.volume;
+                const playPromise = this.audioEl.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // Fallback to synth if file playback fails
+                        this.startCosmicSynth();
+                    });
+                }
+            } else {
+                this.startCosmicSynth();
             }
-        } else {
+        } else if (this.currentTrack === 'track2') {
+            // Track 2: Cosmic Ambient Pad
             this.startCosmicSynth();
+        } else if (this.currentTrack === 'track3') {
+            // Track 3: 8-Bit Space Arcade
+            this.startChiptuneSynth();
         }
+    },
+
+    stopAllAudio() {
+        if (this.audioEl) {
+            this.audioEl.pause();
+        }
+        this.stopSynths();
     },
 
     stop() {
@@ -3498,96 +3537,124 @@ const bgmManager = {
             this.toggleBtn.style.color = '#fff';
             this.toggleBtn.style.borderColor = 'var(--accent-primary)';
         }
+        this.stopAllAudio();
+    },
 
-        if (this.audioEl) {
-            this.audioEl.pause();
+    ensureAudioContext() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return false;
+        if (!this.audioCtx) {
+            this.audioCtx = new AudioContext();
         }
-        this.stopCosmicSynth();
+        if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+        }
+        if (!this.synthGain) {
+            this.synthGain = this.audioCtx.createGain();
+            this.synthGain.connect(this.audioCtx.destination);
+        }
+        this.synthGain.gain.setValueAtTime(this.volume * 0.25, this.audioCtx.currentTime);
+        return true;
     },
 
     startCosmicSynth() {
-        this.mode = 'synth';
-        try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (!AudioContext) return;
-            if (!this.audioCtx) {
-                this.audioCtx = new AudioContext();
+        if (!this.ensureAudioContext()) return;
+        this.stopSynths();
+
+        const chords = [
+            [130.81, 155.56, 196.00, 293.66], // C minor 9
+            [103.83, 130.81, 155.56, 207.65], // Ab major 7
+            [155.56, 196.00, 233.08, 293.66], // Eb major 7
+            [116.54, 174.61, 233.08, 261.63]  // Bb sus2
+        ];
+        let chordIdx = 0;
+
+        const playChord = () => {
+            if (!this.isPlaying || this.currentTrack !== 'track2') return;
+            const now = this.audioCtx.currentTime;
+            const chord = chords[chordIdx % chords.length];
+            chordIdx++;
+
+            chord.forEach((freq, i) => {
+                const osc = this.audioCtx.createOscillator();
+                const noteGain = this.audioCtx.createGain();
+                const filter = this.audioCtx.createBiquadFilter();
+
+                osc.type = i === 0 ? 'triangle' : 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(450 + Math.random() * 200, now);
+
+                noteGain.gain.setValueAtTime(0.001, now);
+                noteGain.gain.exponentialRampToValueAtTime(0.08 / chord.length, now + 1.2);
+                noteGain.gain.exponentialRampToValueAtTime(0.001, now + 4.8);
+
+                osc.connect(filter);
+                filter.connect(noteGain);
+                noteGain.connect(this.synthGain);
+
+                osc.start(now);
+                osc.stop(now + 5.0);
+            });
+
+            // Twinkle bell
+            if (Math.random() < 0.75) {
+                const twinkle = this.audioCtx.createOscillator();
+                const twGain = this.audioCtx.createGain();
+                const twFreqs = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
+                twinkle.type = 'sine';
+                twinkle.frequency.setValueAtTime(twFreqs[Math.floor(Math.random() * twFreqs.length)], now + 1.5);
+                twGain.gain.setValueAtTime(0.001, now + 1.5);
+                twGain.gain.exponentialRampToValueAtTime(0.03, now + 1.8);
+                twGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+
+                twinkle.connect(twGain);
+                twGain.connect(this.synthGain);
+                twinkle.start(now + 1.5);
+                twinkle.stop(now + 3.3);
             }
-            if (this.audioCtx.state === 'suspended') {
-                this.audioCtx.resume();
-            }
+        };
 
-            if (!this.synthGain) {
-                this.synthGain = this.audioCtx.createGain();
-                this.synthGain.connect(this.audioCtx.destination);
-            }
-            this.synthGain.gain.setValueAtTime(this.volume * 0.25, this.audioCtx.currentTime);
-
-            // Chords: C minor 9, Ab major 7, Eb major 7, Bb sus2
-            const chords = [
-                [130.81, 155.56, 196.00, 293.66], // C3, Eb3, G3, D4
-                [103.83, 130.81, 155.56, 207.65], // Ab2, C3, Eb3, G#3/Ab3
-                [155.56, 196.00, 233.08, 293.66], // Eb3, G3, Bb3, D4
-                [116.54, 174.61, 233.08, 261.63]  // Bb2, F3, Bb3, C4
-            ];
-            let chordIdx = 0;
-
-            const playChord = () => {
-                if (!this.isPlaying || this.mode !== 'synth') return;
-                const now = this.audioCtx.currentTime;
-                const chord = chords[chordIdx % chords.length];
-                chordIdx++;
-
-                chord.forEach((freq, i) => {
-                    const osc = this.audioCtx.createOscillator();
-                    const noteGain = this.audioCtx.createGain();
-                    const filter = this.audioCtx.createBiquadFilter();
-
-                    osc.type = i === 0 ? 'triangle' : 'sine';
-                    osc.frequency.setValueAtTime(freq, now);
-
-                    filter.type = 'lowpass';
-                    filter.frequency.setValueAtTime(450 + Math.random() * 200, now);
-
-                    noteGain.gain.setValueAtTime(0.001, now);
-                    noteGain.gain.exponentialRampToValueAtTime(0.08 / chord.length, now + 1.2);
-                    noteGain.gain.exponentialRampToValueAtTime(0.001, now + 4.8);
-
-                    osc.connect(filter);
-                    filter.connect(noteGain);
-                    noteGain.connect(this.synthGain);
-
-                    osc.start(now);
-                    osc.stop(now + 5.0);
-                });
-
-                // Sparkle chime
-                if (Math.random() < 0.75) {
-                    const twinkle = this.audioCtx.createOscillator();
-                    const twGain = this.audioCtx.createGain();
-                    const twFreqs = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
-                    twinkle.type = 'sine';
-                    twinkle.frequency.setValueAtTime(twFreqs[Math.floor(Math.random() * twFreqs.length)], now + 1.5);
-                    twGain.gain.setValueAtTime(0.001, now + 1.5);
-                    twGain.gain.exponentialRampToValueAtTime(0.03, now + 1.8);
-                    twGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
-
-                    twinkle.connect(twGain);
-                    twGain.connect(this.synthGain);
-                    twinkle.start(now + 1.5);
-                    twinkle.stop(now + 3.3);
-                }
-            };
-
-            playChord();
-            clearInterval(this.synthInterval);
-            this.synthInterval = setInterval(playChord, 4500);
-        } catch (e) {
-            console.warn("Cosmic synth unavailable:", e);
-        }
+        playChord();
+        this.synthInterval = setInterval(playChord, 4500);
     },
 
-    stopCosmicSynth() {
+    startChiptuneSynth() {
+        if (!this.ensureAudioContext()) return;
+        this.stopSynths();
+
+        const melody = [
+            261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 261.63, 392.00,
+            293.66, 349.23, 440.00, 587.33, 440.00, 349.23, 293.66, 440.00
+        ];
+        let noteIdx = 0;
+
+        const playNote = () => {
+            if (!this.isPlaying || this.currentTrack !== 'track3') return;
+            const now = this.audioCtx.currentTime;
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(melody[noteIdx % melody.length], now);
+            noteIdx++;
+
+            gain.gain.setValueAtTime(0.03, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+            osc.connect(gain);
+            gain.connect(this.synthGain);
+
+            osc.start(now);
+            osc.stop(now + 0.2);
+        };
+
+        playNote();
+        this.synthInterval = setInterval(playNote, 220);
+    },
+
+    stopSynths() {
         if (this.synthInterval) {
             clearInterval(this.synthInterval);
             this.synthInterval = null;

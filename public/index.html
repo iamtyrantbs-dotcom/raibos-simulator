@@ -25,6 +25,11 @@
                     <div id="rebirth-badge" class="rebirth-badge" style="display: none; margin-top: 0;">Rebirth: <span id="rebirth-count-disp">0</span></div>
                     <div class="bgm-controller" style="display: flex; align-items: center; gap: 6px; background: rgba(0, 210, 255, 0.08); border: 1px solid rgba(0, 210, 255, 0.25); padding: 3px 10px; border-radius: 12px; backdrop-filter: blur(5px);">
                         <button id="bgm-toggle-btn" class="action-btn" style="padding: 2px 8px; font-size: 0.75rem; border-radius: 8px; background: rgba(0, 242, 255, 0.15); border: 1px solid var(--accent-primary); color: #fff; cursor: pointer;">🎵 BGM: OFF</button>
+                        <select id="bgm-track-select" style="background: rgba(0, 15, 30, 0.85); border: 1px solid rgba(0, 210, 255, 0.4); color: var(--accent-primary); font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; cursor: pointer;">
+                            <option value="track1">🚀 Space Flight</option>
+                            <option value="track2">🌌 Cosmic Ambient</option>
+                            <option value="track3">👾 8-Bit Arcade</option>
+                        </select>
                         <input type="range" id="bgm-volume" min="0" max="1" step="0.05" value="0.3" style="width: 55px; height: 4px; cursor: pointer; accent-color: var(--accent-primary);" title="Volume">
                     </div>
                 </div>
