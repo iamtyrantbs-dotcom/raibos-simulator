@@ -165,6 +165,7 @@ body::before {
    AAA-Quality Spotlight Tutorial Styles
    ========================================== */
 .tut-spotlight-svg {
+    display: none;
     position: fixed;
     inset: 0;
     width: 100vw;

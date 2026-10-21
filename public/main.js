@@ -5239,10 +5239,22 @@ const tutorialManager = {
             if (this.active) this.updatePositioning();
         });
 
+        // Ensure overlay elements start hidden
+        const spotlightSvg = document.getElementById('tutorial-spotlight-svg');
+        const spotlightFrame = document.getElementById('tut-spotlight-frame');
+        const arrowEl = document.getElementById('tut-floating-arrow');
+        const overlay = document.getElementById('tutorial-overlay');
+
         // Auto start if not completed
         const completed = localStorage.getItem('raibos_tutorial_completed');
         if (!completed) {
             setTimeout(() => this.start(), 400);
+        } else {
+            this.active = false;
+            if (spotlightSvg) spotlightSvg.style.display = 'none';
+            if (spotlightFrame) spotlightFrame.style.display = 'none';
+            if (arrowEl) arrowEl.style.display = 'none';
+            if (overlay) overlay.style.display = 'none';
         }
     },
 
