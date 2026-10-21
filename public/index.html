@@ -283,33 +283,72 @@
         </div>
     </div>
 
-    <!-- Interactive Tutorial Overlay Modal -->
-    <div id="tutorial-overlay" style="display: none; position: fixed; inset: 0; z-index: 20000; background: rgba(0, 10, 25, 0.75); backdrop-filter: blur(5px); justify-content: center; align-items: center;">
-        <div id="tutorial-card" style="background: linear-gradient(135deg, #0b1528, #050b14); border: 2px solid #00f2ff; box-shadow: 0 0 35px rgba(0, 242, 255, 0.4); border-radius: 18px; padding: 24px; max-width: 520px; width: 90%; color: #fff; position: relative; display: flex; flex-direction: column; gap: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 242, 255, 0.25); padding-bottom: 10px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span id="tut-step-icon" style="font-size: 1.6rem;">🚀</span>
-                    <h3 id="tut-title" style="margin: 0; font-size: 1.25rem; color: #00f2ff; text-shadow: 0 0 10px rgba(0,242,255,0.5);">라이보스 가이드</h3>
+    <!-- AAA-Quality Spotlight & Interactive Tutorial System -->
+    <!-- Dynamic Spotlight Cutout (SVG Mask) -->
+    <svg id="tutorial-spotlight-svg" class="tut-spotlight-svg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <mask id="tut-spotlight-mask">
+                <!-- White reveals the dark backdrop -->
+                <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                <!-- Black creates the transparent punch-hole on targeted element -->
+                <rect id="tut-mask-hole" x="0" y="0" width="0" height="0" rx="16" ry="16" fill="black" />
+            </mask>
+        </defs>
+        <!-- Dark Dimmed Overlay using mask -->
+        <rect x="0" y="0" width="100%" height="100%" fill="rgba(2, 6, 14, 0.8)" mask="url(#tut-spotlight-mask)" />
+    </svg>
+
+    <!-- Pulsing Golden Spotlight Frame -->
+    <div id="tut-spotlight-frame" class="tut-spotlight-frame" style="display: none;"></div>
+
+    <!-- Animated Guiding Pointer Arrow -->
+    <div id="tut-floating-arrow" class="tut-floating-arrow" style="display: none;">
+        <span class="tut-arrow-icon">👇</span>
+        <div class="tut-arrow-ripple"></div>
+    </div>
+
+    <!-- Floating HUD Dialog Card -->
+    <div id="tutorial-overlay" class="tut-overlay-wrapper" style="display: none;">
+        <div id="tutorial-card" class="tut-hud-card">
+            <!-- Header bar with character & badge -->
+            <div class="tut-card-header">
+                <div class="tut-character-badge">
+                    <div id="tut-step-icon" class="tut-character-avatar">🤖</div>
+                    <div>
+                        <div class="tut-hud-tag">SYSTEM AI GUIDE</div>
+                        <h3 id="tut-title" class="tut-hud-title">초기화 및 준비</h3>
+                    </div>
                 </div>
-                <span id="tut-step-badge" style="font-size: 0.8rem; background: rgba(0,242,255,0.15); border: 1px solid #00f2ff; color: #00f2ff; padding: 2px 8px; border-radius: 10px; font-weight: bold;">1 / 5</span>
+                <div class="tut-progress-badge">
+                    <span id="tut-step-badge">1 / 5</span>
+                </div>
             </div>
 
-            <p id="tut-desc" style="font-size: 0.95rem; line-height: 1.5; color: #ddd; min-height: 55px; margin: 0;"></p>
-            
-            <div id="tut-target-hint" style="background: rgba(0, 255, 170, 0.1); border-left: 3px solid #00ffaa; padding: 8px 12px; border-radius: 4px; font-size: 0.85rem; color: #00ffaa;">
-                👉 상호작용 안내
+            <!-- Progress bar -->
+            <div class="tut-progress-track">
+                <div id="tut-progress-fill" class="tut-progress-fill" style="width: 20%;"></div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <button id="tut-skip-btn" class="action-btn" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25); color: #aaa; padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">
-                    튜토리얼 스킵 ⏭️
+            <!-- Description Body -->
+            <div class="tut-card-body">
+                <p id="tut-desc" class="tut-dialog-text"></p>
+                <div id="tut-target-hint" class="tut-action-callout">
+                    <span class="tut-pulse-dot"></span>
+                    <span id="tut-hint-text">중앙의 R 버튼을 클릭해보세요!</span>
+                </div>
+            </div>
+
+            <!-- Actions Footer -->
+            <div class="tut-card-footer">
+                <button id="tut-skip-btn" class="tut-btn-secondary" title="언제든 다시 볼 수 있습니다">
+                    스킵 ⏭️
                 </button>
                 <div style="display: flex; gap: 8px;">
-                    <button id="tut-prev-btn" class="action-btn" style="display: none; background: rgba(0, 242, 255, 0.15); border: 1px solid #00f2ff; color: #fff; padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">
-                        이전
+                    <button id="tut-prev-btn" class="tut-btn-secondary" style="display: none;">
+                        ◀ 이전
                     </button>
-                    <button id="tut-next-btn" class="action-btn" style="background: linear-gradient(135deg, #00f2ff, #7928ca); border: 1px solid #00f2ff; color: #fff; padding: 6px 18px; font-size: 0.85rem; font-weight: bold; border-radius: 8px;">
-                        다음 단계 ▶
+                    <button id="tut-next-btn" class="tut-btn-primary">
+                        <span>다음</span> <span class="tut-btn-arrow">▶</span>
                     </button>
                 </div>
             </div>

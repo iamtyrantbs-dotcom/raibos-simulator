@@ -5046,65 +5046,78 @@ if (crBtn) {
 // 리셋 버튼은 최하단 로직에서 분리하여 안전하게 관리
 
 // ==========================================
-// Tutorial System (Interactive, Multilingual, Skippable)
+// ==========================================
+// AAA-Quality Dynamic Spotlight & Interactive Tutorial System
 // ==========================================
 const tutorialManager = {
     step: 0,
     active: false,
+    cardPlacement: 'bottom-right',
     steps: [
         {
-            icon: '👆',
+            avatar: '👆',
             titleEn: '1. Click to Produce Raibos',
-            titleKo: '1. 라이보스를 클릭하여 생산하기',
-            descEn: 'Click the big glowing central "R" Raibos button to produce your first Raibos!',
-            descKo: '화면 중앙의 빛나는 커다란 "R" 라이보스 버튼을 클릭하여 첫 라이보스를 획득해보세요!',
-            hintEn: '👉 Click the central "R" Raibos button now!',
-            hintKo: '👉 중앙의 "R" 라이보스 버튼을 클릭해보세요!',
+            titleKo: '1. 라이보스 수동 생산',
+            descEn: 'Tap or click the central glowing "R" Raibos button to synthesize your initial cosmic currency!',
+            descKo: '화면 중앙의 빛나는 "R" 라이보스 버튼을 직접 클릭해 첫 우주 통화를 생산해보세요!',
+            hintEn: '👉 Try clicking the glowing "R" button right now!',
+            hintKo: '👉 중앙의 빛나는 "R" 버튼을 직접 3회 이상 클릭해보세요!',
             targetId: 'raibos-button',
-            tab: 'click-upgrades',
-            interactType: 'click'
+            arrowPos: 'top', // arrow points down from above target
+            cardPos: 'right', // place card to right or bottom
+            tab: null,
+            interactTrigger: 'click'
         },
         {
-            icon: '🛒',
-            titleEn: '2. Purchase Click & Idle Upgrades',
-            titleKo: '2. 클릭 및 방치 업그레이드 구매',
-            descEn: 'Spend earned Raibos in the right menu to increase click power and automatic idle production per second.',
-            descKo: '우측 메뉴에서 라이보스를 소모해 클릭당 생산량과 초당 자동 생산량을 올려주는 업그레이드를 구매하세요.',
-            hintEn: '👉 Check out the upgrade list in the Click or Idle tabs!',
-            hintKo: '👉 Click 탭이나 Idle 탭의 업그레이드 목록을 확인해보세요!',
+            avatar: '🛒',
+            titleEn: '2. Upgrades & Automation',
+            titleKo: '2. 생산 업그레이드 및 자동화',
+            descEn: 'Spend your Raibos on Click upgrades to multiply manual production, and Idle generators to produce Raibos automatically while doing nothing!',
+            descKo: '모은 라이보스로 클릭당 생산량을 폭증시키거나, 가만히 있어도 초당 라이보스를 무한 생산하는 방치형 발전기를 구매하세요.',
+            hintEn: '👉 Purchase an upgrade from Click or Idle list!',
+            hintKo: '👉 Click 탭이나 Idle 탭에서 원하는 업그레이드를 구매해보세요!',
             targetId: 'click-upgrades',
+            arrowPos: 'left',
+            cardPos: 'left-center',
             tab: 'click-upgrades'
         },
         {
-            icon: '⚡',
-            titleEn: '3. Active Skills System',
-            titleKo: '3. 액티브 스킬 시스템',
-            descEn: 'Located right below the central click button! A new pull charge is granted every 30 seconds. Extract powerful skills (Common to 0.1% Legendary) and unleash them with short cooldowns!',
-            descKo: '클릭 버튼 바로 아래에 위치합니다! 30초마다 스킬 뽑기 횟수가 1회씩 충전되며, 0.1% 확률의 레전더리 스킬까지 다양한 스킬을 발동할 수 있습니다.',
-            hintEn: '👉 Check the Active Skills section right below the "R" button!',
-            hintKo: '👉 "R" 버튼 바로 아래의 액티브 스킬 패널을 확인해보세요!',
-            targetId: 'active-skills-wrapper'
+            avatar: '⚡',
+            titleEn: '3. Active Skills (2 Equip Slots)',
+            titleKo: '3. 액티브 스킬 & 2개 장착 슬롯',
+            descEn: 'Gain free skill pull charges every 30s! Pull unique skills from Common up to 0.1% Legendary. You can equip up to 2 skills in the quick slots!',
+            descKo: '30초마다 스킬 뽑기 횟수가 1회 충전됩니다! 최대 2개의 스킬을 퀵슬롯에 장착하여 원할 때 강력한 액티브 효과를 발동할 수 있습니다.',
+            hintEn: '👉 Extract a skill and equip it to your quick slots!',
+            hintKo: '👉 스킬을 뽑고 최대 2개까지 자유롭게 장착/발동해보세요!',
+            targetId: 'active-skills-wrapper',
+            arrowPos: 'top',
+            cardPos: 'right-bottom',
+            tab: null
         },
         {
-            icon: '☄️',
-            titleEn: '4. Explore Menu Features (Gacha & Invasion)',
-            titleKo: '4. 메뉴 기능 알아보기 (소행성 & 행성 침략)',
-            descEn: 'Explore Gacha (Asteroid Core Extraction) for permanent production buffs, and Invasion to conquer planets across the Solar System!',
-            descKo: '영구 버프를 부여하는 소행성 뽑기(Gacha)와 태양계 행성들을 점령해나가는 행성 침략(Invasion) 등 다양한 메뉴를 즐겨보세요!',
-            hintEn: '👉 Click the Gacha or Invasion tabs in the shop menu!',
-            hintKo: '👉 메뉴 상단의 Gacha나 Invasion 탭을 클릭해보세요!',
+            avatar: '☄️',
+            titleEn: '4. Asteroid Gacha & Invasion',
+            titleKo: '4. 소행성 코어 추출 & 행성 침략',
+            descEn: 'Extract rare Asteroids for permanent passive buffs across all dimensions, and build up invasion energy to conquer the Solar System planet by planet!',
+            descKo: 'Gacha 탭에서 소행성을 추출해 전역 영구 버프를 획득하고, Invasion 탭에서 에너지를 모아 지구부터 태양계 행성들을 점령하세요!',
+            hintEn: '👉 Check out Gacha and Invasion in the shop tabs!',
+            hintKo: '👉 메뉴 상단의 Gacha(소행성) 및 Invasion(침략) 탭을 확인하세요!',
             targetId: 'asteroid-gacha-panel',
+            arrowPos: 'left',
+            cardPos: 'left-center',
             tab: 'asteroid-gacha-panel'
         },
         {
-            icon: '🌌',
-            titleEn: '5. Rebirth & Constellation Skill Tree',
-            titleKo: '5. 환생 및 별자리 스킬 트리',
-            descEn: 'Once you accumulate enough wealth, Ascend via Rebirth to earn RP and unlock massive permanent powers in the Constellation tree!',
-            descKo: '충분한 라이보스를 모으면 환생(Rebirth)을 통해 RP를 획득하고, 방대한 별자리 스킬 트리를 해금하여 우주적인 성장을 누리세요!',
-            hintEn: '👉 Check the Rebirth tab when you reach 1 Million Raibos!',
-            hintKo: '👉 100만 라이보스에 도달하면 환생 탭을 확인해보세요!',
+            avatar: '🌌',
+            titleEn: '5. Rebirth & Constellation Tree',
+            titleKo: '5. 차원 환생 & 별자리 스킬 트리',
+            descEn: 'When you hit 1 Million Raibos, Ascend to earn Rebirth Points (RP) and unlock over 50 deep celestial perks in the Constellation Skill Tree!',
+            descKo: '100만 라이보스를 달성하면 환생을 통해 RP를 얻고, 50개 이상의 방대한 별자리 스킬 트리를 열어 영구적인 신적 능력을 완성하세요!',
+            hintEn: '👉 Check Rebirth tab to see your next realm ascension!',
+            hintKo: '👉 Rebirth 탭에서 다음 차원 도약 목표를 확인해보세요!',
             targetId: 'rebirth-panel',
+            arrowPos: 'left',
+            cardPos: 'left-center',
             tab: 'rebirth-panel'
         }
     ],
@@ -5142,18 +5155,31 @@ const tutorialManager = {
             };
         }
 
-        // Auto show if never completed
+        window.addEventListener('resize', () => {
+            if (this.active) this.updatePositioning();
+        });
+
+        // Auto start if not completed
         const completed = localStorage.getItem('raibos_tutorial_completed');
         if (!completed) {
-            setTimeout(() => this.start(), 300);
+            setTimeout(() => this.start(), 400);
         }
     },
 
     start(force = false) {
         this.step = 0;
         this.active = true;
+        
         const overlay = document.getElementById('tutorial-overlay');
-        if (overlay) overlay.style.display = 'flex';
+        const spotlightSvg = document.getElementById('tutorial-spotlight-svg');
+        const spotlightFrame = document.getElementById('tut-spotlight-frame');
+        const arrowEl = document.getElementById('tut-floating-arrow');
+
+        if (overlay) overlay.style.display = 'block';
+        if (spotlightSvg) spotlightSvg.style.display = 'block';
+        if (spotlightFrame) spotlightFrame.style.display = 'block';
+        if (arrowEl) arrowEl.style.display = 'flex';
+
         this.render();
     },
 
@@ -5176,15 +5202,24 @@ const tutorialManager = {
     finish() {
         this.active = false;
         localStorage.setItem('raibos_tutorial_completed', 'true');
+
         const overlay = document.getElementById('tutorial-overlay');
+        const spotlightSvg = document.getElementById('tutorial-spotlight-svg');
+        const spotlightFrame = document.getElementById('tut-spotlight-frame');
+        const arrowEl = document.getElementById('tut-floating-arrow');
+
         if (overlay) overlay.style.display = 'none';
-        this.clearHighlight();
-        showToast('Tutorial Complete!', i18n.lang === 'ko' ? '튜토리얼이 완료되었습니다! 행운을 빕니다.' : 'Tutorial completed! Have fun exploring.');
+        if (spotlightSvg) spotlightSvg.style.display = 'none';
+        if (spotlightFrame) spotlightFrame.style.display = 'none';
+        if (arrowEl) arrowEl.style.display = 'none';
+
+        this.clearInteractiveTarget();
+        showToast('Tutorial Complete! 🎉', i18n.lang === 'ko' ? '튜토리얼을 마쳤습니다. 라이보스 우주를 정복해보세요!' : 'Tutorial complete! Have fun conquering the cosmos!');
     },
 
-    clearHighlight() {
-        document.querySelectorAll('.tutorial-highlight').forEach(el => {
-            el.classList.remove('tutorial-highlight');
+    clearInteractiveTarget() {
+        document.querySelectorAll('.tutorial-interactive-target').forEach(el => {
+            el.classList.remove('tutorial-interactive-target');
         });
     },
 
@@ -5196,9 +5231,10 @@ const tutorialManager = {
         const isKo = i18n.lang === 'ko';
         const titleEl = document.getElementById('tut-title');
         const descEl = document.getElementById('tut-desc');
-        const hintEl = document.getElementById('tut-target-hint');
-        const iconEl = document.getElementById('tut-step-icon');
+        const hintEl = document.getElementById('tut-hint-text');
+        const avatarEl = document.getElementById('tut-step-icon');
         const badgeEl = document.getElementById('tut-step-badge');
+        const fillEl = document.getElementById('tut-progress-fill');
         const nextBtn = document.getElementById('tut-next-btn');
         const prevBtn = document.getElementById('tut-prev-btn');
         const skipBtn = document.getElementById('tut-skip-btn');
@@ -5206,30 +5242,128 @@ const tutorialManager = {
         if (titleEl) titleEl.innerText = isKo ? s.titleKo : s.titleEn;
         if (descEl) descEl.innerText = isKo ? s.descKo : s.descEn;
         if (hintEl) hintEl.innerText = isKo ? s.hintKo : s.hintEn;
-        if (iconEl) iconEl.innerText = s.icon;
+        if (avatarEl) avatarEl.innerText = s.avatar;
         if (badgeEl) badgeEl.innerText = `${this.step + 1} / ${this.steps.length}`;
+        if (fillEl) fillEl.style.width = `${((this.step + 1) / this.steps.length) * 100}%`;
 
         if (prevBtn) {
             prevBtn.style.display = this.step > 0 ? 'block' : 'none';
-            prevBtn.innerText = isKo ? '이전' : 'Prev';
+            prevBtn.innerText = isKo ? '◀ 이전' : '◀ Prev';
         }
         if (nextBtn) {
-            nextBtn.innerText = this.step === this.steps.length - 1 ? (isKo ? '완료 🎉' : 'Finish 🎉') : (isKo ? '다음 단계 ▶' : 'Next ▶');
+            const isLast = this.step === this.steps.length - 1;
+            nextBtn.innerHTML = isLast ? (isKo ? '<span>완료 🎉</span>' : '<span>Finish 🎉</span>') : (isKo ? '<span>다음</span> <span class="tut-btn-arrow">▶</span>' : '<span>Next</span> <span class="tut-btn-arrow">▶</span>');
         }
         if (skipBtn) {
-            skipBtn.innerText = isKo ? '튜토리얼 스킵 ⏭️' : 'Skip Tutorial ⏭️';
+            skipBtn.innerText = isKo ? '스킵 ⏭️' : 'Skip ⏭️';
         }
 
-        // Highlight target & auto switch tab
-        this.clearHighlight();
+        // Auto switch tab if required
         if (s.tab) {
             const tabBtn = document.querySelector(`.tab[data-target="${s.tab}"]`);
             if (tabBtn) tabBtn.click();
         }
-        if (s.targetId) {
-            const targetEl = document.getElementById(s.targetId);
-            if (targetEl) {
-                targetEl.classList.add('tutorial-highlight');
+
+        // Setup Target Element & Spotlight
+        this.clearInteractiveTarget();
+        setTimeout(() => this.updatePositioning(), 50);
+    },
+
+    updatePositioning() {
+        if (!this.active) return;
+        const s = this.steps[this.step];
+        if (!s) return;
+
+        const targetEl = s.targetId ? document.getElementById(s.targetId) : null;
+        const holeRect = document.getElementById('tut-mask-hole');
+        const frameEl = document.getElementById('tut-spotlight-frame');
+        const arrowEl = document.getElementById('tut-floating-arrow');
+        const cardEl = document.getElementById('tutorial-card');
+
+        if (targetEl) {
+            targetEl.classList.add('tutorial-interactive-target');
+            const rect = targetEl.getBoundingClientRect();
+            const padding = 10;
+
+            const x = Math.max(0, rect.left - padding);
+            const y = Math.max(0, rect.top - padding);
+            const width = rect.width + padding * 2;
+            const height = rect.height + padding * 2;
+
+            // 1. Cut hole in SVG mask
+            if (holeRect) {
+                holeRect.setAttribute('x', x);
+                holeRect.setAttribute('y', y);
+                holeRect.setAttribute('width', width);
+                holeRect.setAttribute('height', height);
+            }
+
+            // 2. Position Glowing Frame
+            if (frameEl) {
+                frameEl.style.display = 'block';
+                frameEl.style.left = `${x}px`;
+                frameEl.style.top = `${y}px`;
+                frameEl.style.width = `${width}px`;
+                frameEl.style.height = `${height}px`;
+            }
+
+            // 3. Position Guiding Arrow
+            if (arrowEl) {
+                arrowEl.style.display = 'flex';
+                if (s.arrowPos === 'top') {
+                    // Above the target, pointing down
+                    arrowEl.style.left = `${rect.left + rect.width / 2 - 16}px`;
+                    arrowEl.style.top = `${Math.max(10, rect.top - 65)}px`;
+                    const icon = arrowEl.querySelector('.tut-arrow-icon');
+                    if (icon) icon.innerText = '👇';
+                } else if (s.arrowPos === 'left') {
+                    // Left of target pointing right
+                    arrowEl.style.left = `${Math.max(10, rect.left - 65)}px`;
+                    arrowEl.style.top = `${rect.top + rect.height / 2 - 25}px`;
+                    const icon = arrowEl.querySelector('.tut-arrow-icon');
+                    if (icon) icon.innerText = '👉';
+                } else {
+                    arrowEl.style.left = `${rect.left + rect.width / 2 - 16}px`;
+                    arrowEl.style.top = `${rect.bottom + 15}px`;
+                    const icon = arrowEl.querySelector('.tut-arrow-icon');
+                    if (icon) icon.innerText = '👆';
+                }
+            }
+
+            // 4. Position Dialog Card Smartly so it doesn't obscure target
+            if (cardEl) {
+                const winW = window.innerWidth;
+                const winH = window.innerHeight;
+
+                if (s.cardPos === 'left-center') {
+                    // Position to the left of the shop area
+                    cardEl.style.left = `${Math.max(20, rect.left - 460)}px`;
+                    cardEl.style.top = `${Math.min(winH - 260, Math.max(40, rect.top))}px`;
+                } else if (s.cardPos === 'right') {
+                    cardEl.style.left = `${Math.min(winW - 460, rect.right + 30)}px`;
+                    cardEl.style.top = `${Math.max(40, rect.top)}px`;
+                } else if (s.cardPos === 'right-bottom') {
+                    cardEl.style.left = `${Math.min(winW - 460, rect.right + 30)}px`;
+                    cardEl.style.top = `${Math.min(winH - 260, rect.bottom - 120)}px`;
+                } else {
+                    // Default bottom-center
+                    cardEl.style.left = '50%';
+                    cardEl.style.top = `${winH - 240}px`;
+                    cardEl.style.transform = 'translateX(-50%)';
+                }
+            }
+        } else {
+            // No specific target, center spotlight
+            if (holeRect) {
+                holeRect.setAttribute('width', 0);
+                holeRect.setAttribute('height', 0);
+            }
+            if (frameEl) frameEl.style.display = 'none';
+            if (arrowEl) arrowEl.style.display = 'none';
+            if (cardEl) {
+                cardEl.style.left = '50%';
+                cardEl.style.top = '50%';
+                cardEl.style.transform = 'translate(-50%, -50%)';
             }
         }
     }

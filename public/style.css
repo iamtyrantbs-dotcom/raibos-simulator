@@ -160,25 +160,268 @@ body::before {
     overflow: hidden;
 }
 
-/* Tutorial Highlights & Animations */
-.tutorial-highlight {
-    animation: tutorialPulse 1.5s infinite alternate !important;
-    position: relative;
-    z-index: 20005 !important;
+
+/* ==========================================
+   AAA-Quality Spotlight Tutorial Styles
+   ========================================== */
+.tut-spotlight-svg {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 19990;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-@keyframes tutorialPulse {
+.tut-spotlight-frame {
+    position: fixed;
+    border-radius: 16px;
+    border: 2px solid #00f2ff;
+    box-shadow: 0 0 25px rgba(0, 242, 255, 0.7), inset 0 0 20px rgba(0, 242, 255, 0.25);
+    z-index: 19995;
+    pointer-events: none;
+    transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: tutFrameGlow 1.8s infinite alternate ease-in-out;
+}
+
+@keyframes tutFrameGlow {
     0% {
-        outline: 3px solid #00f2ff;
-        outline-offset: 4px;
-        box-shadow: 0 0 20px rgba(0, 242, 255, 0.8);
+        border-color: #00f2ff;
+        box-shadow: 0 0 20px rgba(0, 242, 255, 0.6), inset 0 0 15px rgba(0, 242, 255, 0.2);
+        transform: scale(0.995);
     }
     100% {
-        outline: 3px solid #7928ca;
-        outline-offset: 8px;
-        box-shadow: 0 0 35px rgba(121, 40, 202, 0.9);
+        border-color: #39ff14;
+        box-shadow: 0 0 35px rgba(57, 255, 20, 0.8), inset 0 0 25px rgba(57, 255, 20, 0.3);
+        transform: scale(1.005);
     }
 }
+
+.tut-floating-arrow {
+    position: fixed;
+    z-index: 19998;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: tutArrowBounce 1.2s infinite ease-in-out;
+}
+
+.tut-arrow-icon {
+    font-size: 2.4rem;
+    filter: drop-shadow(0 0 12px #00f2ff);
+}
+
+.tut-arrow-ripple {
+    width: 24px;
+    height: 8px;
+    background: radial-gradient(ellipse at center, rgba(0,242,255,0.8) 0%, transparent 70%);
+    border-radius: 50%;
+    margin-top: -6px;
+    animation: tutRipple 1.2s infinite ease-out;
+}
+
+@keyframes tutArrowBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+@keyframes tutRipple {
+    0% { transform: scale(0.6); opacity: 0.8; }
+    100% { transform: scale(1.8); opacity: 0; }
+}
+
+.tut-overlay-wrapper {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    pointer-events: none; /* Allows interacting with uncovered elements */
+}
+
+.tut-hud-card {
+    position: fixed;
+    pointer-events: auto;
+    background: linear-gradient(145deg, rgba(8, 20, 40, 0.94), rgba(4, 10, 22, 0.96));
+    border: 1px solid rgba(0, 242, 255, 0.4);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 242, 255, 0.2);
+    border-radius: 18px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    width: 440px;
+    max-width: 92vw;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 22px;
+    color: #fff;
+    transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    z-index: 20002;
+}
+
+.tut-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tut-character-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tut-character-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0, 242, 255, 0.2), rgba(121, 40, 202, 0.4));
+    border: 1px solid #00f2ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.6rem;
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+}
+
+.tut-hud-tag {
+    font-size: 0.65rem;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+    color: var(--accent-primary);
+    text-transform: uppercase;
+}
+
+.tut-hud-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.tut-progress-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    background: rgba(0, 242, 255, 0.12);
+    border: 1px solid rgba(0, 242, 255, 0.35);
+    border-radius: 20px;
+    color: #00f2ff;
+}
+
+.tut-progress-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.tut-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00f2ff, #38ef7d);
+    box-shadow: 0 0 10px #00f2ff;
+    transition: width 0.3s ease;
+}
+
+.tut-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tut-dialog-text {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: #d6e2ee;
+    min-height: 42px;
+}
+
+.tut-action-callout {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 255, 170, 0.08);
+    border: 1px solid rgba(0, 255, 170, 0.3);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    color: #00ffaa;
+    font-weight: 600;
+}
+
+.tut-pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #00ffaa;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #00ffaa;
+    animation: tutDotPulse 1.2s infinite;
+}
+
+@keyframes tutDotPulse {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    50% { transform: scale(1.4); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0.6; }
+}
+
+.tut-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tut-btn-primary {
+    background: linear-gradient(135deg, #00f2ff 0%, #0072ff 100%);
+    border: none;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 8px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 242, 255, 0.3);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tut-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 242, 255, 0.5);
+}
+
+.tut-btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #aaa;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tut-btn-secondary:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Interactivity during tutorial: Target receives top layer pointer events */
+.tutorial-interactive-target {
+    position: relative !important;
+    z-index: 19999 !important;
+    pointer-events: auto !important;
+}
+
 .clicker-area {
     flex: 1;
     display: flex;
