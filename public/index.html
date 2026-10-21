@@ -21,7 +21,14 @@
         <header class="header">
             <div class="title-area">
                 <h1 class="title">Raibos Simulator</h1>
-                <div id="rebirth-badge" class="rebirth-badge" style="display: none;">Rebirth: <span id="rebirth-count-disp">0</span></div>
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 5px; flex-wrap: wrap;">
+                    <div id="rebirth-badge" class="rebirth-badge" style="display: none; margin-top: 0;">Rebirth: <span id="rebirth-count-disp">0</span></div>
+                    <div class="bgm-controller" style="display: flex; align-items: center; gap: 6px; background: rgba(0, 210, 255, 0.08); border: 1px solid rgba(0, 210, 255, 0.25); padding: 3px 10px; border-radius: 12px; backdrop-filter: blur(5px);">
+                        <button id="bgm-toggle-btn" class="action-btn" style="padding: 2px 8px; font-size: 0.75rem; border-radius: 8px; background: rgba(0, 242, 255, 0.15); border: 1px solid var(--accent-primary); color: #fff; cursor: pointer;">🎵 BGM: OFF</button>
+                        <input type="range" id="bgm-volume" min="0" max="1" step="0.05" value="0.3" style="width: 55px; height: 4px; cursor: pointer; accent-color: var(--accent-primary);" title="Volume">
+                    </div>
+                </div>
+                <audio id="game-bgm" loop preload="none" src="bgm.mp3"></audio>
             </div>
             
             <div class="stats">
@@ -93,9 +100,16 @@
                             <div id="gacha-buff" style="font-size: 0.9rem; color: #ffaa00; margin-top: 4px;">Cost scaling with total extractions</div>
                         </div>
 
+                        <div style="font-size: 0.85rem; color: #00ffff; font-weight: bold; margin-bottom: 12px; background: rgba(0, 255, 255, 0.1); padding: 5px; border-radius: 6px; border: 1px solid rgba(0, 255, 255, 0.2);">
+                            🌌 Multiverse Luck Multiplier: <span id="gacha-luck-mult" style="color: #ffcc00; font-size: 1rem;">x1.00</span>
+                        </div>
+
                         <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
                             <button id="gacha-pull-1-btn" class="action-btn" style="flex: 1; background: linear-gradient(135deg, rgba(255,0,255,0.3), rgba(120,0,255,0.3)); border: 1px solid #ff55ff; color: #fff; font-weight: bold; padding: 10px;">
                                 Extract 1x<br><span id="gacha-cost-1" style="font-size: 0.8rem; color: #ffcc00;">1,000 Raibos</span>
+                            </button>
+                            <button id="gacha-auto-toggle-btn" class="action-btn" style="flex: 1; background: linear-gradient(135deg, rgba(0,255,170,0.2), rgba(0,210,255,0.2)); border: 1px solid #00ffaa; color: #00ffaa; font-weight: bold; padding: 10px;">
+                                Auto-Extract: <span id="gacha-auto-status" style="color: #ff5555;">OFF</span>
                             </button>
                         </div>
 

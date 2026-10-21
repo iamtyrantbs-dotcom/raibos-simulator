@@ -27,12 +27,21 @@ let gameState = {
 };
 
 const ASTEROID_POOL = [
-    { id: 'ast_stony', name: 'Stony Chondrite', rarity: 'Common', color: '#aaaaaa', chance: 0.45, icon: '🪨', desc: '+10% Click Power & Idle Power per owned', effect: (count) => ({ click: count * 0.10, idle: count * 0.10 }) },
-    { id: 'ast_metallic', name: 'Iron Meteorite', rarity: 'Uncommon', color: '#00ddff', chance: 0.30, icon: '⚙️', desc: '+5% Global Production Multiplier per owned', effect: (count) => ({ global: count * 0.05 }) },
-    { id: 'ast_crystal', name: 'Crystal Pallasite', rarity: 'Rare', color: '#ffcc00', chance: 0.15, icon: '💎', desc: '+10% Rebirth Points Gained per owned', effect: (count) => ({ rp: count * 0.10 }) },
-    { id: 'ast_plasma', name: 'Plasma Comet', rarity: 'Epic', color: '#ff55ff', chance: 0.07, icon: '🔥', desc: '+15% Max Energy & +15% Energy Regen per owned', effect: (count) => ({ energyMax: count * 0.15, energyRegen: count * 0.15 }) },
-    { id: 'ast_darkmatter', name: 'Dark Matter Asteroid', rarity: 'Legendary', color: '#aa00ff', chance: 0.025, icon: '🌌', desc: '+50% All Production & +20% Time Skip Efficiency per owned', effect: (count) => ({ global: count * 0.50, timeSkip: count * 0.20 }) },
-    { id: 'ast_singularity', name: 'Singularity Core Asteroid', rarity: 'Mythic', color: '#ff0055', chance: 0.005, icon: '👑', desc: 'x2 Global Multiplier & +100% Rebirth Points per owned', effect: (count) => ({ globalMultScale: Math.pow(2, count), rp: count * 1.0 }) }
+    { id: 'ast_stony', name: 'Stony Chondrite', rarity: 'Common', color: '#aaaaaa', baseWeight: 60000000, icon: '🪨', desc: '+5% Click & Idle Power (soft-caps with count)', effect: (count) => ({ click: Math.pow(count, 0.75) * 0.05, idle: Math.pow(count, 0.75) * 0.05 }) },
+    { id: 'ast_metallic', name: 'Iron Meteorite', rarity: 'Uncommon', color: '#00ddff', baseWeight: 25000000, icon: '⚙️', desc: '+2.5% Global Multiplier (soft-caps with count)', effect: (count) => ({ global: Math.pow(count, 0.75) * 0.025 }) },
+    { id: 'ast_crystal', name: 'Crystal Pallasite', rarity: 'Rare', color: '#ffcc00', baseWeight: 10000000, icon: '💎', desc: '+5% Rebirth Points Gained (soft-caps with count)', effect: (count) => ({ rp: Math.pow(count, 0.75) * 0.05 }) },
+    { id: 'ast_plasma', name: 'Plasma Comet', rarity: 'Epic', color: '#ff55ff', baseWeight: 4000000, icon: '🔥', desc: '+8% Max Energy & Regen (soft-caps with count)', effect: (count) => ({ energyMax: Math.pow(count, 0.75) * 0.08, energyRegen: Math.pow(count, 0.75) * 0.08 }) },
+    { id: 'ast_darkmatter', name: 'Dark Matter Asteroid', rarity: 'Legendary', color: '#aa00ff', baseWeight: 990000, icon: '🌌', desc: '+25% All Production (soft-caps with count)', effect: (count) => ({ global: Math.pow(count, 0.75) * 0.25 }) },
+    { id: 'ast_singularity', name: 'Singularity Core', rarity: 'Mythic', color: '#ff0055', baseWeight: 50000, icon: '👑', desc: '+50% Global Multiplier & +50% RP Gain', effect: (count) => ({ global: Math.pow(count, 0.75) * 0.50, rp: Math.pow(count, 0.75) * 0.50 }) },
+    
+    // NEW CORES (Between Mythic & Transcendent)
+    { id: 'ast_hypernova', name: 'Hypernova Remnant Core', rarity: 'Cosmic (1/100K)', color: '#ffaa00', baseWeight: 1000, icon: '💥', desc: '+100% Click & Idle Power & +25% Energy Regen', effect: (count) => ({ click: Math.pow(count, 0.75) * 1.0, idle: Math.pow(count, 0.75) * 1.0, energyRegen: Math.pow(count, 0.75) * 0.25 }) },
+    { id: 'ast_chronos', name: 'Temporal Chrono Fragment', rarity: 'Eternal (1/1M)', color: '#00ffaa', baseWeight: 100, icon: '⌛', desc: '+200% Global Multiplier & +100% RP Gain', effect: (count) => ({ global: Math.pow(count, 0.75) * 2.0, rp: Math.pow(count, 0.75) * 1.0 }) },
+    { id: 'ast_void_heart', name: 'Heart of the Void', rarity: 'Divine (1/10M)', color: '#7928ca', baseWeight: 10, icon: '🖤', desc: '+500% All Production & +200% Max Energy', effect: (count) => ({ global: Math.pow(count, 0.75) * 5.0, energyMax: Math.pow(count, 0.75) * 2.0 }) },
+    { id: 'ast_genesis', name: 'Genesis Spark Fragment', rarity: 'Celestia (1/50M)', color: '#ff007f', baseWeight: 2, icon: '✨', desc: 'x2.5 Global Multiplier & +300% RP Gain', effect: (count) => ({ globalMultScale: Math.pow(2.5, Math.pow(count, 0.75)), rp: Math.pow(count, 0.75) * 3.0 }) },
+
+    // TOP TRANSCENDENT CORE
+    { id: 'ast_primordial', name: 'Omniverse Primordial Core', rarity: 'Transcendent (1/100M)', color: '#00ffff', baseWeight: 1, icon: '🌟', desc: 'x5 Global Multiplier & +500% RP Gain per level', effect: (count) => ({ globalMultScale: Math.pow(5, Math.pow(count, 0.75)), rp: Math.pow(count, 0.75) * 5.0 }) }
 ];
 
 
@@ -2301,26 +2310,48 @@ function getGachaCost() {
     return Math.floor(1000 * Math.pow(1.25, total));
 }
 
-function pullAsteroid() {
+function getMultiverseLuckMultiplier() {
+    const mv = gameState.multiverse || 1;
+    // Luck multiplier = 1 + (Multiverse Level - 1) * 1.0 (e.g. MV 1 = x1.0, MV 2 = x2.0, MV 3 = x3.0...)
+    return 1 + (mv - 1);
+}
+
+function pullAsteroid(isAuto = false) {
     const cost = getGachaCost();
     if (gameState.raibos < cost) {
-        showToast('Not Enough Raibos!', `You need ${formatNumber(cost)} Raibos to extract an Asteroid.`);
-        return;
+        if (!isAuto) {
+            showToast('Not Enough Raibos!', `You need ${formatNumber(cost)} Raibos to extract an Asteroid.`);
+        }
+        return false;
     }
 
     gameState.raibos -= cost;
     if (!gameState.asteroids) {
-        gameState.asteroids = { totalPulls: 0, inventory: {} };
+        gameState.asteroids = { totalPulls: 0, inventory: {}, autoEnabled: false };
     }
     gameState.asteroids.totalPulls = (gameState.asteroids.totalPulls || 0) + 1;
 
-    // Roll RNG based on probabilities
-    const rand = Math.random();
-    let cumulative = 0;
-    let pulledAsteroid = ASTEROID_POOL[0];
+    // Multiverse Luck boost on rarity weights
+    const luckMult = getMultiverseLuckMultiplier();
+    
+    // Calculate total weighted luck for extraction
+    let totalWeight = 0;
+    const weightedPool = ASTEROID_POOL.map(ast => {
+        // Higher rarity items get luck multiplier
+        let weight = ast.baseWeight;
+        if (ast.id !== 'ast_stony') {
+            weight *= luckMult;
+        }
+        totalWeight += weight;
+        return { ...ast, weight };
+    });
 
-    for (const ast of ASTEROID_POOL) {
-        cumulative += ast.chance;
+    const rand = Math.random() * totalWeight;
+    let cumulative = 0;
+    let pulledAsteroid = weightedPool[0];
+
+    for (const ast of weightedPool) {
+        cumulative += ast.weight;
         if (rand <= cumulative) {
             pulledAsteroid = ast;
             break;
@@ -2341,22 +2372,46 @@ function pullAsteroid() {
     }
     if (buffEl) buffEl.innerText = pulledAsteroid.desc;
 
-    showToast('Asteroid Extracted!', `${pulledAsteroid.icon} Got ${pulledAsteroid.name} (${pulledAsteroid.rarity})!`);
+    if (!isAuto || pulledAsteroid.id === 'ast_primordial' || pulledAsteroid.id === 'ast_singularity') {
+        showToast('Asteroid Extracted!', `${pulledAsteroid.icon} Got ${pulledAsteroid.name} (${pulledAsteroid.rarity})!`);
+    }
     
     recalculatePowers();
     updateUI();
+    saveGame();
+    return true;
+}
+
+function toggleAutoGacha() {
+    if (!gameState.asteroids) {
+        gameState.asteroids = { totalPulls: 0, inventory: {}, autoEnabled: false };
+    }
+    gameState.asteroids.autoEnabled = !gameState.asteroids.autoEnabled;
+    showToast('Auto-Extract Toggled', `Auto Extraction is now ${gameState.asteroids.autoEnabled ? 'ON' : 'OFF'}.`);
+    updateGachaUI();
     saveGame();
 }
 
 function updateGachaUI() {
     const costBtn = document.getElementById('gacha-cost-1');
     const pullBtn = document.getElementById('gacha-pull-1-btn');
+    const autoStatus = document.getElementById('gacha-auto-status');
+    const luckMultEl = document.getElementById('gacha-luck-mult');
     const cost = getGachaCost();
+    const luckMult = getMultiverseLuckMultiplier();
 
     if (costBtn) costBtn.innerText = `${formatNumber(cost)} Raibos`;
     if (pullBtn) {
         pullBtn.disabled = gameState.raibos < cost;
         pullBtn.style.opacity = gameState.raibos >= cost ? '1' : '0.5';
+    }
+    if (luckMultEl) {
+        luckMultEl.innerText = `x${luckMult.toFixed(2)}`;
+    }
+    if (autoStatus) {
+        const isAuto = gameState.asteroids && gameState.asteroids.autoEnabled;
+        autoStatus.innerText = isAuto ? 'ON' : 'OFF';
+        autoStatus.style.color = isAuto ? '#00ffaa' : '#ff5555';
     }
 
     const container = document.getElementById('asteroid-inventory');
@@ -2637,11 +2692,21 @@ document.getElementById('rebirth-btn').addEventListener('click', () => {
 let lastTime = performance.now();
 let autoInvTimer = 0;
 let timeSkipTimer = 0;
+let autoGachaTimer = 0;
 let nextTimeSkipStr = Math.random() * 120 + 60; // Next spawn in 60-180s
 
 function gameLoop(currentTime) {
     const dt = (currentTime - lastTime) / 1000;
     lastTime = currentTime;
+    
+    // Auto-Extract Gacha Loop (Every 0.3s if enabled and affordable)
+    if (gameState.asteroids && gameState.asteroids.autoEnabled) {
+        autoGachaTimer += dt;
+        if (autoGachaTimer >= 0.3) {
+            autoGachaTimer = 0;
+            pullAsteroid(true);
+        }
+    }
     
     // Invasion Energy Regen
     const astBuffs = getAsteroidBuffs();
@@ -2784,7 +2849,11 @@ function loadGame() {
 // Events
 const gachaPullBtn = document.getElementById('gacha-pull-1-btn');
 if (gachaPullBtn) {
-    gachaPullBtn.addEventListener('click', pullAsteroid);
+    gachaPullBtn.addEventListener('click', () => pullAsteroid(false));
+}
+const gachaAutoBtn = document.getElementById('gacha-auto-toggle-btn');
+if (gachaAutoBtn) {
+    gachaAutoBtn.addEventListener('click', toggleAutoGacha);
 }
 
 elements.offClose.addEventListener('click', () => {
@@ -3330,5 +3399,202 @@ if (rankHelpBtn) {
         alert(`[서버 활성화 가이드]\n\n랭킹 보드를 이용하려면 서버가 켜져 있어야 합니다.\n\n방법: 다음 경로에서 'run_server.bat' 파일을 더블 클릭하세요.\n\n경로:\nc:\\Users\\dogye\\.gemini\\antigravity\\scratch\\sols-rng-web\\run_server.bat`);
     });
 }
+
+// --- BGM System (Audio File + Procedural Cosmic Ambient Synth) ---
+const bgmManager = {
+    isPlaying: false,
+    volume: 0.3,
+    audioEl: document.getElementById('game-bgm'),
+    toggleBtn: document.getElementById('bgm-toggle-btn'),
+    volSlider: document.getElementById('bgm-volume'),
+    audioCtx: null,
+    synthGain: null,
+    synthInterval: null,
+    mode: 'file', // 'file' or 'synth'
+
+    init() {
+        const savedVol = localStorage.getItem('raibos_bgm_volume');
+        if (savedVol !== null) {
+            this.volume = parseFloat(savedVol);
+            if (this.volSlider) this.volSlider.value = this.volume;
+        }
+        if (this.audioEl) this.audioEl.volume = this.volume;
+
+        if (this.volSlider) {
+            this.volSlider.addEventListener('input', (e) => {
+                this.setVolume(parseFloat(e.target.value));
+            });
+        }
+
+        if (this.toggleBtn) {
+            this.toggleBtn.addEventListener('click', () => {
+                this.toggle();
+            });
+        }
+
+        // Resume playback on user's first interaction if previously enabled
+        const savedPlaying = localStorage.getItem('raibos_bgm_enabled');
+        if (savedPlaying === 'true') {
+            const onFirstClick = () => {
+                if (!this.isPlaying && localStorage.getItem('raibos_bgm_enabled') === 'true') {
+                    this.start();
+                }
+                window.removeEventListener('click', onFirstClick);
+                window.removeEventListener('keydown', onFirstClick);
+            };
+            window.addEventListener('click', onFirstClick);
+            window.addEventListener('keydown', onFirstClick);
+        }
+    },
+
+    setVolume(val) {
+        this.volume = Math.max(0, Math.min(1, val));
+        if (this.audioEl) this.audioEl.volume = this.volume;
+        if (this.synthGain && this.audioCtx) {
+            this.synthGain.gain.setTargetAtTime(this.volume * 0.25, this.audioCtx.currentTime, 0.05);
+        }
+        localStorage.setItem('raibos_bgm_volume', this.volume);
+    },
+
+    toggle() {
+        if (this.isPlaying) {
+            this.stop();
+        } else {
+            this.start();
+        }
+    },
+
+    start() {
+        this.isPlaying = true;
+        localStorage.setItem('raibos_bgm_enabled', 'true');
+        if (this.toggleBtn) {
+            this.toggleBtn.innerText = '🎵 BGM: ON';
+            this.toggleBtn.style.color = '#00ffaa';
+            this.toggleBtn.style.borderColor = '#00ffaa';
+        }
+
+        // Try playing audio file first
+        if (this.audioEl && this.audioEl.src) {
+            this.audioEl.volume = this.volume;
+            const playPromise = this.audioEl.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    this.mode = 'file';
+                }).catch(() => {
+                    // Audio file not found or autoplay restricted -> Procedural Cosmic Synth fallback
+                    this.startCosmicSynth();
+                });
+            }
+        } else {
+            this.startCosmicSynth();
+        }
+    },
+
+    stop() {
+        this.isPlaying = false;
+        localStorage.setItem('raibos_bgm_enabled', 'false');
+        if (this.toggleBtn) {
+            this.toggleBtn.innerText = '🎵 BGM: OFF';
+            this.toggleBtn.style.color = '#fff';
+            this.toggleBtn.style.borderColor = 'var(--accent-primary)';
+        }
+
+        if (this.audioEl) {
+            this.audioEl.pause();
+        }
+        this.stopCosmicSynth();
+    },
+
+    startCosmicSynth() {
+        this.mode = 'synth';
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            if (!this.audioCtx) {
+                this.audioCtx = new AudioContext();
+            }
+            if (this.audioCtx.state === 'suspended') {
+                this.audioCtx.resume();
+            }
+
+            if (!this.synthGain) {
+                this.synthGain = this.audioCtx.createGain();
+                this.synthGain.connect(this.audioCtx.destination);
+            }
+            this.synthGain.gain.setValueAtTime(this.volume * 0.25, this.audioCtx.currentTime);
+
+            // Chords: C minor 9, Ab major 7, Eb major 7, Bb sus2
+            const chords = [
+                [130.81, 155.56, 196.00, 293.66], // C3, Eb3, G3, D4
+                [103.83, 130.81, 155.56, 207.65], // Ab2, C3, Eb3, G#3/Ab3
+                [155.56, 196.00, 233.08, 293.66], // Eb3, G3, Bb3, D4
+                [116.54, 174.61, 233.08, 261.63]  // Bb2, F3, Bb3, C4
+            ];
+            let chordIdx = 0;
+
+            const playChord = () => {
+                if (!this.isPlaying || this.mode !== 'synth') return;
+                const now = this.audioCtx.currentTime;
+                const chord = chords[chordIdx % chords.length];
+                chordIdx++;
+
+                chord.forEach((freq, i) => {
+                    const osc = this.audioCtx.createOscillator();
+                    const noteGain = this.audioCtx.createGain();
+                    const filter = this.audioCtx.createBiquadFilter();
+
+                    osc.type = i === 0 ? 'triangle' : 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(450 + Math.random() * 200, now);
+
+                    noteGain.gain.setValueAtTime(0.001, now);
+                    noteGain.gain.exponentialRampToValueAtTime(0.08 / chord.length, now + 1.2);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, now + 4.8);
+
+                    osc.connect(filter);
+                    filter.connect(noteGain);
+                    noteGain.connect(this.synthGain);
+
+                    osc.start(now);
+                    osc.stop(now + 5.0);
+                });
+
+                // Sparkle chime
+                if (Math.random() < 0.75) {
+                    const twinkle = this.audioCtx.createOscillator();
+                    const twGain = this.audioCtx.createGain();
+                    const twFreqs = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
+                    twinkle.type = 'sine';
+                    twinkle.frequency.setValueAtTime(twFreqs[Math.floor(Math.random() * twFreqs.length)], now + 1.5);
+                    twGain.gain.setValueAtTime(0.001, now + 1.5);
+                    twGain.gain.exponentialRampToValueAtTime(0.03, now + 1.8);
+                    twGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+
+                    twinkle.connect(twGain);
+                    twGain.connect(this.synthGain);
+                    twinkle.start(now + 1.5);
+                    twinkle.stop(now + 3.3);
+                }
+            };
+
+            playChord();
+            clearInterval(this.synthInterval);
+            this.synthInterval = setInterval(playChord, 4500);
+        } catch (e) {
+            console.warn("Cosmic synth unavailable:", e);
+        }
+    },
+
+    stopCosmicSynth() {
+        if (this.synthInterval) {
+            clearInterval(this.synthInterval);
+            this.synthInterval = null;
+        }
+    }
+};
+
+bgmManager.init();
 
 requestAnimationFrame(gameLoop);
