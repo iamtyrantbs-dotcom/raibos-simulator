@@ -715,7 +715,7 @@ function renderConstellation() {
         tierHeader.style.marginBottom = '8px';
         tierHeader.style.textTransform = 'uppercase';
         tierHeader.style.opacity = '0.8';
-        tierHeader.innerText = `Tier ${t}`;
+        tierHeader.innerText = i18n.t('constellation_tier').replace('{0}', t);
         tierRow.appendChild(tierHeader);
 
         (tiers[t] || []).forEach(skill => {
@@ -726,7 +726,7 @@ function renderConstellation() {
 
             const reqSkillNames = (skill.requires || []).map(reqId => {
                 const s = constellationData.find(item => item.id === reqId);
-                return s ? s.name : reqId;
+                return s ? i18n.getSkillName(s) : reqId;
             });
 
             const node = document.createElement('div');
@@ -742,19 +742,23 @@ function renderConstellation() {
             node.style.flexDirection = 'column';
             node.style.justifyContent = 'space-between';
 
+            const sName = i18n.getSkillName(skill);
+            const sDesc = i18n.getSkillDesc(skill);
+            const reqJoiner = i18n.lang === 'ko' ? ' 또는 ' : ' OR ';
+
             node.innerHTML = `
                 <div class="c-node-info">
-                    <h3 style="color: ${unlocked ? (level > 0 ? '#00f2ff' : '#ffcc00') : '#777'}; margin: 0 0 5px 0;">${skill.name}</h3>
-                    <p style="font-size: 0.8rem; color: #bbb; margin-bottom: 8px;">${skill.desc}</p>
-                    ${!unlocked ? `<div style="color:#ff6666; font-size:0.75rem; margin-bottom:5px;">🔒 Requires: ${reqSkillNames.join(' OR ')}</div>` : ''}
-                    <div class="c-node-level" style="font-size:0.85rem; font-weight:bold; color: #ffaa00;">Level ${level} / ${skill.maxLevel}</div>
+                    <h3 style="color: ${unlocked ? (level > 0 ? '#00f2ff' : '#ffcc00') : '#777'}; margin: 0 0 5px 0;">${sName}</h3>
+                    <p style="font-size: 0.8rem; color: #bbb; margin-bottom: 8px;">${sDesc}</p>
+                    ${!unlocked ? `<div style="color:#ff6666; font-size:0.75rem; margin-bottom:5px;">${i18n.t('constellation_requires')}${reqSkillNames.join(reqJoiner)}</div>` : ''}
+                    <div class="c-node-level" style="font-size:0.85rem; font-weight:bold; color: #ffaa00;">${i18n.t('constellation_level').replace('{0}', level).replace('{1}', skill.maxLevel)}</div>
                 </div>
                 <div class="c-node-action" style="margin-top: 10px;">
-                    ${!unlocked ? '<span style="color:#666; font-size:0.85rem;">LOCKED</span>' : (isMax ? '<span style="color:#00f2ff; font-weight:bold;">MAXED</span>' : `
-                        <span class="c-node-cost" style="display:block; font-size:0.85rem; margin-bottom:5px;">Cost: ${formatNumber(cost)} RP</span>
+                    ${!unlocked ? `<span style="color:#666; font-size:0.85rem;">${i18n.t('constellation_locked')}</span>` : (isMax ? `<span style="color:#00f2ff; font-weight:bold;">${i18n.t('constellation_maxed')}</span>` : `
+                        <span class="c-node-cost" style="display:block; font-size:0.85rem; margin-bottom:5px;">${i18n.t('constellation_cost').replace('{0}', formatNumber(cost))}</span>
                         <div style="display:flex; gap:5px;">
-                            <button class="action-btn c-buy-one-btn" style="flex:1;" ${gameState.rebirthPoints < cost ? 'disabled' : ''}>+1 Level</button>
-                            <button class="action-btn c-buy-max-btn" style="flex:1; background:rgba(255,204,0,0.2); border:1px solid #ffcc00; color:#ffcc00;" ${gameState.rebirthPoints < cost ? 'disabled' : ''}>MAX</button>
+                            <button class="action-btn c-buy-one-btn" style="flex:1;" ${gameState.rebirthPoints < cost ? 'disabled' : ''}>${i18n.t('constellation_buy_one')}</button>
+                            <button class="action-btn c-buy-max-btn" style="flex:1; background:rgba(255,204,0,0.2); border:1px solid #ffcc00; color:#ffcc00;" ${gameState.rebirthPoints < cost ? 'disabled' : ''}>${i18n.t('constellation_buy_max')}</button>
                         </div>
                     `)}
                 </div>
@@ -2118,6 +2122,512 @@ const achievementsData = [
     { id: 'h10', title: 'System Sovereign', req: () => gameState.invasion.currentPlanet === 5 && planetsData[5].regions.every(r => gameState.invasion.conqueredRegions.includes(r.id)), desc: 'Conquer the entire Solar System (Pluto).', bonus: 500.0, hidden: true }
 ];
 
+// ==========================================
+// Internationalization (i18n) System (KO / EN)
+// ==========================================
+const i18n = {
+    lang: localStorage.getItem('raibos_lang') || 'ko', // 한국어 기본값
+
+    t(key) {
+        if (this.lang === 'ko' && this.strings.ko[key] !== undefined) {
+            return this.strings.ko[key];
+        }
+        return this.strings.en[key] !== undefined ? this.strings.en[key] : key;
+    },
+
+    toggle() {
+        this.lang = this.lang === 'ko' ? 'en' : 'ko';
+        localStorage.setItem('raibos_lang', this.lang);
+        this.apply();
+        showToast(
+            this.lang === 'ko' ? '🌐 언어 변경' : '🌐 Language Changed',
+            this.lang === 'ko' ? '한국어로 변경되었습니다.' : 'Switched to English.'
+        );
+    },
+
+    strings: {
+        en: {
+            title: 'Raibos Simulator',
+            currency: 'Raibos',
+            per_sec: 'Raibos / sec',
+            per_click: 'Raibos / click',
+            global_mult: 'Global Multiplier',
+            rebirth_badge: 'Rebirth: ',
+            menu: 'Menu',
+            hard_reset_btn: 'Hard Reset ⚠️',
+            hard_reset_confirm: 'Are you sure you want to RESET EVERYTHING? All your progress, RP, constellation, asteroids and invasion data will be permanently wiped!',
+            
+            // Tabs
+            tab_click: 'Click',
+            tab_idle: 'Idle',
+            tab_gacha: 'Gacha ☄️',
+            tab_rebirth: 'Rebirth',
+            tab_trophies: 'Trophies',
+            tab_invasion: 'Invasion',
+            tab_ranking: 'Ranking',
+
+            // Asteroid Gacha
+            gacha_title: '☄️ Asteroid Core Extraction',
+            gacha_desc: 'Spend Raibos to extract Rare Asteroids! Higher rarity asteroids grant game-wide permanent buffs.',
+            gacha_placeholder: 'Extract an Asteroid',
+            gacha_cost_scaling: 'Cost scaling with total extractions',
+            gacha_luck_mult: '🌌 Multiverse Luck Multiplier: ',
+            gacha_btn_extract: 'Extract 1x',
+            gacha_btn_auto: 'Auto-Extract: ',
+            gacha_collection: 'Extracted Asteroids Collection',
+
+            // Rebirth
+            rebirth_title: 'Ascend to Next Realm',
+            rebirth_desc: 'Ascending resets your current progress but grants <span style="color:#ffaa00; font-weight:bold;">Rebirth Points</span> which multiply all future gains.',
+            rebirth_curr_rp: 'Current Points: ',
+            rebirth_earn_rp: 'Points to Earn: ',
+            rebirth_req_label: 'Entry Requirement: ',
+            rebirth_ascend_btn: 'ASCEND (+{0} RP)',
+            rebirth_need_btn: 'NEED {0} RAIBOS ({1}%)',
+            rebirth_confirm: 'Do you want to rebirth? All progress will be reset and you will receive {0} RP.',
+            rebirth_toast_title: 'Ascension Complete!',
+            rebirth_toast_desc: 'You earned +{0} RP! Cosmic power grows.',
+            constellation_box_title: 'Constellation (Skill Tree)',
+            constellation_box_desc: 'Spend RP on permanent cosmic abilities. Note: Spending RP reduces your base multiplier!',
+            constellation_open_btn: 'OPEN CONSTELLATION SKILL TREE 🌌',
+
+            // Constellation Modal
+            constellation_modal_title: 'Constellation',
+            constellation_available_rp: 'Available RP: ',
+            constellation_close_btn: 'Close',
+            constellation_tier: 'Tier {0}',
+            constellation_cost: 'Cost: {0} RP',
+            constellation_level: 'Level {0} / {1}',
+            constellation_locked: 'LOCKED',
+            constellation_maxed: 'MAXED',
+            constellation_buy_one: '+1 Level',
+            constellation_buy_max: 'MAX',
+            constellation_requires: '🔒 Requires: ',
+
+            // Invasion
+            invasion_energy_label: 'Invasion Energy',
+            planet_conquest_in_progress: 'Conquest in progress...',
+            planet_fully_conquered: '✨ Fully Conquered! (You can navigate freely)',
+            multiverse_jump_btn: '🌌 MULTIVERSE JUMP 🌌',
+            mv_jump_confirm: 'Are you sure you want to jump to Multiverse {0}? Planets and invasion progress will reset, but non-energy buffs and all previous progress will be retained!',
+            select_region: 'Select a Region',
+            reward_label: 'Reward: ',
+            region_conquered: 'Conquered',
+            region_cost: 'Cost: {0}',
+            invade_btn: 'INVADE ({0})',
+            invade_conquered_btn: 'CONQUERED',
+            invade_energy_btn: 'ENERGY: {0}',
+
+            // Offline Modal
+            offline_title: 'Welcome Back!',
+            offline_text1: 'While you were away for ',
+            offline_text2: 'The Raibos worked hard:',
+            offline_btn: 'Awesome!',
+
+            // BGM
+            bgm_track_arcade: '👾 8-Bit Arcade',
+            bgm_track_ambient: '🌌 Cosmic Ambient'
+        },
+        ko: {
+            title: '라이보스 시뮬레이터',
+            currency: '라이보스',
+            per_sec: '초당 라이보스',
+            per_click: '클릭당 라이보스',
+            global_mult: '전역 배수',
+            rebirth_badge: '환생: ',
+            menu: '메뉴',
+            hard_reset_btn: '전체 초기화 ⚠️',
+            hard_reset_confirm: '정말 모든 데이터를 초기화하시겠습니까? 보유 라이보스, 환생 포인트, 별자리 스킬, 소행성 및 침략 데이터가 영구적으로 삭제됩니다!',
+
+            // Tabs
+            tab_click: '클릭',
+            tab_idle: '방치 (자동)',
+            tab_gacha: '소행성 ☄️',
+            tab_rebirth: '환생',
+            tab_trophies: '업적',
+            tab_invasion: '행성 침략',
+            tab_ranking: '랭킹',
+
+            // Asteroid Gacha
+            gacha_title: '☄️ 소행성 코어 추출',
+            gacha_desc: '라이보스를 소모해 희귀 소행성을 추출하세요! 높은 등급의 소행성은 게임 전체에 강력한 영구 버프를 부여합니다.',
+            gacha_placeholder: '소행성을 추출하세요',
+            gacha_cost_scaling: '추출 횟수에 따라 비용이 증가합니다',
+            gacha_luck_mult: '🌌 멀티버스 행운 배수: ',
+            gacha_btn_extract: '1회 추출',
+            gacha_btn_auto: '자동 추출: ',
+            gacha_collection: '보유 소행성 목록',
+
+            // Rebirth
+            rebirth_title: '다음 차원으로 환생',
+            rebirth_desc: '환생하면 현재 진행도가 초기화되지만, 모든 미래 생산량을 영구 증폭시키는 <span style="color:#ffaa00; font-weight:bold;">환생 포인트(RP)</span>를 획득합니다.',
+            rebirth_curr_rp: '현재 보유 RP: ',
+            rebirth_earn_rp: '획득 가능 RP: ',
+            rebirth_req_label: '최소 요구치: ',
+            rebirth_ascend_btn: '환생하기 (+{0} RP)',
+            rebirth_need_btn: '{0} 라이보스 필요 ({1}%)',
+            rebirth_confirm: '환생하시겠습니까? 현재 진행도가 초기화되고 {0} RP를 획득합니다.',
+            rebirth_toast_title: '환생 완료!',
+            rebirth_toast_desc: '+{0} RP 획득! 우주적 힘이 강화되었습니다.',
+            constellation_box_title: '별자리 (스킬 트리)',
+            constellation_box_desc: 'RP를 소모해 영구적인 우주 능력을 해금하세요. (RP를 소모하면 기본 배수가 감소합니다!)',
+            constellation_open_btn: '별자리 스킬 트리 열기 🌌',
+
+            // Constellation Modal
+            constellation_modal_title: '별자리 스킬 트리',
+            constellation_available_rp: '보유 RP: ',
+            constellation_close_btn: '닫기',
+            constellation_tier: '티어 {0}',
+            constellation_cost: '비용: {0} RP',
+            constellation_level: '레벨 {0} / {1}',
+            constellation_locked: '잠김',
+            constellation_maxed: '최대 레벨',
+            constellation_buy_one: '+1 레벨',
+            constellation_buy_max: '최대',
+            constellation_requires: '🔒 선행 스킬: ',
+
+            // Invasion
+            invasion_energy_label: '침략 에너지',
+            planet_conquest_in_progress: '정복 진행 중...',
+            planet_fully_conquered: '✨ 완전 정복 완료! (자유롭게 이동 가능)',
+            multiverse_jump_btn: '🌌 멀티버스 도약 🌌',
+            mv_jump_confirm: '멀티버스 {0}(으)로 도약하시겠습니까? 행성과 침략 진행도는 초기화되지만, 비에너지 버프 및 이전의 모든 진행도는 보존됩니다!',
+            select_region: '지역을 선택하세요',
+            reward_label: '보상: ',
+            region_conquered: '정복 완료',
+            region_cost: '비용: {0}',
+            invade_btn: '침략하기 ({0})',
+            invade_conquered_btn: '정복 완료',
+            invade_energy_btn: '에너지 부족: {0}',
+
+            // Offline Modal
+            offline_title: '돌아오신 것을 환영합니다!',
+            offline_text1: '자리를 비운 ',
+            offline_text2: '라이보스들이 열심히 일했습니다:',
+            offline_btn: '확인',
+
+            // BGM
+            bgm_track_arcade: '👾 8비트 아케이드',
+            bgm_track_ambient: '🌌 우주 앰비언트'
+        }
+    },
+
+    planetsKo: {
+        'Earth': '지구',
+        'Moon': '달',
+        'Mars': '화성',
+        'Jupiter': '목성',
+        'Saturn': '토성',
+        'Neptune': '해왕성',
+        'Pluto': '명왕성',
+        'Sun': '태양',
+        'Proxima Centauri': '프록시마 센타우리',
+        'Sirius': '시리우스',
+        'Vega': '베가',
+        'Polaris': '북극성',
+        'Betelgeuse': '베텔게우스',
+        'Canopus': '카노푸스',
+        'Rigel': '리겔',
+        'Cygnus X-1': '백조자리 X-1',
+        'Sagittarius A*': '궁수자리 A*',
+        'Andromeda': '안드로메다 은하'
+    },
+    getPlanetName(planet) {
+        if (this.lang === 'ko' && this.planetsKo[planet.name]) {
+            return this.planetsKo[planet.name];
+        }
+        return planet.name;
+    },
+
+    regionsKo: {
+        'Asia': '아시아', 'Europe': '유럽', 'North America': '북아메리카', 'South America': '남아메리카', 'Africa': '아프리카', 'Oceania': '오세아니아', 'Antarctica': '남극',
+        'Sea of Tranquility': '고요의 바다', 'Ocean of Storms': '폭풍의 대양', 'Copernicus Crater': '코페르니쿠스 분화구', 'Tycho Crater': '티코 분화구',
+        'Olympus Mons': '올림푸스 화산', 'Valles Marineris': '매리너 계곡', 'Hellas Planitia': '헬라스 평원', 'Gale Crater': '게일 분화구', 'Tharsis Rise': '타르시스 고원',
+        'Great Red Spot': '대적점', 'North Temperate Belt': '북온대 띠', 'South Equatorial Belt': '남적도 띠', 'Io Plasma Torus': '이오 플라즈마 토러스', 'Callisto Basin': '칼리스토 분지',
+        'Titan Dunes': '타이탄 사구', 'Enceladus Plumes': '엔켈라두스 간헐천', 'Ring Sector Alpha': 'A고리 구역', 'Hexagon Storm': '육각형 제트기류', 'Rhea Crater': '레아 크레이터',
+        'Great Dark Spot': '대암점', 'Triton Cryogeysers': '트리톤 얼음간헐천', 'Scooter Cloud': '스쿠터 구름', 'South Pole Vortex': '남극 와류',
+        'Tombaugh Regio': '톰보 지역 (하트)', 'Cthulhu Macula': '크툴루 흑반', 'Sputnik Planitia': '스푸트니크 평원', 'Charon Chasm': '카론 협곡',
+        'Corona Core': '코로나 코어', 'Solar Flare Belt': '플레어 벨트', 'Radiative Zone': '복사층', 'Convective Zone': '대류층',
+        'Proxima b': '프록시마 b', 'Flare Zone': '플레어 지대', 'Dust Ring': '먼지 고리',
+        'Sirius A Core': '시리우스 A 코어', 'Sirius B Dwarf': '시리우스 B 백색왜성', 'Binary Orbit': '연성 궤도',
+        'Equatorial Bulge': '적도 팽창대', 'Debris Disk': '잔해 원반', 'Blue Ion Field': '청색 이온장',
+        'Alpha Polaris': '북극성 알파', 'Cepheid Pulse': '세페이드 맥동', 'Supergiant Halo': '초거성 헤일로',
+        'Atmospheric Shell': '대기 껍질', 'Convection Plume': '대류 플룸', 'Supernova Seed': '초신성 전구체',
+        'Supergiant Core': '초거성 핵', 'Stellar Wind Field': '항성풍 지대', 'Golden Corona': '황금 코로나',
+        'Blue Supergiant Core': '청색초거성 핵', 'Rigel Nebula': '리겔 성운', 'Radiation Tempest': '방사선 폭풍',
+        'Accretion Disk': '강착 원반', 'Relativistic Jet': '상대론적 제트', 'Event Horizon': '사건의 지평선',
+        'Supermassive Core': '초대질량 블랙홀', 'Photon Sphere': '광자구', 'Gravitational Singularity': '중력 특이점',
+        'Galactic Nucleus': '은하핵', 'Spiral Arm Alpha': '알파 나선팔', 'Stellar Nursery': '항성 요람', 'Halo Clusters': '헤일로 성단'
+    },
+    getRegionName(region) {
+        if (this.lang === 'ko' && this.regionsKo[region.name]) {
+            return this.regionsKo[region.name];
+        }
+        return region.name;
+    },
+    getRegionBuff(region) {
+        if (this.lang === 'ko') {
+            return region.buff
+                .replace('Click Power', '클릭 파워')
+                .replace('Idle Power', '초당 생산량')
+                .replace('Upgrade Cost', '업그레이드 비용')
+                .replace('Global Multiplier', '전역 배수')
+                .replace('Energy Regen', '에너지 회복 속도')
+                .replace('Energy Max', '최대 에너지')
+                .replace('All Production', '모든 생산량');
+        }
+        return region.buff;
+    },
+
+    asteroidsKo: {
+        'ast_stony': { name: '구립 운석 (스토니)', rarity: '일반', desc: '클릭 및 초당 생산량 +5% (소프트캡)' },
+        'ast_metallic': { name: '철질 운석', rarity: '고급', desc: '전역 배수 +2.5% (소프트캡)' },
+        'ast_crystal': { name: '결정 팰러사이트', rarity: '희귀', desc: '환생 시 RP 획득량 +5% (소프트캡)' },
+        'ast_plasma': { name: '플라즈마 혜성', rarity: '에픽', desc: '최대 침략 에너지 및 회복 속도 +8% (소프트캡)' },
+        'ast_darkmatter': { name: '암흑 물질 소행성', rarity: '전설', desc: '모든 생산량 +25% (소프트캡)' },
+        'ast_singularity': { name: '특이점 코어', rarity: '신화', desc: '전역 배수 +50% 및 RP 획득량 +50%' },
+        'ast_hypernova': { name: '초신성 잔해 코어', rarity: '코스믹 (1/10만)', desc: '클릭 및 초당 생산량 +100% & 에너지 회복 +25%' },
+        'ast_chronos': { name: '시간의 파편', rarity: '이터널 (1/100만)', desc: '전역 배수 +200% & RP 획득량 +100%' },
+        'ast_void_heart': { name: '공허의 심장', rarity: '디바인 (1/1000만)', desc: '모든 생산량 +500% & 최대 에너지 +200%' },
+        'ast_genesis': { name: '창세의 불꽃', rarity: '셀레스티아 (1/5000만)', desc: '전역 배수 x2.5 & RP 획득량 +300%' },
+        'ast_primordial': { name: '태초의 옴니버스 코어', rarity: '초월 (1/1억)', desc: '전역 배수 x5 & RP 획득량 +500%' }
+    },
+    getAstName(ast) {
+        return (this.lang === 'ko' && this.asteroidsKo[ast.id]) ? this.asteroidsKo[ast.id].name : ast.name;
+    },
+    getAstRarity(ast) {
+        return (this.lang === 'ko' && this.asteroidsKo[ast.id]) ? this.asteroidsKo[ast.id].rarity : ast.rarity;
+    },
+    getAstDesc(ast) {
+        return (this.lang === 'ko' && this.asteroidsKo[ast.id]) ? this.asteroidsKo[ast.id].desc : ast.desc;
+    },
+
+    constellationKo: {
+        'c_click': { name: '별빛 공명', desc: '레벨당 클릭 파워 +50%' },
+        'c_idle': { name: '공허 수확기', desc: '레벨당 초당 생산량 +50%' },
+        'c_energy_start': { name: '우주 배터리', desc: '환생 시 최대 에너지 +10%로 시작' },
+        'c_cost': { name: '양자 효율', desc: '레벨당 모든 업그레이드 비용 -2%' },
+        'c_regen': { name: '암흑 물질 원자로', desc: '레벨당 초당 기본 에너지 회복 +1' },
+        'c_rp': { name: '천상의 수확', desc: '레벨당 환생 시 RP 획득량 +10%' },
+        'c_global': { name: '성운 증폭기', desc: '레벨당 영구 전역 배수 +5%' },
+        'c_invasion_cost': { name: '워프 침투', desc: '레벨당 침략 에너지 소모량 -2%' },
+        'c_energy_max': { name: '항성 축전기', desc: '레벨당 최대 에너지 용량 +5%' },
+        'c_invasion_progress': { name: '양자 타격', desc: '레벨당 최소 침략 진행도 +5%' },
+        'c_offline': { name: '시간의 메아리', desc: '레벨당 오프라인 생산량 +10%' },
+        'c_click_idle_sync': { name: '조화 공명', desc: '레벨당 초당 생산량의 1%를 클릭 파워에 추가' },
+        'c_rp_mult_decay': { name: '영원의 서약', desc: '레벨당 보유 RP 1개당 전역 배수 +0.1% 추가' },
+        'c_timeskip': { name: '시간 균열', desc: '레벨당 타임스킵 +1분' },
+        'c_achv_bonus': { name: '우주 기록보관소', desc: '레벨당 업적 배수 보너스 +5%' },
+        'c_region_rp': { name: '정복 배당금', desc: '레벨당 정복한 지역 1곳당 환생 시 +2 RP 획득' },
+        'c_energy_on_conquest': { name: '전리품 수탈', desc: '레벨당 지역 정복 시 최대 에너지의 5% 즉시 회복' },
+        'c_click_multiplier_spike': { name: '초신성 폭발', desc: '레벨당 클릭 파워 2배 발동 확률 +10%' },
+        'c_idle_floor': { name: '공허 닻', desc: '환생 시 초당 생산량 하한선 유지' },
+        'c_upgrade_speed': { name: '워프 공정', desc: '업그레이드 비용 상승률 감소' },
+        'c_conquest_chain': { name: '연쇄 정복', desc: '정복 지역당 전역 배수 보너스' },
+        'c_rebirth_head_start': { name: '환생 도약', desc: '환생 시 이전 총 라이보스의 0.1% 보유 시작' },
+        'c_energy_regen_mult': { name: '에너지 과충전', desc: '에너지 회복 속도 배수 증가' },
+        'c_super_click': { name: '슈퍼 클릭', desc: '클릭 파워 대폭 폭발 (레벨당 x2)' },
+        'c_super_idle': { name: '슈퍼 방치', desc: '초당 생산량 대폭 폭발 (레벨당 x2)' },
+        'c_conquest_energy_mastery': { name: '정복 에너지 마스터리', desc: '에너지 효율 극대화' },
+        'c_multiverse_power': { name: '멀티버스 시너지', desc: '멀티버스당 전역 파워 배수 +50%' },
+        'c_multiverse_cost_mitigation': { name: '차원 안정화', desc: '멀티버스 침략 비용 증가 대폭 완화' },
+        'c_buff_nerf_shield': { name: '차원 방벽', desc: '버프 감소 효과 방어' },
+        'c_t8_click_fury': { name: '항성 분노', desc: '클릭 파워 x2' },
+        'c_t8_idle_reactor': { name: '항성 노심', desc: '초당 생산량 x2' },
+        'c_t9_energy_overload': { name: '에너지 과부하', desc: '최대 에너지 용량 2배' },
+        'c_t9_rp_overflow': { name: '초차원 수확', desc: 'RP 획득량 +50%' },
+        'c_t10_cosmic_multiplier': { name: '우주 초배수', desc: '전역 배수 x3' },
+        'c_t10_cosmic_battery_overcharge': { name: '우주 전지 과충전', desc: '환생 시 시작 에너지 100%' },
+        'c_t11_conquest_frenzy': { name: '광란의 정복', desc: '정복 속도 3배' },
+        'c_t11_temporal_mastery': { name: '시간 마스터리', desc: '타임스킵 효과 극대화' },
+        'c_t12_stellar_fusion': { name: '항성 융합', desc: '클릭 및 초당 생산량 x3' },
+        'c_t12_singularity_harvester': { name: '특이점 수확기', desc: 'RP 획득량 2배' },
+        'c_t13_quantum_god': { name: '양자 신격', desc: '모든 생산량 x5' },
+        'c_t13_hyper_conquest_efficiency': { name: '초효율 정복', desc: '침략 에너지 소모 대폭 절감' },
+        'c_t14_multiverse_dominator': { name: '멀티버스 지배자', desc: '멀티버스당 전역 배수 2배' },
+        'c_t15_infinity_core': { name: '무한의 코어', desc: '전역 배수 x10' },
+        'c_t15_infinity_time_nexus': { name: '무한의 시간 결절', desc: '오프라인 생산 100% 반영' },
+        'c_t16_dark_energy_hyperdrive': { name: '암흑 에너지 초추진', desc: '에너지 회복 속도 5배' },
+        'c_t17_transcendence': { name: '초월', desc: '모든 스탯 초월적 증폭' },
+        'c_t17_omniverse_resonance': { name: '옴니버스 공명', desc: '멀티버스 파워 극대화' },
+        'c_t18_omniverse_warp': { name: '옴니버스 워프', desc: 'RP 획득량 5배' },
+        'c_t19_primordial_singularity': { name: '태초의 특이점', desc: '전역 배수 x50' },
+        'c_t19_godhead_harvest': { name: '신성 수확', desc: 'RP 획득량 10배' },
+        'c_t20_absolute_apex': { name: '절대 정점', desc: '궁극의 전역 배수 x100' },
+        'c_t20_infinity_overlord': { name: '무한의 군주', desc: '전지전능: 모든 효과 극대화' }
+    },
+    getSkillName(skill) {
+        return (this.lang === 'ko' && this.constellationKo[skill.id]) ? this.constellationKo[skill.id].name : skill.name;
+    },
+    getSkillDesc(skill) {
+        return (this.lang === 'ko' && this.constellationKo[skill.id]) ? this.constellationKo[skill.id].desc : skill.desc;
+    },
+
+    achievementsKo: {
+        'a1': { title: '첫 걸음', desc: '10회 클릭하기' },
+        'a2': { title: '진지한 시작', desc: '100회 클릭하기' },
+        'a3': { title: '클릭 광인', desc: '1,000회 클릭하기' },
+        'a4': { title: '부유함', desc: '총 1만 라이보스 획득' },
+        'a5': { title: '백만장자', desc: '총 100만 라이보스 획득' },
+        'a6': { title: '억만장자', desc: '총 10억 라이보스 획득' },
+        'a7': { title: '산업가', desc: '초당 1만 라이보스 도달' },
+        'a8': { title: '환생의 시작', desc: '첫 환생 달성하기' },
+        'a9': { title: '클릭의 신', desc: '1만 회 클릭하기' },
+        'a10': { title: '조만장자', desc: '총 1조 라이보스 획득' },
+        'a11': { title: '경만장자', desc: '총 1경 라이보스 획득' },
+        'a12': { title: '우주 거물', desc: '총 1해 라이보스 획득' },
+        'a13': { title: '자동화 루키', desc: '초당 100만 라이보스 도달' },
+        'a14': { title: '자동화 마스터', desc: '초당 10억 라이보스 도달' },
+        'a15': { title: '환생 마스터', desc: '환생 포인트 1,000점 달성' },
+        'a16': { title: '선봉대', desc: '지역 5곳 정복' },
+        'a17': { title: '은하 개척자', desc: '첫 번째 행성(지구) 정복' },
+        'a18': { title: '제국 함대', desc: '태양계 전역 25개 지역 정복' },
+        'a19': { title: '우주적 부', desc: '1 데실리온(1e33) 라이보스 획득' },
+        'h1': { title: '붉은 정복', desc: '화성 정복하기' },
+        'h2': { title: '목성의 거인', desc: '목성 정복하기' },
+        'h3': { title: '방치의 정점', desc: '영원의 다이나모 해금' },
+        'h4': { title: '시간 여행자', desc: '골든 라이보스 5회 포획' },
+        'h5': { title: '불굴의 노력가', desc: '환생 포인트 100,000점 달성' },
+        'h6': { title: '고리의 지배자', desc: '토성 정복하기' },
+        'h7': { title: '오메가 클릭', desc: '오메가 엔드 클릭 업그레이드 해금' },
+        'h8': { title: '절대 영도', desc: '첫 번째 클릭 업그레이드 100레벨 달성' },
+        'h9': { title: '해왕성의 심연', desc: '해왕성 정복하기' },
+        'h10': { title: '태양계의 군주', desc: '명왕성을 포함한 태양계 전체 정복' }
+    },
+    getAchTitle(ach) {
+        return (this.lang === 'ko' && this.achievementsKo[ach.id]) ? this.achievementsKo[ach.id].title : ach.title;
+    },
+    getAchDesc(ach) {
+        return (this.lang === 'ko' && this.achievementsKo[ach.id]) ? this.achievementsKo[ach.id].desc : ach.desc;
+    },
+
+    upgradesKo: {
+        'c1': '라이보스 클릭커', 'c2': '강화된 커서', 'c3': '메가 핑거', 'c4': '사이버 글러브',
+        'c5': '양자 클릭커', 'c6': '플라즈마 포인터', 'c7': '네온 임팩트', 'c8': '초공간 탭',
+        'c9': '반물질 터치', 'c10': '차원 분쇄기', 'c11': '암흑 에너지 펄스', 'c12': '오메가 엔드',
+        'i1': '라이보스 작업자', 'i2': '라이보스 발전기', 'i3': '라이보스 농장', 'i4': '라이보스 공장',
+        'i5': '라이보스 광산', 'i6': '라이보스 은행', 'i7': '라이보스 신전', 'i8': '마법 타워',
+        'i9': '라이보스 우주선', 'i10': '연금술 연구소', 'i11': '라이보스 포털', 'i12': '타임머신',
+        'i13': '반물질 응축기', 'i14': '라이보스 프리즘', 'i15': '영원의 다이나모'
+    },
+    getUpgradeName(upg) {
+        if (this.lang === 'ko') {
+            if (this.upgradesKo[upg.id]) return this.upgradesKo[upg.id];
+            return upg.name.replace('Raibos ', '라이보스 ');
+        }
+        return upg.name;
+    },
+    getUpgradeDesc(upg) {
+        if (this.lang === 'ko') {
+            return upg.desc
+                .replace('Raibos/click', '라이보스/클릭')
+                .replace('Raibos/sec', '라이보스/초');
+        }
+        return upg.desc;
+    },
+
+    apply() {
+        // 1. Language Toggle Button text
+        const langBtnText = document.getElementById('lang-btn-text');
+        if (langBtnText) langBtnText.innerText = this.lang === 'ko' ? '한국어' : 'English';
+
+        // 2. Header and Stats
+        const currLabel = document.querySelector('.currency-label');
+        if (currLabel) currLabel.innerText = this.t('currency');
+
+        const statLabels = document.querySelectorAll('.stat-label');
+        if (statLabels[0]) statLabels[0].innerText = this.t('per_sec');
+        if (statLabels[1]) statLabels[1].innerText = this.t('per_click');
+        if (statLabels[2]) statLabels[2].innerText = this.t('global_mult');
+
+        const panelTitle = document.querySelector('.panel-title');
+        if (panelTitle) panelTitle.innerText = this.t('menu');
+
+        const hrBtn = document.getElementById('hard-reset-btn');
+        if (hrBtn) hrBtn.innerText = this.t('hard_reset_btn');
+
+        // 3. Tabs
+        const tabMap = {
+            'click-upgrades': 'tab_click',
+            'idle-upgrades': 'tab_idle',
+            'asteroid-gacha-panel': 'tab_gacha',
+            'rebirth-panel': 'tab_rebirth',
+            'achievements-panel': 'tab_trophies',
+            'invasion-panel': 'tab_invasion',
+            'ranking-upgrades': 'tab_ranking'
+        };
+        document.querySelectorAll('.tab').forEach(tab => {
+            const target = tab.getAttribute('data-target');
+            if (tabMap[target]) tab.innerText = this.t(tabMap[target]);
+        });
+
+        // 4. Gacha Panel static text
+        const gTitle = document.querySelector('#asteroid-gacha-panel h3');
+        if (gTitle) gTitle.innerText = this.t('gacha_title');
+        const gDesc = document.querySelector('#asteroid-gacha-panel p');
+        if (gDesc) gDesc.innerText = this.t('gacha_desc');
+        const gCol = document.querySelector('#asteroid-gacha-panel h4');
+        if (gCol) gCol.innerText = this.t('gacha_collection');
+
+        // 5. Rebirth Panel static text
+        const rbTitle = document.querySelector('.rebirth-info h3');
+        if (rbTitle) rbTitle.innerText = this.t('rebirth_title');
+        const rbDesc = document.querySelector('.rebirth-info p');
+        if (rbDesc) rbDesc.innerHTML = this.t('rebirth_desc');
+        const cBoxTitle = document.querySelector('.constellation-entry h4');
+        if (cBoxTitle) cBoxTitle.innerText = this.t('constellation_box_title');
+        const cBoxDesc = document.querySelector('.constellation-entry p');
+        if (cBoxDesc) cBoxDesc.innerText = this.t('constellation_box_desc');
+        const cOpenBtn = document.getElementById('open-constellation-btn');
+        if (cOpenBtn) cOpenBtn.innerText = this.t('constellation_open_btn');
+
+        // 6. Constellation Modal static text
+        const cModalH2 = document.querySelector('#constellation-modal h2');
+        if (cModalH2) cModalH2.innerText = this.t('constellation_modal_title');
+        const cCloseBtn = document.getElementById('close-constellation-btn');
+        if (cCloseBtn) cCloseBtn.innerText = this.t('constellation_close_btn');
+
+        // 7. Offline Modal static text
+        const offH2 = document.querySelector('#offline-modal h2');
+        if (offH2) offH2.innerText = this.t('offline_title');
+        const offBtn = document.getElementById('offline-close-btn');
+        if (offBtn) offBtn.innerText = this.t('offline_btn');
+
+        // 8. Invasion Panel static text
+        const invEnergyHdr = document.querySelector('.energy-header span:first-child');
+        if (invEnergyHdr) invEnergyHdr.innerText = this.t('invasion_energy_label');
+
+        // 9. BGM Track select options
+        const trackSelect = document.getElementById('bgm-track-select');
+        if (trackSelect && trackSelect.options.length >= 2) {
+            trackSelect.options[0].text = this.t('bgm_track_arcade');
+            trackSelect.options[1].text = this.t('bgm_track_ambient');
+        }
+
+        // 10. Re-render dynamic components
+        if (typeof renderLists === 'function') renderLists();
+        if (typeof renderAchievements === 'function') renderAchievements();
+        if (typeof updateInvasionUI === 'function') updateInvasionUI();
+        if (typeof updateGachaUI === 'function') updateGachaUI();
+        if (typeof updateRebirthUI === 'function') updateRebirthUI();
+        const cModal = document.getElementById('constellation-modal');
+        if (cModal && cModal.style.display !== 'none' && typeof renderConstellation === 'function') {
+            renderConstellation();
+        }
+    },
+
+    init() {
+        const toggleBtn = document.getElementById('lang-toggle-btn');
+        if (toggleBtn) {
+            toggleBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.toggle();
+            };
+        }
+        this.apply();
+    }
+};
+
 // DOM Elements
 const elements = {
     count: document.getElementById('raibos-count'),
@@ -2182,10 +2692,10 @@ function formatNumber(num) {
 }
 
 function formatTime(sec) {
-    if (sec < 60) return sec.toFixed(1) + 's';
+    if (sec < 60) return sec.toFixed(1) + (i18n.lang === 'ko' ? '초' : 's');
     const m = Math.floor(sec / 60);
     const s = Math.floor(sec % 60);
-    return `${m}m ${s}s`;
+    return i18n.lang === 'ko' ? `${m}분 ${s}초` : `${m}m ${s}s`;
 }
 
 const REBIRTH_MIN_REQ = 1000000; // 1,000,000 (1M) Raibos (초반 진입장벽 대폭 완화)
@@ -2402,7 +2912,7 @@ function updateGachaUI() {
     const cost = getGachaCost();
     const luckMult = getMultiverseLuckMultiplier();
 
-    if (costBtn) costBtn.innerText = `${formatNumber(cost)} Raibos`;
+    if (costBtn) costBtn.innerText = `${formatNumber(cost)} ${i18n.t('currency')}`;
     if (pullBtn) {
         pullBtn.disabled = gameState.raibos < cost;
         pullBtn.style.opacity = gameState.raibos >= cost ? '1' : '0.5';
@@ -2427,12 +2937,15 @@ function updateGachaUI() {
                 hasAny = true;
                 const div = document.createElement('div');
                 div.style.cssText = `display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.4); padding:8px 12px; border-radius:8px; border:1px solid ${ast.color};`;
+                const aName = i18n.getAstName(ast);
+                const aRarity = i18n.getAstRarity(ast);
+                const aDesc = i18n.getAstDesc(ast);
                 div.innerHTML = `
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-size:1.4rem;">${ast.icon}</span>
                         <div>
-                            <div style="font-weight:bold; color:${ast.color}; font-size:0.9rem;">${ast.name} <span style="font-size:0.75rem; color:#aaa;">(${ast.rarity})</span></div>
-                            <div style="font-size:0.75rem; color:#ddd;">${ast.desc}</div>
+                            <div style="font-weight:bold; color:${ast.color}; font-size:0.9rem;">${aName} <span style="font-size:0.75rem; color:#aaa;">(${aRarity})</span></div>
+                            <div style="font-size:0.75rem; color:#ddd;">${aDesc}</div>
                         </div>
                     </div>
                     <div style="font-weight:bold; color:#ffcc00; font-size:1rem; margin-left:10px;">x${owned}</div>
@@ -2442,7 +2955,7 @@ function updateGachaUI() {
         });
 
         if (!hasAny) {
-            container.innerHTML = '<div style="text-align:center; padding:15px; color:#888; font-size:0.85rem;">No asteroids extracted yet. Try your luck!</div>';
+            container.innerHTML = `<div style="text-align:center; padding:15px; color:#888; font-size:0.85rem;">${i18n.lang === 'ko' ? '아직 추출된 소행성이 없습니다. 운을 시험해보세요!' : 'No asteroids extracted yet. Try your luck!'}</div>`;
         }
     }
 }
@@ -2482,10 +2995,12 @@ function createUpgradeElement(upg, isClick) {
     const div = document.createElement('div');
     div.id = `upg-${upg.id}`;
     div.className = 'upgrade-item';
+    const uName = i18n.getUpgradeName(upg);
+    const uDesc = i18n.getUpgradeDesc(upg);
     div.innerHTML = `
         <div class="upgrade-info">
-            <span class="upgrade-name">${upg.name}</span>
-            <span class="upgrade-desc">${upg.desc}</span>
+            <span class="upgrade-name">${uName}</span>
+            <span class="upgrade-desc">${uDesc}</span>
             <span class="upgrade-level">Lv. 0</span>
         </div>
         <div class="upgrade-cost-area" style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
@@ -2608,12 +3123,11 @@ function renderAchievements() {
     achievementsData.forEach(ach => {
         const isUnlocked = gameState.achievements.includes(ach.id);
         
-        // Hide details if it's a hidden achievement and not yet unlocked
-        let dispTitle = ach.title;
-        let dispDesc = ach.desc;
-        if(ach.hidden && !isUnlocked) {
+        let dispTitle = i18n.getAchTitle(ach);
+        let dispDesc = i18n.getAchDesc(ach);
+        if (ach.hidden && !isUnlocked) {
             dispTitle = "???";
-            dispDesc = "Condition Unknown (Hidden Achievement)";
+            dispDesc = i18n.lang === 'ko' ? "조건 불명 (히든 업적)" : "Condition Unknown (Hidden Achievement)";
         }
         
         const div = document.createElement('div');
@@ -2648,20 +3162,20 @@ function updateRebirthUI() {
 
     const reqDisp = document.getElementById('rebirth-req-disp');
     if (reqDisp) {
-        reqDisp.innerText = `${formatNumber(REBIRTH_MIN_REQ)} Raibos`;
+        reqDisp.innerText = `${formatNumber(REBIRTH_MIN_REQ)} ${i18n.t('currency')}`;
     }
     
     const btn = document.getElementById('rebirth-btn');
     if (pointsToEarn > 0) {
         btn.disabled = false;
-        btn.innerText = `ASCEND (+${formatNumber(pointsToEarn)} RP)`;
+        btn.innerText = i18n.t('rebirth_ascend_btn').replace('{0}', formatNumber(pointsToEarn));
         btn.style.opacity = '1';
         btn.style.cursor = 'pointer';
     } else {
         btn.disabled = true;
         const currentTotal = gameState.totalRaibos || 0;
         const progressPct = Math.min(99.9, ((currentTotal / REBIRTH_MIN_REQ) * 100)).toFixed(1);
-        btn.innerText = `NEED ${formatNumber(REBIRTH_MIN_REQ)} RAIBOS (${progressPct}%)`;
+        btn.innerText = i18n.t('rebirth_need_btn').replace('{0}', formatNumber(REBIRTH_MIN_REQ)).replace('{1}', progressPct);
         btn.style.opacity = '0.6';
         btn.style.cursor = 'not-allowed';
     }
@@ -2671,7 +3185,7 @@ document.getElementById('rebirth-btn').addEventListener('click', () => {
     let earned = getPointsToEarn(gameState.totalRaibos);
     if (earned <= 0) return;
     
-    if (confirm(`Do you want to rebirth? All progress will be reset and you will receive ${formatNumber(earned)} RP.`)) {
+    if (confirm(i18n.t('rebirth_confirm').replace('{0}', formatNumber(earned)))) {
         const astBuffs = getAsteroidBuffs();
         const rpMult = (getConstellationEffect('c_rp') || 1) * (getConstellationEffect('c_t9_rp_overflow') || 1) * (getConstellationEffect('c_t12_singularity_harvester') || 1) * (getConstellationEffect('c_t18_omniverse_warp') || 1) * (getConstellationEffect('c_t19_godhead_harvest') || 1) * astBuffs.rp;
         const regionBonus = getConstellationEffect('c_region_rp') || 0;
@@ -2702,7 +3216,7 @@ document.getElementById('rebirth-btn').addEventListener('click', () => {
         // Visual effect
         document.body.style.background = 'white';
         setTimeout(() => { document.body.style.background = ''; }, 500);
-        showToast('Ascension Complete!', `You earned +${formatNumber(totalEarnedRP)} RP! Cosmic power grows.`);
+        showToast(i18n.t('rebirth_toast_title'), i18n.t('rebirth_toast_desc').replace('{0}', formatNumber(totalEarnedRP)));
     }
 });
 
@@ -3037,8 +3551,8 @@ function selectRegion(regionId) {
     if (!region) return;
 
     document.getElementById('region-details').style.display = 'block';
-    document.getElementById('selected-region-name').innerText = region.name;
-    document.getElementById('selected-region-buff').innerText = `Reward: ${region.buff}`;
+    document.getElementById('selected-region-name').innerText = i18n.getRegionName(region);
+    document.getElementById('selected-region-buff').innerText = `${i18n.t('reward_label')}${i18n.getRegionBuff(region)}`;
     
     updateInvasionUI();
 }
@@ -3052,7 +3566,7 @@ function updateInvasionUI() {
     const multiverseScale = 1 + (rawMultiverseScale - 1) * costMitigation;
     gameState.invasion.energyMax = Math.floor(planet.energyMax * multiverseScale);
 
-    document.getElementById('planet-name').innerText = `${planet.name} (MV ${gameState.multiverse || 1})`;
+    document.getElementById('planet-name').innerText = `${i18n.getPlanetName(planet)} (MV ${gameState.multiverse || 1})`;
     document.getElementById('planet-name').style.color = planet.color;
 
     // Prev / Next button states
@@ -3096,6 +3610,7 @@ function updateInvasionUI() {
         const lastPlanetCleared = lastPlanet.regions.every(r => gameState.invasion.conqueredRegions.includes(r.id));
         if (lastPlanetCleared) {
             mvJumpBtn.style.display = 'block';
+            mvJumpBtn.innerText = i18n.t('multiverse_jump_btn');
             mvJumpBtn.onclick = triggerMultiverseJump;
         } else {
             mvJumpBtn.style.display = 'none';
@@ -3112,10 +3627,10 @@ function updateInvasionUI() {
     const isPlanetCleared = planet.regions.every(r => gameState.invasion.conqueredRegions.includes(r.id));
     if (planetStatusEl) {
         if (isPlanetCleared) {
-            planetStatusEl.innerText = `✨ Fully Conquered! (You can navigate freely)`;
+            planetStatusEl.innerText = i18n.t('planet_fully_conquered');
             planetStatusEl.style.color = '#00ffaa';
         } else {
-            planetStatusEl.innerText = `Conquest in progress...`;
+            planetStatusEl.innerText = i18n.t('planet_conquest_in_progress');
             planetStatusEl.style.color = 'var(--text-secondary)';
         }
     }
@@ -3126,8 +3641,8 @@ function updateInvasionUI() {
         if (firstUnconquered) {
             selectedRegionId = firstUnconquered.id;
             document.getElementById('region-details').style.display = 'block';
-            document.getElementById('selected-region-name').innerText = firstUnconquered.name;
-            document.getElementById('selected-region-buff').innerText = `Reward: ${firstUnconquered.buff}`;
+            document.getElementById('selected-region-name').innerText = i18n.getRegionName(firstUnconquered);
+            document.getElementById('selected-region-buff').innerText = `${i18n.t('reward_label')}${i18n.getRegionBuff(firstUnconquered)}`;
         }
     }
 
@@ -3177,10 +3692,12 @@ function updateInvasionUI() {
             
             const invasionCostMult = getConstellationEffect('c_invasion_cost') || 1;
             const actualCost = Math.floor(r.cost * invasionCostMult * multiverseScale);
+            const rName = i18n.getRegionName(r);
+            const rStatus = isConquered ? i18n.t('region_conquered') : i18n.t('region_cost').replace('{0}', actualCost);
 
             div.innerHTML = `
-                <div class="region-list-item-name">${r.name}</div>
-                <div>${isConquered ? 'Conquered' : `Cost: ${actualCost}`}</div>
+                <div class="region-list-item-name">${rName}</div>
+                <div>${rStatus}</div>
             `;
             
             const onSelect = (e) => {
@@ -3206,13 +3723,13 @@ function updateInvasionUI() {
             
             if (isConquered) {
                 btn.disabled = true;
-                btn.innerText = 'CONQUERED';
+                btn.innerText = i18n.t('invade_conquered_btn');
             } else if (gameState.invasion.energy < actualCost) {
                 btn.disabled = true;
-                btn.innerText = `ENERGY: ${actualCost}`;
+                btn.innerText = i18n.t('invade_energy_btn').replace('{0}', actualCost);
             } else {
                 btn.disabled = false;
-                btn.innerText = `INVADE (${actualCost})`;
+                btn.innerText = i18n.t('invade_btn').replace('{0}', actualCost);
             }
 
             const triggerInvasion = (e) => {
@@ -3261,7 +3778,7 @@ function updateInvasionUI() {
 }
 
 function triggerMultiverseJump() {
-    if (confirm(`🌌 Multiverse Jump to Multiverse ${(gameState.multiverse || 1) + 1}? (All planets reset, but all non-energy region buffs are PERMANENTLY RETAINED and boosted!)`)) {
+    if (confirm(i18n.t('mv_jump_confirm').replace('{0}', (gameState.multiverse || 1) + 1))) {
         document.getElementById('invasion-panel').classList.add('hyperdrive-active');
         setTimeout(() => {
             const allRegions = getAllRegions();
@@ -3367,21 +3884,19 @@ if (crBtn) {
 if (elements.hrBtn) {
     elements.hrBtn.onmousedown = (e) => {
         e.stopPropagation();
-        if (confirm("⚠️ WARNING: Do you want to completely delete all progress?")) {
-            if (confirm("Are you sure? All saved data will be permanently lost.")) {
-                isResetting = true; // 저장 방지 플래그 활성화
-                localStorage.clear(); 
-                location.reload();
-            }
+        if (confirm(i18n.t('hard_reset_confirm'))) {
+            isResetting = true; // 저장 방지 플래그 활성화
+            localStorage.clear(); 
+            location.reload();
         }
     };
 }
 
 // Init
-renderLists();
+i18n.init();
 loadGame();
-    updateUI();
-    updateInvasionUI();
+updateUI();
+updateInvasionUI();
 
 // Tab navigation
 elements.tabs.forEach(tab => {
