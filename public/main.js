@@ -3400,11 +3400,11 @@ if (rankHelpBtn) {
     });
 }
 
-// --- BGM System (Multi-track: Space Audio File + Procedural Synth) ---
+// --- BGM System (8-Bit Retro Space Arcade Default + Cosmic Ambient) ---
 const bgmManager = {
     isPlaying: false,
     volume: 0.3,
-    currentTrack: 'track1',
+    currentTrack: 'track3', // 8-Bit Arcade as default!
     audioEl: document.getElementById('game-bgm'),
     toggleBtn: document.getElementById('bgm-toggle-btn'),
     trackSelect: document.getElementById('bgm-track-select'),
@@ -3422,10 +3422,12 @@ const bgmManager = {
         if (this.audioEl) this.audioEl.volume = this.volume;
 
         const savedTrack = localStorage.getItem('raibos_bgm_track');
-        if (savedTrack) {
+        if (savedTrack && savedTrack !== 'track1') {
             this.currentTrack = savedTrack;
-            if (this.trackSelect) this.trackSelect.value = this.currentTrack;
+        } else {
+            this.currentTrack = 'track3';
         }
+        if (this.trackSelect) this.trackSelect.value = this.currentTrack;
 
         if (this.volSlider) {
             this.volSlider.addEventListener('input', (e) => {
@@ -3498,26 +3500,11 @@ const bgmManager = {
     },
 
     playCurrentTrack() {
-        if (this.currentTrack === 'track1') {
-            // Track 1: Space Flight (MP3 File)
-            if (this.audioEl) {
-                this.audioEl.currentTime = 0;
-                this.audioEl.volume = this.volume;
-                const playPromise = this.audioEl.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(() => {
-                        // Fallback to synth if file playback fails
-                        this.startCosmicSynth();
-                    });
-                }
-            } else {
-                this.startCosmicSynth();
-            }
-        } else if (this.currentTrack === 'track2') {
+        if (this.currentTrack === 'track2') {
             // Track 2: Cosmic Ambient Pad
             this.startCosmicSynth();
-        } else if (this.currentTrack === 'track3') {
-            // Track 3: 8-Bit Space Arcade
+        } else {
+            // Default Track 3: 8-Bit Space Arcade Chiptune
             this.startChiptuneSynth();
         }
     },
@@ -3624,34 +3611,74 @@ const bgmManager = {
         if (!this.ensureAudioContext()) return;
         this.stopSynths();
 
-        const melody = [
+        // 8-Bit Space Adventure Theme (Lead Arp + Bassline + Percussion Tick)
+        const leadNotes = [
             261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 261.63, 392.00,
-            293.66, 349.23, 440.00, 587.33, 440.00, 349.23, 293.66, 440.00
+            293.66, 349.23, 440.00, 587.33, 440.00, 349.23, 293.66, 440.00,
+            329.63, 392.00, 493.88, 659.25, 493.88, 392.00, 329.63, 493.88,
+            261.63, 392.00, 523.25, 659.25, 783.99, 659.25, 523.25, 392.00
         ];
-        let noteIdx = 0;
+        const bassNotes = [
+            130.81, 130.81, 130.81, 130.81, 130.81, 130.81, 130.81, 130.81,
+            146.83, 146.83, 146.83, 146.83, 146.83, 146.83, 146.83, 146.83,
+            164.81, 164.81, 164.81, 164.81, 164.81, 164.81, 164.81, 164.81,
+            130.81, 130.81, 130.81, 130.81, 196.00, 196.00, 196.00, 196.00
+        ];
+        let step = 0;
 
-        const playNote = () => {
+        const tick = () => {
             if (!this.isPlaying || this.currentTrack !== 'track3') return;
             const now = this.audioCtx.currentTime;
-            const osc = this.audioCtx.createOscillator();
-            const gain = this.audioCtx.createGain();
+            const idx = step % leadNotes.length;
+            step++;
 
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(melody[noteIdx % melody.length], now);
-            noteIdx++;
+            // 1. Lead Chiptune (Square Wave)
+            const leadOsc = this.audioCtx.createOscillator();
+            const leadGain = this.audioCtx.createGain();
+            leadOsc.type = 'square';
+            leadOsc.frequency.setValueAtTime(leadNotes[idx], now);
 
-            gain.gain.setValueAtTime(0.03, now);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+            leadGain.gain.setValueAtTime(0.035, now);
+            leadGain.gain.exponentialRampToValueAtTime(0.0005, now + 0.14);
 
-            osc.connect(gain);
-            gain.connect(this.synthGain);
+            leadOsc.connect(leadGain);
+            leadGain.connect(this.synthGain);
+            leadOsc.start(now);
+            leadOsc.stop(now + 0.16);
 
-            osc.start(now);
-            osc.stop(now + 0.2);
+            // 2. Chiptune Bassline (Triangle Wave, every step)
+            const bassOsc = this.audioCtx.createOscillator();
+            const bassGain = this.audioCtx.createGain();
+            bassOsc.type = 'triangle';
+            bassOsc.frequency.setValueAtTime(bassNotes[idx], now);
+
+            bassGain.gain.setValueAtTime(0.06, now);
+            bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+            bassOsc.connect(bassGain);
+            bassGain.connect(this.synthGain);
+            bassOsc.start(now);
+            bassOsc.stop(now + 0.17);
+
+            // 3. 8-Bit Hi-hat / Snare click on beats
+            if (idx % 2 === 0) {
+                const noise = this.audioCtx.createOscillator();
+                const nGain = this.audioCtx.createGain();
+                noise.type = idx % 4 === 2 ? 'sawtooth' : 'square';
+                noise.frequency.setValueAtTime(idx % 4 === 2 ? 180 : 800, now);
+
+                nGain.gain.setValueAtTime(idx % 4 === 2 ? 0.03 : 0.015, now);
+                nGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+
+                noise.connect(nGain);
+                nGain.connect(this.synthGain);
+                noise.start(now);
+                noise.stop(now + 0.06);
+            }
         };
 
-        playNote();
-        this.synthInterval = setInterval(playNote, 220);
+        tick();
+        this.synthInterval = setInterval(tick, 160); // 160ms = fast chiptune tempo!
     },
 
     stopSynths() {
