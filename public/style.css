@@ -160,16 +160,37 @@ body::before {
     overflow: hidden;
 }
 
-/* Clicker Area */
+/* Tutorial Highlights & Animations */
+.tutorial-highlight {
+    animation: tutorialPulse 1.5s infinite alternate !important;
+    position: relative;
+    z-index: 20005 !important;
+}
+
+@keyframes tutorialPulse {
+    0% {
+        outline: 3px solid #00f2ff;
+        outline-offset: 4px;
+        box-shadow: 0 0 20px rgba(0, 242, 255, 0.8);
+    }
+    100% {
+        outline: 3px solid #7928ca;
+        outline-offset: 8px;
+        box-shadow: 0 0 35px rgba(121, 40, 202, 0.9);
+    }
+}
 .clicker-area {
     flex: 1;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     position: relative;
     border: 1px solid var(--border-color);
     border-radius: 20px;
     background: radial-gradient(circle at center, rgba(0,255,170,0.05) 0%, transparent 70%);
+    padding: 20px;
+    gap: 20px;
 }
 
 .clicker-glow {

@@ -65,13 +65,45 @@
                 <button id="raibos-button" class="raibos-btn">
                     <div class="raibos-face">R</div>
                 </button>
+
+                <!-- Active Skills Section (Positioned under Click Button) -->
+                <div id="active-skills-wrapper" style="width: 100%; max-width: 360px; background: rgba(0, 15, 30, 0.75); border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 14px; padding: 12px; backdrop-filter: blur(8px); display: flex; flex-direction: column; gap: 10px; z-index: 5;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 242, 255, 0.2); padding-bottom: 6px;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 1.1rem;">⚡</span>
+                            <span id="active-skills-header-title" style="font-weight: 800; font-size: 0.85rem; color: #00f2ff; letter-spacing: 0.5px;">ACTIVE SKILLS</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem;">
+                            <span style="color: #aaa;">Pulls:</span>
+                            <span id="skill-charges-count" style="color: #ffcc00; font-weight: bold; font-size: 0.9rem;">0</span>
+                            <span style="color: #555;">|</span>
+                            <span id="skill-timer-label" style="color: #888;">+1 in:</span>
+                            <span id="skill-timer-disp" style="color: #38ef7d; font-family: monospace;">30s</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 8px;">
+                        <button id="skill-pull-btn" class="action-btn" style="flex: 1; padding: 6px 10px; font-size: 0.8rem; background: linear-gradient(135deg, rgba(0, 242, 255, 0.2), rgba(121, 40, 202, 0.3)); border: 1px solid #00f2ff; color: #fff; font-weight: bold; border-radius: 8px; cursor: pointer;">
+                            🎲 <span id="skill-pull-btn-text">Extract Skill (1 Charge)</span>
+                        </button>
+                    </div>
+
+                    <div id="active-skills-buttons-container" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;">
+                        <!-- Skill buttons populated dynamically -->
+                    </div>
+                </div>
             </section>
 
             <!-- Right: Upgrades / Shop -->
             <aside class="shop-area panel">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 255, 170, 0.2); margin-bottom: 20px; padding-bottom: 10px;">
                     <h2 class="panel-title" style="margin-bottom: 0; border: none;">메뉴</h2>
-                    <button id="hard-reset-btn" class="action-btn" style="background: rgba(255,0,0,0.2); border: 1px solid #ff3333; color: #ff5555; padding: 5px 10px; font-size: 0.8rem; font-weight: bold;">전체 초기화 ⚠️</button>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <button id="tutorial-replay-btn" class="action-btn" style="background: rgba(0, 242, 255, 0.15); border: 1px solid #00f2ff; color: #00f2ff; padding: 5px 12px; font-size: 0.8rem; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="튜토리얼 다시 보기">
+                            📖 <span id="tutorial-btn-text">튜토리얼 다시 보기</span>
+                        </button>
+                        <button id="hard-reset-btn" class="action-btn" style="background: rgba(255,0,0,0.2); border: 1px solid #ff3333; color: #ff5555; padding: 5px 10px; font-size: 0.8rem; font-weight: bold;">전체 초기화 ⚠️</button>
+                    </div>
                 </div>
                 <div class="tabs">
                     <button class="tab active" data-target="click-upgrades">Click</button>
@@ -247,6 +279,39 @@
             
             <div id="constellation-nodes-container" style="flex: 1; position: relative; overflow: auto; padding: 20px; z-index: 10;">
                 <!-- JS will populate skill nodes here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Tutorial Overlay Modal -->
+    <div id="tutorial-overlay" style="display: none; position: fixed; inset: 0; z-index: 20000; background: rgba(0, 10, 25, 0.75); backdrop-filter: blur(5px); justify-content: center; align-items: center;">
+        <div id="tutorial-card" style="background: linear-gradient(135deg, #0b1528, #050b14); border: 2px solid #00f2ff; box-shadow: 0 0 35px rgba(0, 242, 255, 0.4); border-radius: 18px; padding: 24px; max-width: 520px; width: 90%; color: #fff; position: relative; display: flex; flex-direction: column; gap: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0, 242, 255, 0.25); padding-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="tut-step-icon" style="font-size: 1.6rem;">🚀</span>
+                    <h3 id="tut-title" style="margin: 0; font-size: 1.25rem; color: #00f2ff; text-shadow: 0 0 10px rgba(0,242,255,0.5);">라이보스 가이드</h3>
+                </div>
+                <span id="tut-step-badge" style="font-size: 0.8rem; background: rgba(0,242,255,0.15); border: 1px solid #00f2ff; color: #00f2ff; padding: 2px 8px; border-radius: 10px; font-weight: bold;">1 / 5</span>
+            </div>
+
+            <p id="tut-desc" style="font-size: 0.95rem; line-height: 1.5; color: #ddd; min-height: 55px; margin: 0;"></p>
+            
+            <div id="tut-target-hint" style="background: rgba(0, 255, 170, 0.1); border-left: 3px solid #00ffaa; padding: 8px 12px; border-radius: 4px; font-size: 0.85rem; color: #00ffaa;">
+                👉 상호작용 안내
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <button id="tut-skip-btn" class="action-btn" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25); color: #aaa; padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">
+                    튜토리얼 스킵 ⏭️
+                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button id="tut-prev-btn" class="action-btn" style="display: none; background: rgba(0, 242, 255, 0.15); border: 1px solid #00f2ff; color: #fff; padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">
+                        이전
+                    </button>
+                    <button id="tut-next-btn" class="action-btn" style="background: linear-gradient(135deg, #00f2ff, #7928ca); border: 1px solid #00f2ff; color: #fff; padding: 6px 18px; font-size: 0.85rem; font-weight: bold; border-radius: 8px;">
+                        다음 단계 ▶
+                    </button>
+                </div>
             </div>
         </div>
     </div>
