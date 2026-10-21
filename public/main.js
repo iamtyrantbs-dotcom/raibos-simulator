@@ -2099,74 +2099,658 @@ const idleUpgrades = [
 
 
 const achievementsData = [
-    // --- Normal Achievements (40 total) ---
-    // [Clicks]
-    { id: 'a1', title: 'First Spark', req: () => gameState.totalClicks >= 1, desc: 'Click the Raibos 1 time', rewardDesc: '+5 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 5; } },
-    { id: 'a2', title: 'Click Apprentice', req: () => gameState.totalClicks >= 100, desc: 'Click 100 times', rewardDesc: '+10 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 10; } },
-    { id: 'a3', title: 'Finger of Light', req: () => gameState.totalClicks >= 1000, desc: 'Click 1,000 times', rewardDesc: 'Next 50 Clicks are Instant Critical', onUnlock: () => { gameState.activeSkills.charges += 15; } },
-    { id: 'a4', title: 'Tachyon Tapper', req: () => gameState.totalClicks >= 5000, desc: 'Click 5,000 times', rewardDesc: '+20 Active Skill Pulls & +500 Energy', onUnlock: () => { gameState.activeSkills.charges += 20; gameState.invasion.energy += 500; } },
-    { id: 'a5', title: 'God of Touch', req: () => gameState.totalClicks >= 25000, desc: 'Click 25,000 times', rewardDesc: '+35 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 35; } },
+    // --- [클릭 분야: a1 ~ a5] ---
+    {
+        id: 'a1',
+        title: 'First Spark',
+        req: () => gameState.totalClicks >= 1,
+        desc: 'Click the Raibos 1 time',
+        rewardDesc: '+100 Starting Raibos & +1 Skill Pull',
+        onUnlock: () => {
+            gameState.raibos += 100;
+            gameState.totalRaibos += 100;
+            if (gameState.activeSkills) gameState.activeSkills.charges += 1;
+        }
+    },
+    {
+        id: 'a2',
+        title: 'Click Apprentice',
+        req: () => gameState.totalClicks >= 100,
+        desc: 'Click 100 times',
+        rewardDesc: 'Instant 30s Click Production & +3 Skill Pulls',
+        onUnlock: () => {
+            const gain = (gameState.clickPower || 1) * 30;
+            gameState.raibos += gain;
+            gameState.totalRaibos += gain;
+            if (gameState.activeSkills) gameState.activeSkills.charges += 3;
+        }
+    },
+    {
+        id: 'a3',
+        title: 'Finger of Light',
+        req: () => gameState.totalClicks >= 1000,
+        desc: 'Click 1,000 times',
+        rewardDesc: 'Free Click Upgrades (+5 Levels to c1~c3)',
+        onUnlock: () => {
+            ['c1', 'c2', 'c3'].forEach(id => {
+                gameState.upgradeLevels[id] = (gameState.upgradeLevels[id] || 0) + 5;
+            });
+            recalculatePowers();
+        }
+    },
+    {
+        id: 'a4',
+        title: 'Tachyon Tapper',
+        req: () => gameState.totalClicks >= 5000,
+        desc: 'Click 5,000 times',
+        rewardDesc: '+500 Invasion Energy & +5 Skill Pulls',
+        onUnlock: () => {
+            if (gameState.invasion) gameState.invasion.energy = Math.min(gameState.invasion.energyMax, (gameState.invasion.energy || 0) + 500);
+            if (gameState.activeSkills) gameState.activeSkills.charges += 5;
+        }
+    },
+    {
+        id: 'a5',
+        title: 'God of Touch',
+        req: () => gameState.totalClicks >= 25000,
+        desc: 'Click 25,000 times',
+        rewardDesc: 'Free Rare Asteroid (Crystal Pallasite) & +10 Skill Pulls',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_crystal'] = (gameState.asteroids.inventory['ast_crystal'] || 0) + 1;
+            }
+            if (gameState.activeSkills) gameState.activeSkills.charges += 10;
+        }
+    },
 
-    // [Total Raibos Wealth]
-    { id: 'a6', title: 'Pocket Change', req: () => gameState.totalRaibos >= 1000, desc: 'Earn 1,000 Raibos total', rewardDesc: '+5 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 5; } },
-    { id: 'a7', title: 'Cosmic Millionaire', req: () => gameState.totalRaibos >= 1e6, desc: 'Earn 1 Million Raibos', rewardDesc: '+10 Active Skill Pulls & +100 Max Energy', onUnlock: () => { gameState.activeSkills.charges += 10; } },
-    { id: 'a8', title: 'Billionaire Orbit', req: () => gameState.totalRaibos >= 1e9, desc: 'Earn 1 Billion Raibos', rewardDesc: '+15 Active Skill Pulls & 1 Free Stony Asteroid', onUnlock: () => { gameState.activeSkills.charges += 15; if (gameState.asteroids) gameState.asteroids.inventory['ast_stony'] = (gameState.asteroids.inventory['ast_stony'] || 0) + 1; } },
-    { id: 'a9', title: 'Trillion Galactic Core', req: () => gameState.totalRaibos >= 1e12, desc: 'Earn 1 Trillion Raibos', rewardDesc: '+25 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 25; } },
-    { id: 'a10', title: 'Quadrillion Supercluster', req: () => gameState.totalRaibos >= 1e15, desc: 'Earn 1 Quadrillion Raibos', rewardDesc: '+30 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 30; } },
-    { id: 'a11', title: 'Quintillion Nebula', req: () => gameState.totalRaibos >= 1e18, desc: 'Earn 1 Quintillion Raibos', rewardDesc: '+40 Active Skill Pulls & 1 Free Plasma Comet', onUnlock: () => { gameState.activeSkills.charges += 40; if (gameState.asteroids) gameState.asteroids.inventory['ast_plasma'] = (gameState.asteroids.inventory['ast_plasma'] || 0) + 1; } },
-    { id: 'a12', title: 'Sextillion Void', req: () => gameState.totalRaibos >= 1e21, desc: 'Earn 1 Sextillion Raibos', rewardDesc: '+50 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 50; } },
-    { id: 'a13', title: 'Septillion Apex', req: () => gameState.totalRaibos >= 1e24, desc: 'Earn 1 Septillion Raibos', rewardDesc: '+60 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 60; } },
-    { id: 'a14', title: 'Decillion Absolute', req: () => gameState.totalRaibos >= 1e33, desc: 'Earn 1 Decillion Raibos', rewardDesc: '+100 Active Skill Pulls & Instant Full Energy', onUnlock: () => { gameState.activeSkills.charges += 100; gameState.invasion.energy = gameState.invasion.energyMax; } },
+    // --- [자산 및 생산 분야: a6 ~ a14] ---
+    {
+        id: 'a6',
+        title: 'Pocket Change',
+        req: () => gameState.totalRaibos >= 1000,
+        desc: 'Earn 1,000 Raibos total',
+        rewardDesc: 'Instant +500 Raibos Bonus',
+        onUnlock: () => {
+            gameState.raibos += 500;
+            gameState.totalRaibos += 500;
+        }
+    },
+    {
+        id: 'a7',
+        title: 'Cosmic Millionaire',
+        req: () => gameState.totalRaibos >= 1e6,
+        desc: 'Earn 1 Million Raibos',
+        rewardDesc: '+50 Rebirth Points & +100 Max Energy Boost',
+        onUnlock: () => {
+            gameState.rebirthPoints += 50;
+            if (gameState.invasion) gameState.invasion.energy = (gameState.invasion.energy || 0) + 100;
+        }
+    },
+    {
+        id: 'a8',
+        title: 'Billionaire Orbit',
+        req: () => gameState.totalRaibos >= 1e9,
+        desc: 'Earn 1 Billion Raibos',
+        rewardDesc: '1 Free Stony Chondrite Asteroid & +2 Skill Pulls',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_stony'] = (gameState.asteroids.inventory['ast_stony'] || 0) + 1;
+            }
+            if (gameState.activeSkills) gameState.activeSkills.charges += 2;
+        }
+    },
+    {
+        id: 'a9',
+        title: 'Trillion Galactic Core',
+        req: () => gameState.totalRaibos >= 1e12,
+        desc: 'Earn 1 Trillion Raibos',
+        rewardDesc: '+1,000 Rebirth Points & Instant 60s Production',
+        onUnlock: () => {
+            gameState.rebirthPoints += 1000;
+            const gain = (gameState.idlePower || 0) * 60;
+            gameState.raibos += gain;
+            gameState.totalRaibos += gain;
+        }
+    },
+    {
+        id: 'a10',
+        title: 'Quadrillion Supercluster',
+        req: () => gameState.totalRaibos >= 1e15,
+        desc: 'Earn 1 Quadrillion Raibos',
+        rewardDesc: '1 Free Iron Meteorite & Instant Energy Fill',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_metallic'] = (gameState.asteroids.inventory['ast_metallic'] || 0) + 1;
+            }
+            if (gameState.invasion) gameState.invasion.energy = gameState.invasion.energyMax;
+        }
+    },
+    {
+        id: 'a11',
+        title: 'Quintillion Nebula',
+        req: () => gameState.totalRaibos >= 1e18,
+        desc: 'Earn 1 Quintillion Raibos',
+        rewardDesc: '1 Free Epic Plasma Comet & +5,000 RP',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_plasma'] = (gameState.asteroids.inventory['ast_plasma'] || 0) + 1;
+            }
+            gameState.rebirthPoints += 5000;
+        }
+    },
+    {
+        id: 'a12',
+        title: 'Sextillion Void',
+        req: () => gameState.totalRaibos >= 1e21,
+        desc: 'Earn 1 Sextillion Raibos',
+        rewardDesc: 'Instant 10-Minute Time Skip Production',
+        onUnlock: () => {
+            const gain = (gameState.idlePower || 0) * 600;
+            gameState.raibos += gain;
+            gameState.totalRaibos += gain;
+        }
+    },
+    {
+        id: 'a13',
+        title: 'Septillion Apex',
+        req: () => gameState.totalRaibos >= 1e24,
+        desc: 'Earn 1 Septillion Raibos',
+        rewardDesc: '+50,000 RP & +15 Skill Pulls',
+        onUnlock: () => {
+            gameState.rebirthPoints += 50000;
+            if (gameState.activeSkills) gameState.activeSkills.charges += 15;
+        }
+    },
+    {
+        id: 'a14',
+        title: 'Decillion Absolute',
+        req: () => gameState.totalRaibos >= 1e33,
+        desc: 'Earn 1 Decillion Raibos',
+        rewardDesc: '1 Free Fabled Astral Pulsar Meteor & +100,000 RP',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_astral_pulsar'] = (gameState.asteroids.inventory['ast_astral_pulsar'] || 0) + 1;
+            }
+            gameState.rebirthPoints += 100000;
+        }
+    },
 
-    // [Idle Production]
-    { id: 'a15', title: 'Autonomous Engine', req: () => gameState.idlePower >= 1000, desc: 'Reach 1,000 Raibos/sec', rewardDesc: '+5 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 5; } },
-    { id: 'a16', title: 'Perpetual Motion', req: () => gameState.idlePower >= 1e6, desc: 'Reach 1M Raibos/sec', rewardDesc: '+10 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 10; } },
-    { id: 'a17', title: 'Stellar Dyson Core', req: () => gameState.idlePower >= 1e9, desc: 'Reach 1B Raibos/sec', rewardDesc: '+15 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 15; } },
-    { id: 'a18', title: 'Galactic Industrialist', req: () => gameState.idlePower >= 1e12, desc: 'Reach 1T Raibos/sec', rewardDesc: '+25 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 25; } },
-    { id: 'a19', title: 'Omnipresent Factory', req: () => gameState.idlePower >= 1e15, desc: 'Reach 1Qd Raibos/sec', rewardDesc: '+35 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 35; } },
+    // --- [방치 자동화 분야: a15 ~ a19] ---
+    {
+        id: 'a15',
+        title: 'Autonomous Engine',
+        req: () => gameState.idlePower >= 1000,
+        desc: 'Reach 1,000 Raibos/sec',
+        rewardDesc: 'Free Idle Upgrades (+5 Levels to i1~i2)',
+        onUnlock: () => {
+            ['i1', 'i2'].forEach(id => {
+                gameState.upgradeLevels[id] = (gameState.upgradeLevels[id] || 0) + 5;
+            });
+            recalculatePowers();
+        }
+    },
+    {
+        id: 'a16',
+        title: 'Perpetual Motion',
+        req: () => gameState.idlePower >= 1e6,
+        desc: 'Reach 1M Raibos/sec',
+        rewardDesc: '+250 Invasion Energy & Instant 30s Idle Production',
+        onUnlock: () => {
+            if (gameState.invasion) gameState.invasion.energy = Math.min(gameState.invasion.energyMax, (gameState.invasion.energy || 0) + 250);
+            const gain = (gameState.idlePower || 0) * 30;
+            gameState.raibos += gain;
+            gameState.totalRaibos += gain;
+        }
+    },
+    {
+        id: 'a17',
+        title: 'Stellar Dyson Core',
+        req: () => gameState.idlePower >= 1e9,
+        desc: 'Reach 1B Raibos/sec',
+        rewardDesc: '+500 RP & 1 Free Stony Chondrite Asteroid',
+        onUnlock: () => {
+            gameState.rebirthPoints += 500;
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_stony'] = (gameState.asteroids.inventory['ast_stony'] || 0) + 1;
+            }
+        }
+    },
+    {
+        id: 'a18',
+        title: 'Galactic Industrialist',
+        req: () => gameState.idlePower >= 1e12,
+        desc: 'Reach 1T Raibos/sec',
+        rewardDesc: '+1 Free Rare Crystal Pallasite & +5 Skill Pulls',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_crystal'] = (gameState.asteroids.inventory['ast_crystal'] || 0) + 1;
+            }
+            if (gameState.activeSkills) gameState.activeSkills.charges += 5;
+        }
+    },
+    {
+        id: 'a19',
+        title: 'Omnipresent Factory',
+        req: () => gameState.idlePower >= 1e15,
+        desc: 'Reach 1Qd Raibos/sec',
+        rewardDesc: 'Instant 15-Minute Massive Production Surplus',
+        onUnlock: () => {
+            const gain = (gameState.idlePower || 0) * 900;
+            gameState.raibos += gain;
+            gameState.totalRaibos += gain;
+        }
+    },
 
-    // [Upgrades Purchased]
-    { id: 'a20', title: 'First Investment', req: () => Object.values(gameState.upgradeLevels || {}).reduce((a, b) => a + b, 0) >= 10, desc: 'Purchase 10 upgrades total', rewardDesc: '+5 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 5; } },
-    { id: 'a21', title: 'Expansionist', req: () => Object.values(gameState.upgradeLevels || {}).reduce((a, b) => a + b, 0) >= 100, desc: 'Purchase 100 upgrades total', rewardDesc: '+15 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 15; } },
-    { id: 'a22', title: 'Infrastructure Lord', req: () => Object.values(gameState.upgradeLevels || {}).reduce((a, b) => a + b, 0) >= 500, desc: 'Purchase 500 upgrades total', rewardDesc: '+25 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 25; } },
-    { id: 'a23', title: 'Omega Builder', req: () => Object.values(gameState.upgradeLevels || {}).reduce((a, b) => a + b, 0) >= 1500, desc: 'Purchase 1,500 upgrades total', rewardDesc: '+50 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 50; } },
+    // --- [상점 업그레이드 분야: a20 ~ a23] ---
+    {
+        id: 'a20',
+        title: 'First Investment',
+        req: () => Object.values(gameState.upgradeLevels || {}).reduce((a, b) => a + b, 0) >= 10,
+        desc: 'Purchase 10 upgrades total',
+        rewardDesc: 'Instant 10x Current Click Power Raibos',
+        onUnlock: () => {
+            const gain = (gameState.clickPower || 1) * 10;
+            gameState.raibos += gain;
+            gameState.totalRaibos += gain;
+        }
+    },
+    {
+        id: 'a21',
+        title: 'Expansionist',
+        req: () => Object.values(gameState.upgradeLevels || {}).reduce((a, b) => a + b, 0) >= 100,
+        desc: 'Purchase 100 upgrades total',
+        rewardDesc: '+100 Invasion Energy & +3 Skill Pulls',
+        onUnlock: () => {
+            if (gameState.invasion) gameState.invasion.energy = Math.min(gameState.invasion.energyMax, (gameState.invasion.energy || 0) + 100);
+            if (gameState.activeSkills) gameState.activeSkills.charges += 3;
+        }
+    },
+    {
+        id: 'a22',
+        title: 'Infrastructure Lord',
+        req: () => Object.values(gameState.upgradeLevels || {}).reduce((a, b) => a + b, 0) >= 500,
+        desc: 'Purchase 500 upgrades total',
+        rewardDesc: '+5 Free Random Click & Idle Upgrade Levels',
+        onUnlock: () => {
+            ['c4', 'c5', 'i3', 'i4'].forEach(id => {
+                gameState.upgradeLevels[id] = (gameState.upgradeLevels[id] || 0) + 5;
+            });
+            recalculatePowers();
+        }
+    },
+    {
+        id: 'a23',
+        title: 'Omega Builder',
+        req: () => Object.values(gameState.upgradeLevels || {}).reduce((a, b) => a + b, 0) >= 1500,
+        desc: 'Purchase 1,500 upgrades total',
+        rewardDesc: '+2,500 RP & Instant Energy Full Recharge',
+        onUnlock: () => {
+            gameState.rebirthPoints += 2500;
+            if (gameState.invasion) gameState.invasion.energy = gameState.invasion.energyMax;
+        }
+    },
 
-    // [Rebirth & Constellation]
-    { id: 'a24', title: 'New Horizon', req: () => (gameState.rebirthCount || 0) >= 1 || gameState.rebirthPoints > 0, desc: 'Rebirth for the first time', rewardDesc: '+10 Active Skill Pulls & +50 Starting RP', onUnlock: () => { gameState.activeSkills.charges += 10; gameState.rebirthPoints += 50; } },
-    { id: 'a25', title: 'Ascension Cycle', req: () => (gameState.rebirthCount || 0) >= 5, desc: 'Rebirth 5 times', rewardDesc: '+20 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 20; } },
-    { id: 'a26', title: 'Rebirth Veteran', req: () => (gameState.rebirthCount || 0) >= 20, desc: 'Rebirth 20 times', rewardDesc: '+30 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 30; } },
-    { id: 'a27', title: 'RP Hoarder', req: () => gameState.rebirthPoints >= 10000, desc: 'Accumulate 10,000 Rebirth Points', rewardDesc: '+25 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 25; } },
-    { id: 'a28', title: 'Stargazer', req: () => Object.values(gameState.constellation || {}).reduce((a, b) => a + b, 0) >= 10, desc: 'Unlock 10 Constellation skill levels', rewardDesc: '+15 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 15; } },
-    { id: 'a29', title: 'Constellation Weaver', req: () => Object.values(gameState.constellation || {}).reduce((a, b) => a + b, 0) >= 50, desc: 'Unlock 50 Constellation skill levels', rewardDesc: '+35 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 35; } },
+    // --- [환생 및 별자리 스킬 분야: a24 ~ a29] ---
+    {
+        id: 'a24',
+        title: 'New Horizon',
+        req: () => (gameState.rebirthCount || 0) >= 1 || gameState.rebirthPoints > 0,
+        desc: 'Rebirth for the first time',
+        rewardDesc: '+50 Extra Rebirth Points Starting Grant',
+        onUnlock: () => {
+            gameState.rebirthPoints += 50;
+        }
+    },
+    {
+        id: 'a25',
+        title: 'Ascension Cycle',
+        req: () => (gameState.rebirthCount || 0) >= 5,
+        desc: 'Rebirth 5 times',
+        rewardDesc: '+250 RP & +3 Skill Pulls',
+        onUnlock: () => {
+            gameState.rebirthPoints += 250;
+            if (gameState.activeSkills) gameState.activeSkills.charges += 3;
+        }
+    },
+    {
+        id: 'a26',
+        title: 'Rebirth Veteran',
+        req: () => (gameState.rebirthCount || 0) >= 20,
+        desc: 'Rebirth 20 times',
+        rewardDesc: '+1,500 RP & 1 Free Uncommon Iron Meteorite',
+        onUnlock: () => {
+            gameState.rebirthPoints += 1500;
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_metallic'] = (gameState.asteroids.inventory['ast_metallic'] || 0) + 1;
+            }
+        }
+    },
+    {
+        id: 'a27',
+        title: 'RP Hoarder',
+        req: () => gameState.rebirthPoints >= 10000,
+        desc: 'Accumulate 10,000 Rebirth Points',
+        rewardDesc: '+2,000 Extra RP Dividend',
+        onUnlock: () => {
+            gameState.rebirthPoints += 2000;
+        }
+    },
+    {
+        id: 'a28',
+        title: 'Stargazer',
+        req: () => Object.values(gameState.constellation || {}).reduce((a, b) => a + b, 0) >= 10,
+        desc: 'Unlock 10 Constellation skill levels',
+        rewardDesc: '+1 Free Level to Starlight Resonance (c_click)',
+        onUnlock: () => {
+            gameState.constellation['c_click'] = (gameState.constellation['c_click'] || 0) + 1;
+            recalculatePowers();
+        }
+    },
+    {
+        id: 'a29',
+        title: 'Constellation Weaver',
+        req: () => Object.values(gameState.constellation || {}).reduce((a, b) => a + b, 0) >= 50,
+        desc: 'Unlock 50 Constellation skill levels',
+        rewardDesc: '+1 Free Level to Void Harvester (c_idle) & +5,000 RP',
+        onUnlock: () => {
+            gameState.constellation['c_idle'] = (gameState.constellation['c_idle'] || 0) + 1;
+            gameState.rebirthPoints += 5000;
+            recalculatePowers();
+        }
+    },
 
-    // [Asteroid Extraction]
-    { id: 'a30', title: 'Cosmic Prospector', req: () => (gameState.asteroids && gameState.asteroids.totalPulls >= 1), desc: 'Extract an Asteroid 1 time', rewardDesc: '+5 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 5; } },
-    { id: 'a31', title: 'Meteor Hunter', req: () => (gameState.asteroids && gameState.asteroids.totalPulls >= 50), desc: 'Extract 50 Asteroids', rewardDesc: '+15 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 15; } },
-    { id: 'a32', title: 'Asteroid Belt Miner', req: () => (gameState.asteroids && gameState.asteroids.totalPulls >= 250), desc: 'Extract 250 Asteroids', rewardDesc: '+30 Active Skill Pulls & 1 Free Dark Matter Asteroid', onUnlock: () => { gameState.activeSkills.charges += 30; if (gameState.asteroids) gameState.asteroids.inventory['ast_darkmatter'] = (gameState.asteroids.inventory['ast_darkmatter'] || 0) + 1; } },
-    { id: 'a33', title: 'Collector of the Stars', req: () => (gameState.asteroids && Object.keys(gameState.asteroids.inventory || {}).length >= 5), desc: 'Own 5 different types of Asteroids', rewardDesc: '+25 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 25; } },
+    // --- [소행성 추출 분야: a30 ~ a33] ---
+    {
+        id: 'a30',
+        title: 'Cosmic Prospector',
+        req: () => (gameState.asteroids && gameState.asteroids.totalPulls >= 1),
+        desc: 'Extract an Asteroid 1 time',
+        rewardDesc: '+2 Free Stony Chondrite Asteroids',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_stony'] = (gameState.asteroids.inventory['ast_stony'] || 0) + 2;
+                recalculatePowers();
+            }
+        }
+    },
+    {
+        id: 'a31',
+        title: 'Meteor Hunter',
+        req: () => (gameState.asteroids && gameState.asteroids.totalPulls >= 50),
+        desc: 'Extract 50 Asteroids',
+        rewardDesc: '+1 Free Rare Crystal Pallasite & +100 Energy',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_crystal'] = (gameState.asteroids.inventory['ast_crystal'] || 0) + 1;
+                recalculatePowers();
+            }
+            if (gameState.invasion) gameState.invasion.energy = Math.min(gameState.invasion.energyMax, (gameState.invasion.energy || 0) + 100);
+        }
+    },
+    {
+        id: 'a32',
+        title: 'Asteroid Belt Miner',
+        req: () => (gameState.asteroids && gameState.asteroids.totalPulls >= 250),
+        desc: 'Extract 250 Asteroids',
+        rewardDesc: '1 Free Legendary Dark Matter Asteroid',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_darkmatter'] = (gameState.asteroids.inventory['ast_darkmatter'] || 0) + 1;
+                recalculatePowers();
+            }
+        }
+    },
+    {
+        id: 'a33',
+        title: 'Collector of the Stars',
+        req: () => (gameState.asteroids && Object.keys(gameState.asteroids.inventory || {}).length >= 5),
+        desc: 'Own 5 different types of Asteroids',
+        rewardDesc: '+1 Free Epic Plasma Comet & +3 Skill Pulls',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_plasma'] = (gameState.asteroids.inventory['ast_plasma'] || 0) + 1;
+                recalculatePowers();
+            }
+            if (gameState.activeSkills) gameState.activeSkills.charges += 3;
+        }
+    },
 
-    // [Invasion & Multiverse]
-    { id: 'a34', title: 'First Drop', req: () => (gameState.invasion && (gameState.invasion.conqueredRegions || []).length >= 1), desc: 'Conquer your first region', rewardDesc: '+10 Active Skill Pulls & +200 Energy', onUnlock: () => { gameState.activeSkills.charges += 10; gameState.invasion.energy += 200; } },
-    { id: 'a35', title: 'Terran Overlord', req: () => (gameState.invasion && (gameState.invasion.conqueredRegions || []).length >= 10), desc: 'Conquer 10 regions', rewardDesc: '+20 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 20; } },
-    { id: 'a36', title: 'System Conqueror', req: () => (gameState.invasion && (gameState.invasion.conqueredRegions || []).length >= 25), desc: 'Conquer 25 regions', rewardDesc: '+35 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 35; } },
-    { id: 'a37', title: 'Planetary Purge', req: () => (gameState.invasion && gameState.invasion.currentPlanet >= 1), desc: 'Advance past Earth to Mars', rewardDesc: '+20 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 20; } },
-    { id: 'a38', title: 'Multiverse Jumper', req: () => (gameState.multiverse || 1) >= 2, desc: 'Jump to Multiverse 2 for the first time', rewardDesc: '+50 Active Skill Pulls & 1 Free Astral Pulsar Meteor', onUnlock: () => { gameState.activeSkills.charges += 50; if (gameState.asteroids) gameState.asteroids.inventory['ast_astral_pulsar'] = (gameState.asteroids.inventory['ast_astral_pulsar'] || 0) + 1; } },
+    // --- [행성 침략 및 멀티버스 분야: a34 ~ a38] ---
+    {
+        id: 'a34',
+        title: 'First Drop',
+        req: () => (gameState.invasion && (gameState.invasion.conqueredRegions || []).length >= 1),
+        desc: 'Conquer your first region',
+        rewardDesc: '+200 Invasion Energy Immediate Injection',
+        onUnlock: () => {
+            if (gameState.invasion) gameState.invasion.energy = Math.min(gameState.invasion.energyMax, (gameState.invasion.energy || 0) + 200);
+        }
+    },
+    {
+        id: 'a35',
+        title: 'Terran Overlord',
+        req: () => (gameState.invasion && (gameState.invasion.conqueredRegions || []).length >= 10),
+        desc: 'Conquer 10 regions',
+        rewardDesc: '+500 Invasion Energy & +300 RP',
+        onUnlock: () => {
+            if (gameState.invasion) gameState.invasion.energy = Math.min(gameState.invasion.energyMax, (gameState.invasion.energy || 0) + 500);
+            gameState.rebirthPoints += 300;
+        }
+    },
+    {
+        id: 'a36',
+        title: 'System Conqueror',
+        req: () => (gameState.invasion && (gameState.invasion.conqueredRegions || []).length >= 25),
+        desc: 'Conquer 25 regions',
+        rewardDesc: 'Instant +20% Progress to Current Selected Region',
+        onUnlock: () => {
+            if (gameState.invasion && selectedRegionId) {
+                let prog = (gameState.invasion.regionProgress[selectedRegionId] || 0) + 20;
+                if (prog >= 100) {
+                    prog = 100;
+                    if (!gameState.invasion.conqueredRegions.includes(selectedRegionId)) {
+                        gameState.invasion.conqueredRegions.push(selectedRegionId);
+                        recalculatePowers();
+                        checkPlanetClear();
+                    }
+                }
+                gameState.invasion.regionProgress[selectedRegionId] = prog;
+                updateInvasionUI();
+            }
+        }
+    },
+    {
+        id: 'a37',
+        title: 'Planetary Purge',
+        req: () => (gameState.invasion && gameState.invasion.currentPlanet >= 1),
+        desc: 'Advance past Earth to Mars',
+        rewardDesc: '+1,000 Invasion Energy & +1,000 RP',
+        onUnlock: () => {
+            if (gameState.invasion) gameState.invasion.energy = Math.min(gameState.invasion.energyMax, (gameState.invasion.energy || 0) + 1000);
+            gameState.rebirthPoints += 1000;
+        }
+    },
+    {
+        id: 'a38',
+        title: 'Multiverse Jumper',
+        req: () => (gameState.multiverse || 1) >= 2,
+        desc: 'Jump to Multiverse 2 for the first time',
+        rewardDesc: '1 Free Fabled Astral Pulsar Meteor & +10,000 RP',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_astral_pulsar'] = (gameState.asteroids.inventory['ast_astral_pulsar'] || 0) + 1;
+                recalculatePowers();
+            }
+            gameState.rebirthPoints += 10000;
+        }
+    },
 
-    // [Active Skills]
-    { id: 'a39', title: 'Skill Awakened', req: () => (gameState.activeSkills && gameState.activeSkills.totalSkillsUsed >= 1), desc: 'Activate an Active Skill for the first time', rewardDesc: '+5 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 5; } },
-    { id: 'a40', title: 'Skill Conductor', req: () => (gameState.activeSkills && gameState.activeSkills.totalSkillsUsed >= 25), desc: 'Activate Active Skills 25 times', rewardDesc: '+30 Active Skill Pulls & Instant Cooldown Reset', onUnlock: () => { gameState.activeSkills.charges += 30; if (gameState.activeSkills) gameState.activeSkills.cooldowns = {}; } },
+    // --- [액티브 스킬 분야: a39 ~ a40] ---
+    {
+        id: 'a39',
+        title: 'Skill Awakened',
+        req: () => (gameState.activeSkills && gameState.activeSkills.totalSkillsUsed >= 1),
+        desc: 'Activate an Active Skill for the first time',
+        rewardDesc: '+3 Skill Pulls & Instant Cooldown Reset',
+        onUnlock: () => {
+            if (gameState.activeSkills) {
+                gameState.activeSkills.charges += 3;
+                gameState.activeSkills.cooldowns = {};
+            }
+        }
+    },
+    {
+        id: 'a40',
+        title: 'Skill Conductor',
+        req: () => (gameState.activeSkills && gameState.activeSkills.totalSkillsUsed >= 25),
+        desc: 'Activate Active Skills 25 times',
+        rewardDesc: 'Instant 2-Minute Production Time Skip & Cooldowns Cleared',
+        onUnlock: () => {
+            const gain = (gameState.idlePower || 0) * 120;
+            gameState.raibos += gain;
+            gameState.totalRaibos += gain;
+            if (gameState.activeSkills) gameState.activeSkills.cooldowns = {};
+        }
+    },
 
-    // --- Hidden Achievements (10 total) ---
-    { id: 'h1', title: 'Speed of Sound', req: () => gameState.totalClicks >= 100 && (gameState.totalRaibos < 5000), desc: 'Click 100 times before earning 5,000 Raibos', rewardDesc: '+15 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 15; }, hidden: true },
-    { id: 'h2', title: 'Chrono Hunter', req: () => (gameState.timeSkipsUsed || 0) >= 3, desc: 'Catch the Golden Chrono-Raibos 3 times', rewardDesc: '+20 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 20; }, hidden: true },
-    { id: 'h3', title: 'Legendary Summoner', req: () => (gameState.activeSkills && (gameState.activeSkills.unlocked['sk_supernova'] > 0 || gameState.activeSkills.unlocked['sk_genesis'] > 0)), desc: 'Extract a Legendary Active Skill (0.1% chance)', rewardDesc: '+50 Active Skill Pulls & Instant Legendary Boost', onUnlock: () => { gameState.activeSkills.charges += 50; }, hidden: true },
-    { id: 'h4', title: 'Void Weaver', req: () => (gameState.activeSkills && gameState.activeSkills.unlocked['sk_blackhole'] > 0), desc: 'Extract the Epic Skill Black Hole Graviton', rewardDesc: '+25 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 25; }, hidden: true },
-    { id: 'h5', title: 'Clean Slate', req: () => (gameState.activeSkills && gameState.activeSkills.totalSkillPulls >= 50), desc: 'Pull Active Skills 50 times', rewardDesc: '+30 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 30; }, hidden: true },
-    { id: 'h6', title: 'Red Storm', req: () => (gameState.invasion && gameState.invasion.currentPlanet >= 2), desc: 'Reach Jupiter in invasion', rewardDesc: '+25 Active Skill Pulls & +500 Energy', onUnlock: () => { gameState.activeSkills.charges += 25; gameState.invasion.energy += 500; }, hidden: true },
-    { id: 'h7', title: 'Ring Conqueror', req: () => (gameState.invasion && gameState.invasion.currentPlanet >= 3), desc: 'Reach Saturn in invasion', rewardDesc: '+35 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 35; }, hidden: true },
-    { id: 'h8', title: 'Deep Space Apex', req: () => (gameState.invasion && gameState.invasion.currentPlanet >= 4), desc: 'Reach Uranus in invasion', rewardDesc: '+45 Active Skill Pulls', onUnlock: () => { gameState.activeSkills.charges += 45; }, hidden: true },
-    { id: 'h9', title: 'Solar Dominion', req: () => (gameState.invasion && gameState.invasion.currentPlanet === 5 && planetsData[5].regions.every(r => (gameState.invasion.conqueredRegions || []).includes(r.id))), desc: 'Conquer the entire Solar System', rewardDesc: '+100 Active Skill Pulls & +5,000 Energy', onUnlock: () => { gameState.activeSkills.charges += 100; gameState.invasion.energy += 5000; }, hidden: true },
-    { id: 'h10', title: 'Multiverse Sovereign', req: () => (gameState.multiverse || 1) >= 3, desc: 'Reach Multiverse 3', rewardDesc: '+150 Active Skill Pulls & 1 Free Singularity Core', onUnlock: () => { gameState.activeSkills.charges += 150; if (gameState.asteroids) gameState.asteroids.inventory['ast_singularity'] = (gameState.asteroids.inventory['ast_singularity'] || 0) + 1; }, hidden: true }
+    // --- [히든 업적: h1 ~ h10] ---
+    {
+        id: 'h1',
+        title: 'Speed of Sound',
+        req: () => gameState.totalClicks >= 100 && (gameState.totalRaibos < 5000),
+        desc: 'Click 100 times before earning 5,000 Raibos',
+        rewardDesc: '+500 Starting Raibos & +2 Skill Pulls',
+        onUnlock: () => {
+            gameState.raibos += 500;
+            gameState.totalRaibos += 500;
+            if (gameState.activeSkills) gameState.activeSkills.charges += 2;
+        },
+        hidden: true
+    },
+    {
+        id: 'h2',
+        title: 'Chrono Hunter',
+        req: () => (gameState.timeSkipsUsed || 0) >= 3,
+        desc: 'Catch the Golden Chrono-Raibos 3 times',
+        rewardDesc: 'Instant 5-Minute Golden Production Blast',
+        onUnlock: () => {
+            const gain = (gameState.idlePower || 0) * 300;
+            gameState.raibos += gain;
+            gameState.totalRaibos += gain;
+        },
+        hidden: true
+    },
+    {
+        id: 'h3',
+        title: 'Legendary Summoner',
+        req: () => (gameState.activeSkills && (gameState.activeSkills.unlocked['sk_supernova'] > 0 || gameState.activeSkills.unlocked['sk_genesis'] > 0)),
+        desc: 'Extract a Legendary Active Skill (0.1% chance)',
+        rewardDesc: '1 Free Legendary Dark Matter Asteroid & +5,000 RP',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_darkmatter'] = (gameState.asteroids.inventory['ast_darkmatter'] || 0) + 1;
+                recalculatePowers();
+            }
+            gameState.rebirthPoints += 5000;
+        },
+        hidden: true
+    },
+    {
+        id: 'h4',
+        title: 'Void Weaver',
+        req: () => (gameState.activeSkills && gameState.activeSkills.unlocked['sk_blackhole'] > 0),
+        desc: 'Extract the Epic Skill Black Hole Graviton',
+        rewardDesc: '+1,000 Invasion Energy & +3 Skill Pulls',
+        onUnlock: () => {
+            if (gameState.invasion) gameState.invasion.energy = Math.min(gameState.invasion.energyMax, (gameState.invasion.energy || 0) + 1000);
+            if (gameState.activeSkills) gameState.activeSkills.charges += 3;
+        },
+        hidden: true
+    },
+    {
+        id: 'h5',
+        title: 'Clean Slate',
+        req: () => (gameState.activeSkills && gameState.activeSkills.totalSkillPulls >= 50),
+        desc: 'Pull Active Skills 50 times',
+        rewardDesc: '+10,000 RP & Instant Full Energy Recharge',
+        onUnlock: () => {
+            gameState.rebirthPoints += 10000;
+            if (gameState.invasion) gameState.invasion.energy = gameState.invasion.energyMax;
+        },
+        hidden: true
+    },
+    {
+        id: 'h6',
+        title: 'Red Storm',
+        req: () => (gameState.invasion && gameState.invasion.currentPlanet >= 2),
+        desc: 'Reach Jupiter in invasion',
+        rewardDesc: '+1,500 Invasion Energy & +2,000 RP',
+        onUnlock: () => {
+            if (gameState.invasion) gameState.invasion.energy = Math.min(gameState.invasion.energyMax, (gameState.invasion.energy || 0) + 1500);
+            gameState.rebirthPoints += 2000;
+        },
+        hidden: true
+    },
+    {
+        id: 'h7',
+        title: 'Ring Conqueror',
+        req: () => (gameState.invasion && gameState.invasion.currentPlanet >= 3),
+        desc: 'Reach Saturn in invasion',
+        rewardDesc: '1 Free Epic Plasma Comet & +5,000 RP',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_plasma'] = (gameState.asteroids.inventory['ast_plasma'] || 0) + 1;
+                recalculatePowers();
+            }
+            gameState.rebirthPoints += 5000;
+        },
+        hidden: true
+    },
+    {
+        id: 'h8',
+        title: 'Deep Space Apex',
+        req: () => (gameState.invasion && gameState.invasion.currentPlanet >= 4),
+        desc: 'Reach Uranus in invasion',
+        rewardDesc: '+10,000 RP & Instant 10-Minute Production',
+        onUnlock: () => {
+            gameState.rebirthPoints += 10000;
+            const gain = (gameState.idlePower || 0) * 600;
+            gameState.raibos += gain;
+            gameState.totalRaibos += gain;
+        },
+        hidden: true
+    },
+    {
+        id: 'h9',
+        title: 'Solar Dominion',
+        req: () => (gameState.invasion && gameState.invasion.currentPlanet === 5 && planetsData[5].regions.every(r => (gameState.invasion.conqueredRegions || []).includes(r.id))),
+        desc: 'Conquer the entire Solar System',
+        rewardDesc: '1 Free Fabled Astral Pulsar Meteor & +50,000 RP',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_astral_pulsar'] = (gameState.asteroids.inventory['ast_astral_pulsar'] || 0) + 1;
+                recalculatePowers();
+            }
+            gameState.rebirthPoints += 50000;
+            if (gameState.invasion) gameState.invasion.energy = gameState.invasion.energyMax;
+        },
+        hidden: true
+    },
+    {
+        id: 'h10',
+        title: 'Multiverse Sovereign',
+        req: () => (gameState.multiverse || 1) >= 3,
+        desc: 'Reach Multiverse 3',
+        rewardDesc: '1 Free Mythic Singularity Core & +100,000 RP',
+        onUnlock: () => {
+            if (gameState.asteroids) {
+                gameState.asteroids.inventory['ast_singularity'] = (gameState.asteroids.inventory['ast_singularity'] || 0) + 1;
+                recalculatePowers();
+            }
+            gameState.rebirthPoints += 100000;
+        },
+        hidden: true
+    }
 ];
 
 // ==========================================
@@ -2511,65 +3095,65 @@ const i18n = {
         return (this.lang === 'ko' && this.constellationKo[skill.id]) ? this.constellationKo[skill.id].desc : skill.desc;
     },
 
-        achievementsKo: {
-        'a1': { title: '첫 불꽃', desc: '라이보스 1회 클릭', rewardDesc: '액티브 스킬 뽑기 +5회' },
-        'a2': { title: '클릭 견습생', desc: '100회 클릭하기', rewardDesc: '액티브 스킬 뽑기 +10회' },
-        'a3': { title: '빛의 손가락', desc: '1,000회 클릭하기', rewardDesc: '액티브 스킬 뽑기 +15회' },
-        'a4': { title: '타키온 태퍼', desc: '5,000회 클릭하기', rewardDesc: '액티브 스킬 뽑기 +20회 & 에너지 +500' },
-        'a5': { title: '터치의 신', desc: '25,000회 클릭하기', rewardDesc: '액티브 스킬 뽑기 +35회' },
+            achievementsKo: {
+        'a1': { title: '첫 불꽃', desc: '라이보스 1회 클릭', rewardDesc: '+100 라이보스 & 스킬 뽑기 +1회' },
+        'a2': { title: '클릭 견습생', desc: '100회 클릭하기', rewardDesc: '30초 클릭분 라이보스 & 스킬 뽑기 +3회' },
+        'a3': { title: '빛의 손가락', desc: '1,000회 클릭하기', rewardDesc: '클릭 업그레이드(c1~c3) 무료 +5레벨' },
+        'a4': { title: '타키온 태퍼', desc: '5,000회 클릭하기', rewardDesc: '침략 에너지 +500 & 스킬 뽑기 +5회' },
+        'a5': { title: '터치의 신', desc: '25,000회 클릭하기', rewardDesc: '희귀 소행성(결정 팰러사이트) & 스킬 뽑기 +10회' },
 
-        'a6': { title: '주머니 속 동전', desc: '총 1,000 라이보스 획득', rewardDesc: '액티브 스킬 뽑기 +5회' },
-        'a7': { title: '우주 백만장자', desc: '총 100만 라이보스 획득', rewardDesc: '액티브 스킬 뽑기 +10회' },
-        'a8': { title: '억만장자 궤도', desc: '총 10억 라이보스 획득', rewardDesc: '액티브 스킬 뽑기 +15회 & 구립 운석 1개' },
-        'a9': { title: '은하 중심 조만장자', desc: '총 1조 라이보스 획득', rewardDesc: '액티브 스킬 뽑기 +25회' },
-        'a10': { title: '초은하단 경만장자', desc: '총 1경 라이보스 획득', rewardDesc: '액티브 스킬 뽑기 +30회' },
-        'a11': { title: '성운 해만장자', desc: '총 1해 라이보스 획득', rewardDesc: '액티브 스킬 뽑기 +40회 & 플라즈마 혜성 1개' },
-        'a12': { title: '자만장자 공허', desc: '총 1자 라이보스 획득', rewardDesc: '액티브 스킬 뽑기 +50회' },
-        'a13': { title: '양만장자 정점', desc: '총 1양 라이보스 획득', rewardDesc: '액티브 스킬 뽑기 +60회' },
-        'a14': { title: '데실리온의 절대자', desc: '총 1 데실리온(1e33) 라이보스 획득', rewardDesc: '액티브 스킬 뽑기 +100회 & 에너지 완전 충전' },
+        'a6': { title: '주머니 속 동전', desc: '총 1,000 라이보스 획득', rewardDesc: '+500 라이보스 보너스' },
+        'a7': { title: '우주 백만장자', desc: '총 100만 라이보스 획득', rewardDesc: '+50 RP & 침략 에너지 +100' },
+        'a8': { title: '억만장자 궤도', desc: '총 10억 라이보스 획득', rewardDesc: '구립 운석 소행성 1개 & 스킬 뽑기 +2회' },
+        'a9': { title: '은하 중심 조만장자', desc: '총 1조 라이보스 획득', rewardDesc: '+1,000 RP & 60초 즉시 생산' },
+        'a10': { title: '초은하단 경만장자', desc: '총 1경 라이보스 획득', rewardDesc: '철질 운석 소행성 1개 & 에너지 완전 충전' },
+        'a11': { title: '성운 해만장자', desc: '총 1해 라이보스 획득', rewardDesc: '에픽 플라즈마 혜성 1개 & +5,000 RP' },
+        'a12': { title: '자만장자 공허', desc: '총 1자 라이보스 획득', rewardDesc: '10분치 방치 생산량 즉시 획득' },
+        'a13': { title: '양만장자 정점', desc: '총 1양 라이보스 획득', rewardDesc: '+50,000 RP & 스킬 뽑기 +15회' },
+        'a14': { title: '데실리온의 절대자', desc: '총 1 데실리온(1e33) 라이보스 획득', rewardDesc: '아스트랄 펄서 유성 1개 & +100,000 RP' },
 
-        'a15': { title: '자율 엔진', desc: '초당 1,000 라이보스 생산', rewardDesc: '액티브 스킬 뽑기 +5회' },
-        'a16': { title: '영구 기관', desc: '초당 100만 라이보스 생산', rewardDesc: '액티브 스킬 뽑기 +10회' },
-        'a17': { title: '다이슨 스피어 코어', desc: '초당 10억 라이보스 생산', rewardDesc: '액티브 스킬 뽑기 +15회' },
-        'a18': { title: '은하 산업가', desc: '초당 1조 라이보스 생산', rewardDesc: '액티브 스킬 뽑기 +25회' },
-        'a19': { title: '전지전능 공장', desc: '초당 1경 라이보스 생산', rewardDesc: '액티브 스킬 뽑기 +35회' },
+        'a15': { title: '자율 엔진', desc: '초당 1,000 라이보스 생산', rewardDesc: '방치 업그레이드(i1~i2) 무료 +5레벨' },
+        'a16': { title: '영구 기관', desc: '초당 100만 라이보스 생산', rewardDesc: '침략 에너지 +250 & 30초치 방치 생산' },
+        'a17': { title: '다이슨 스피어 코어', desc: '초당 10억 라이보스 생산', rewardDesc: '+500 RP & 구립 운석 1개' },
+        'a18': { title: '은하 산업가', desc: '초당 1조 라이보스 생산', rewardDesc: '희귀 결정 팰러사이트 1개 & 스킬 뽑기 +5회' },
+        'a19': { title: '전지전능 공장', desc: '초당 1경 라이보스 생산', rewardDesc: '15분치 방치 대량 생산 보너스' },
 
-        'a20': { title: '첫 투자', desc: '업그레이드 10회 구매', rewardDesc: '액티브 스킬 뽑기 +5회' },
-        'a21': { title: '확장주의자', desc: '업그레이드 100회 구매', rewardDesc: '액티브 스킬 뽑기 +15회' },
-        'a22': { title: '인프라의 군주', desc: '업그레이드 500회 구매', rewardDesc: '액티브 스킬 뽑기 +25회' },
-        'a23': { title: '오메가 빌더', desc: '업그레이드 1,500회 구매', rewardDesc: '액티브 스킬 뽑기 +50회' },
+        'a20': { title: '첫 투자', desc: '업그레이드 10회 구매', rewardDesc: '클릭 파워 10배 라이보스 즉시 지급' },
+        'a21': { title: '확장주의자', desc: '업그레이드 100회 구매', rewardDesc: '침략 에너지 +100 & 스킬 뽑기 +3회' },
+        'a22': { title: '인프라의 군주', desc: '업그레이드 500회 구매', rewardDesc: '상위 업그레이드(c4~c5, i3~i4) 무료 +5레벨' },
+        'a23': { title: '오메가 빌더', desc: '업그레이드 1,500회 구매', rewardDesc: '+2,500 RP & 에너지 완전 충전' },
 
-        'a24': { title: '새로운 지평선', desc: '첫 환생 달성하기', rewardDesc: '액티브 스킬 뽑기 +10회 & +50 RP 지급' },
-        'a25': { title: '상승 주기', desc: '환생 5회 달성', rewardDesc: '액티브 스킬 뽑기 +20회' },
-        'a26': { title: '환생 베테랑', desc: '환생 20회 달성', rewardDesc: '액티브 스킬 뽑기 +30회' },
-        'a27': { title: 'RP 수집가', desc: '환생 포인트 10,000점 축적', rewardDesc: '액티브 스킬 뽑기 +25회' },
-        'a28': { title: '별을 보는 자', desc: '별자리 스킬 레벨 합계 10 달성', rewardDesc: '액티브 스킬 뽑기 +15회' },
-        'a29': { title: '별자리의 직조공', desc: '별자리 스킬 레벨 합계 50 달성', rewardDesc: '액티브 스킬 뽑기 +35회' },
+        'a24': { title: '새로운 지평선', desc: '첫 환생 달성하기', rewardDesc: '환생 포인트 +50 RP 시작 보너스' },
+        'a25': { title: '상승 주기', desc: '환생 5회 달성', rewardDesc: '+250 RP & 스킬 뽑기 +3회' },
+        'a26': { title: '환생 베테랑', desc: '환생 20회 달성', rewardDesc: '+1,500 RP & 철질 운석 소행성 1개' },
+        'a27': { title: 'RP 수집가', desc: '환생 포인트 10,000점 축적', rewardDesc: '+2,000 RP 추가 배당금' },
+        'a28': { title: '별을 보는 자', desc: '별자리 스킬 레벨 합계 10 달성', rewardDesc: '별빛 공명(c_click) 스킬 무료 +1레벨' },
+        'a29': { title: '별자리의 직조공', desc: '별자리 스킬 레벨 합계 50 달성', rewardDesc: '공허 수확기(c_idle) +1레벨 & +5,000 RP' },
 
-        'a30': { title: '우주 탐사자', desc: '소행성 1회 추출', rewardDesc: '액티브 스킬 뽑기 +5회' },
-        'a31': { title: '운석 사냥꾼', desc: '소행성 50회 추출', rewardDesc: '액티브 스킬 뽑기 +15회' },
-        'a32': { title: '소행성대 채굴업자', desc: '소행성 250회 추출', rewardDesc: '액티브 스킬 뽑기 +30회 & 암흑 물질 소행성 1개' },
-        'a33': { title: '별들의 수집가', desc: '서로 다른 소행성 5종류 보유', rewardDesc: '액티브 스킬 뽑기 +25회' },
+        'a30': { title: '우주 탐사자', desc: '소행성 1회 추출', rewardDesc: '구립 운석 소행성 2개 지급' },
+        'a31': { title: '운석 사냥꾼', desc: '소행성 50회 추출', rewardDesc: '결정 팰러사이트 1개 & 에너지 +100' },
+        'a32': { title: '소행성대 채굴업자', desc: '소행성 250회 추출', rewardDesc: '전설 암흑 물질 소행성 1개 지급' },
+        'a33': { title: '별들의 수집가', desc: '서로 다른 소행성 5종류 보유', rewardDesc: '에픽 플라즈마 혜성 1개 & 스킬 뽑기 +3회' },
 
-        'a34': { title: '첫 강하', desc: '첫 번째 지역 정복', rewardDesc: '액티브 스킬 뽑기 +10회 & 에너지 +200' },
-        'a35': { title: '지구의 지배자', desc: '지역 10곳 정복', rewardDesc: '액티브 스킬 뽑기 +20회' },
-        'a36': { title: '태양계 정복자', desc: '지역 25곳 정복', rewardDesc: '액티브 스킬 뽑기 +35회' },
-        'a37': { title: '행성 관통', desc: '지구를 넘어 화성으로 진격', rewardDesc: '액티브 스킬 뽑기 +20회' },
-        'a38': { title: '멀티버스 도약자', desc: '멀티버스 2로 첫 도약', rewardDesc: '액티브 스킬 뽑기 +50회 & 아스트랄 펄서 유성 1개' },
+        'a34': { title: '첫 강하', desc: '첫 번째 지역 정복', rewardDesc: '침략 에너지 +200 즉시 주입' },
+        'a35': { title: '지구의 지배자', desc: '지역 10곳 정복', rewardDesc: '침략 에너지 +500 & +300 RP' },
+        'a36': { title: '태양계 정복자', desc: '지역 25곳 정복', rewardDesc: '선택한 침략 지역 진행도 즉시 +20%' },
+        'a37': { title: '행성 관통', desc: '지구를 넘어 화성으로 진격', rewardDesc: '침략 에너지 +1,000 & +1,000 RP' },
+        'a38': { title: '멀티버스 도약자', desc: '멀티버스 2로 첫 도약', rewardDesc: '아스트랄 펄서 유성 1개 & +10,000 RP' },
 
-        'a39': { title: '스킬의 각성', desc: '액티브 스킬 1회 발동', rewardDesc: '액티브 스킬 뽑기 +5회' },
-        'a40': { title: '스킬 마에스트로', desc: '액티브 스킬 25회 발동', rewardDesc: '액티브 스킬 뽑기 +30회 & 모든 스킬 쿨타임 즉시 초기화' },
+        'a39': { title: '스킬의 각성', desc: '액티브 스킬 1회 발동', rewardDesc: '스킬 뽑기 +3회 & 쿨타임 즉시 초기화' },
+        'a40': { title: '스킬 마에스트로', desc: '액티브 스킬 25회 발동', rewardDesc: '2분치 방치 생산량 & 쿨타임 즉시 초기화' },
 
-        'h1': { title: '음속의 돌파', desc: '5,000 라이보스를 모으기 전에 100회 클릭', rewardDesc: '액티브 스킬 뽑기 +15회' },
-        'h2': { title: '시간 사냥꾼', desc: '골든 크로노 라이보스 3회 포획', rewardDesc: '액티브 스킬 뽑기 +20회' },
-        'h3': { title: '전설의 소환사', desc: '0.1% 확률의 레전더리 액티브 스킬 획득', rewardDesc: '액티브 스킬 뽑기 +50회' },
-        'h4': { title: '공허의 조련사', desc: '에픽 스킬 블랙홀 그라비톤 획득', rewardDesc: '액티브 스킬 뽑기 +25회' },
-        'h5': { title: '풍요로운 인벤토리', desc: '액티브 스킬 50회 뽑기', rewardDesc: '액티브 스킬 뽑기 +30회' },
-        'h6': { title: '붉은 폭풍', desc: '행성 침략에서 목성 도달', rewardDesc: '액티브 스킬 뽑기 +25회 & 에너지 +500' },
-        'h7': { title: '고리의 정복자', desc: '행성 침략에서 토성 도달', rewardDesc: '액티브 스킬 뽑기 +35회' },
-        'h8': { title: '심우주의 정점', desc: '행성 침략에서 천왕성 도달', rewardDesc: '액티브 스킬 뽑기 +45회' },
-        'h9': { title: '태양계 전역 평정', desc: '명왕성을 포함한 태양계 전 행성 정복', rewardDesc: '액티브 스킬 뽑기 +100회 & 에너지 +5,000' },
-        'h10': { title: '다중우주의 절대 군주', desc: '멀티버스 3 도달', rewardDesc: '액티브 스킬 뽑기 +150회 & 특이점 코어 1개' }
+        'h1': { title: '음속의 돌파', desc: '5,000 라이보스를 모으기 전에 100회 클릭', rewardDesc: '+500 라이보스 & 스킬 뽑기 +2회' },
+        'h2': { title: '시간 사냥꾼', desc: '골든 크로노 라이보스 3회 포획', rewardDesc: '골든 라이보스 5분치 대량 생산 즉시 발동' },
+        'h3': { title: '전설의 소환사', desc: '0.1% 확률의 레전더리 액티브 스킬 획득', rewardDesc: '전설 암흑 물질 소행성 1개 & +5,000 RP' },
+        'h4': { title: '공허의 조련사', desc: '에픽 스킬 블랙홀 그라비톤 획득', rewardDesc: '침략 에너지 +1,000 & 스킬 뽑기 +3회' },
+        'h5': { title: '풍요로운 인벤토리', desc: '액티브 스킬 50회 뽑기', rewardDesc: '+10,000 RP & 에너지 완전 충전' },
+        'h6': { title: '붉은 폭풍', desc: '행성 침략에서 목성 도달', rewardDesc: '침략 에너지 +1,500 & +2,000 RP' },
+        'h7': { title: '고리의 정복자', desc: '행성 침략에서 토성 도달', rewardDesc: '에픽 플라즈마 혜성 1개 & +5,000 RP' },
+        'h8': { title: '심우주의 정점', desc: '행성 침략에서 천왕성 도달', rewardDesc: '+10,000 RP & 10분치 방치 생산' },
+        'h9': { title: '태양계 전역 평정', desc: '명왕성을 포함한 태양계 전 행성 정복', rewardDesc: '아스트랄 펄서 유성 1개 & +50,000 RP & 에너지 충전' },
+        'h10': { title: '다중우주의 절대 군주', desc: '멀티버스 3 도달', rewardDesc: '신화 특이점 코어 1개 & +100,000 RP' }
     },
     getAchTitle(ach) {
         return (this.lang === 'ko' && this.achievementsKo[ach.id]) ? this.achievementsKo[ach.id].title : ach.title;
