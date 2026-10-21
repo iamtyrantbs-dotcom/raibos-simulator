@@ -3474,10 +3474,10 @@ function getGlobalMultiplier() {
     });
 
     // Active Skills Multiplier Boosts
-    if (gameState.activeSkills && gameState.activeSkills.active === 'sk_blackhole') {
+    if (isSkillEffectActive('sk_blackhole')) {
         mult *= 3; // Black Hole Graviton: x3 Global Multiplier
     }
-    if (gameState.activeSkills && gameState.activeSkills.active === 'sk_supernova') {
+    if (isSkillEffectActive('sk_supernova')) {
         mult *= 10; // Supernova Cataclysm: x10 Global Multiplier
     }
 
@@ -3728,6 +3728,12 @@ function toggleEquipSkill(skillId) {
     saveGame();
 }
 
+function isSkillEffectActive(skillId) {
+    if (!gameState || !gameState.activeSkills) return false;
+    if (gameState.activeSkills.activeEffects && gameState.activeSkills.activeEffects[skillId] > 0) return true;
+    return gameState.activeSkills.active === skillId;
+}
+
 function activateActiveSkill(skillId) {
     if (!gameState.activeSkills) return;
     if (!Array.isArray(gameState.activeSkills.equipped) || !gameState.activeSkills.equipped.includes(skillId)) {
@@ -3749,6 +3755,8 @@ function activateActiveSkill(skillId) {
     gameState.activeSkills.cooldowns[skillId] = skill.cooldown;
 
     if (skill.duration > 0) {
+        if (!gameState.activeSkills.activeEffects) gameState.activeSkills.activeEffects = {};
+        gameState.activeSkills.activeEffects[skillId] = skill.duration;
         gameState.activeSkills.active = skillId;
         gameState.activeSkills.activeDuration = skill.duration;
     }
@@ -3764,6 +3772,44 @@ function activateActiveSkill(skillId) {
     updateSkillsUI();
     checkAchievements();
     saveGame();
+}
+
+function updateSkillSlotDisplays() {
+    if (!gameState.activeSkills) return;
+    const isKo = (typeof i18n !== 'undefined' && i18n.lang === 'ko');
+
+    for (let i = 0; i < 2; i++) {
+        const slotBox = document.getElementById('skill-slot-btn-' + i);
+        if (!slotBox) continue;
+
+        const skillId = (gameState.activeSkills.equipped && gameState.activeSkills.equipped[i]) || null;
+        if (skillId) {
+            const skill = ACTIVE_SKILL_POOL.find(s => s.id === skillId);
+            const cd = (gameState.activeSkills.cooldowns && gameState.activeSkills.cooldowns[skillId]) || 0;
+            const isActive = isSkillEffectActive(skillId);
+
+            slotBox.style.border = '1px solid ' + (skill ? skill.color : '#00f2ff');
+            slotBox.style.background = isActive ? 'rgba(0, 255, 170, 0.25)' : 'rgba(0, 20, 40, 0.7)';
+            slotBox.style.cursor = cd > 0 ? 'not-allowed' : 'pointer';
+            slotBox.style.opacity = cd > 0 ? '0.6' : '1.0';
+
+            const statusEl = slotBox.querySelector('.slot-status-text');
+            if (statusEl) {
+                if (cd > 0) {
+                    statusEl.innerHTML = '<span style="color:#ff5555; font-weight:bold;">⏳ ' + cd.toFixed(1) + 's</span>';
+                } else if (isActive) {
+                    statusEl.innerHTML = '<span style="color:#00ffaa; font-weight:bold; animation:pulse 1s infinite;">🔥 ACTIVE</span>';
+                } else {
+                    statusEl.innerHTML = '<span style="color:#00ffff; font-weight:bold;">⚡ [USE]</span>';
+                }
+            }
+        } else {
+            slotBox.style.border = '1px dashed rgba(255,255,255,0.2)';
+            slotBox.style.background = 'rgba(0,0,0,0.4)';
+            slotBox.style.cursor = 'default';
+            slotBox.style.opacity = '1.0';
+        }
+    }
 }
 
 function updateSkillsUI() {
@@ -3793,7 +3839,7 @@ function updateSkillsUI() {
 
     if (listContainer) {
         listContainer.innerHTML = '';
-        const isKo = i18n.lang === 'ko';
+        const isKo = (typeof i18n !== 'undefined' && i18n.lang === 'ko');
 
         // 1. Equipped Skills Quick Activation Bar (Max 2 Slots)
         const equippedSection = document.createElement('div');
@@ -3811,35 +3857,45 @@ function updateSkillsUI() {
         slotContainer.style.cssText = 'display:flex; gap:8px;';
 
         for (let i = 0; i < 2; i++) {
-            const skillId = gameState.activeSkills.equipped[i];
+            const currentSlotIndex = i;
+            const skillId = gameState.activeSkills.equipped[currentSlotIndex];
             const slotBox = document.createElement('div');
-            slotBox.style.cssText = 'flex:1; min-height:55px; border-radius:8px; border:1px dashed rgba(255,255,255,0.2); background:rgba(0,0,0,0.4); display:flex; flex-direction:column; justify-content:center; align-items:center; position:relative; overflow:hidden; padding:4px;';
+            slotBox.id = 'skill-slot-btn-' + currentSlotIndex;
+            slotBox.style.cssText = 'flex:1; min-height:55px; border-radius:8px; border:1px dashed rgba(255,255,255,0.2); background:rgba(0,0,0,0.4); display:flex; flex-direction:column; justify-content:center; align-items:center; position:relative; overflow:hidden; padding:4px; user-select:none;';
 
             if (skillId) {
                 const skill = ACTIVE_SKILL_POOL.find(s => s.id === skillId);
                 const cd = (gameState.activeSkills.cooldowns && gameState.activeSkills.cooldowns[skillId]) || 0;
-                const isActive = gameState.activeSkills.active === skillId;
+                const isActive = isSkillEffectActive(skillId);
 
-                slotBox.style.border = `1px solid ${skill ? skill.color : '#00f2ff'}`;
+                slotBox.style.border = '1px solid ' + (skill ? skill.color : '#00f2ff');
                 slotBox.style.background = isActive ? 'rgba(0, 255, 170, 0.25)' : 'rgba(0, 20, 40, 0.7)';
                 slotBox.style.cursor = cd > 0 ? 'not-allowed' : 'pointer';
+                slotBox.style.opacity = cd > 0 ? '0.6' : '1.0';
 
                 const sName = skill ? (i18n.getSkillObjName ? i18n.getSkillObjName(skill) : skill.name) : skillId;
 
                 slotBox.innerHTML = `
                     <div style="font-size:1.2rem; filter:drop-shadow(0 0 5px ${skill ? skill.color : '#fff'});">${skill ? skill.icon : '⚡'}</div>
                     <div style="font-size:0.75rem; font-weight:bold; color:${skill ? skill.color : '#fff'}; max-width:130px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${sName}</div>
-                    <div style="font-size:0.75rem; font-weight:bold; margin-top:2px;">
+                    <div class="slot-status-text" style="font-size:0.75rem; font-weight:bold; margin-top:2px;">
                         ${cd > 0 ? `<span style="color:#ff5555;">⏳ ${cd.toFixed(1)}s</span>` : (isActive ? `<span style="color:#00ffaa; animation:pulse 1s infinite;">🔥 ACTIVE</span>` : `<span style="color:#00ffff;">⚡ [USE]</span>`)}
                     </div>
                 `;
 
-                if (cd <= 0) {
-                    slotBox.onclick = (e) => {
-                        e.stopPropagation();
-                        activateActiveSkill(skillId);
-                    };
-                }
+                // Persistent click listener that directly checks current skill's cooldown at the moment of click
+                slotBox.onclick = (e) => {
+                    e.stopPropagation();
+                    const targetSkillId = (gameState.activeSkills.equipped && gameState.activeSkills.equipped[currentSlotIndex]);
+                    if (!targetSkillId) return;
+                    const currentCd = (gameState.activeSkills.cooldowns && gameState.activeSkills.cooldowns[targetSkillId]) || 0;
+                    if (currentCd > 0) {
+                        const skObj = ACTIVE_SKILL_POOL.find(s => s.id === targetSkillId);
+                        showToast('Skill on Cooldown', (skObj ? skObj.name : targetSkillId) + ' is on cooldown for ' + currentCd.toFixed(1) + 's');
+                        return;
+                    }
+                    activateActiveSkill(targetSkillId);
+                };
             } else {
                 slotBox.innerHTML = `<span style="color:#666; font-size:0.75rem;">${isKo ? '+ 빈 슬롯' : '+ Empty Slot'}</span>`;
             }
@@ -4172,7 +4228,7 @@ elements.btn.addEventListener('mousedown', (e) => {
     let earned = gameState.clickPower;
 
     // Active Skill Effects on Click
-    if (gameState.activeSkills && gameState.activeSkills.active === 'sk_overcharge') {
+    if (isSkillEffectActive('sk_overcharge')) {
         earned *= 4; // +300% (total 4x)
         if (gameState.idlePower > 0) {
             earned += gameState.idlePower * 0.05;
@@ -4359,35 +4415,59 @@ function gameLoop(currentTime) {
             if (typeof updateSkillsUI === 'function') updateSkillsUI();
         }
 
-        // Active Skill Active Duration Countdown
+        // Active Skill Active Duration Countdown (supports concurrent independent active buffs)
+        if (!gameState.activeSkills.activeEffects) gameState.activeSkills.activeEffects = {};
         if (gameState.activeSkills.active && gameState.activeSkills.activeDuration > 0) {
             gameState.activeSkills.activeDuration -= dt;
             if (gameState.activeSkills.activeDuration <= 0) {
                 gameState.activeSkills.active = null;
-                recalculatePowers();
-                updateUI();
-                if (typeof updateSkillsUI === 'function') updateSkillsUI();
             }
+        }
+        let anyEffectExpired = false;
+        for (const effId in gameState.activeSkills.activeEffects) {
+            if (gameState.activeSkills.activeEffects[effId] > 0) {
+                gameState.activeSkills.activeEffects[effId] -= dt;
+                if (gameState.activeSkills.activeEffects[effId] <= 0) {
+                    delete gameState.activeSkills.activeEffects[effId];
+                    anyEffectExpired = true;
+                }
+            }
+        }
+        if (anyEffectExpired) {
+            recalculatePowers();
+            updateUI();
+            if (typeof updateSkillsUI === 'function') updateSkillsUI();
         }
 
         // Black Hole Graviton Auto-Clicking Effect during duration
-        if (gameState.activeSkills.active === 'sk_blackhole') {
+        if (isSkillEffectActive('sk_blackhole')) {
             const autoClickGain = (gameState.clickPower || 1) * 2 * 15 * dt;
             gameState.raibos += autoClickGain;
             gameState.totalRaibos += autoClickGain;
         }
 
-        // Skill Cooldowns countdown
+        // Skill Cooldowns countdown (independent cooldowns per skill)
         if (gameState.activeSkills.cooldowns) {
             let cdChanged = false;
+            let anyCdFinished = false;
             for (const skId in gameState.activeSkills.cooldowns) {
                 if (gameState.activeSkills.cooldowns[skId] > 0) {
                     gameState.activeSkills.cooldowns[skId] = Math.max(0, gameState.activeSkills.cooldowns[skId] - dt);
                     cdChanged = true;
+                    if (gameState.activeSkills.cooldowns[skId] === 0) {
+                        anyCdFinished = true;
+                    }
                 }
             }
-            if (cdChanged && typeof updateSkillsUI === 'function') {
-                updateSkillsUI();
+            if (cdChanged) {
+                if (typeof updateSkillSlotDisplays === 'function') {
+                    updateSkillSlotDisplays();
+                } else if (typeof updateSkillsUI === 'function') {
+                    updateSkillsUI();
+                }
+                if (anyCdFinished && typeof updateSkillsUI === 'function') {
+                    updateSkillsUI();
+                }
             }
         }
     }
