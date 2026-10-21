@@ -3611,19 +3611,128 @@ const bgmManager = {
         if (!this.ensureAudioContext()) return;
         this.stopSynths();
 
-        // 8-Bit Space Adventure Theme (Lead Arp + Bassline + Percussion Tick)
-        const leadNotes = [
-            261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 261.63, 392.00,
-            293.66, 349.23, 440.00, 587.33, 440.00, 349.23, 293.66, 440.00,
-            329.63, 392.00, 493.88, 659.25, 493.88, 392.00, 329.63, 493.88,
-            261.63, 392.00, 523.25, 659.25, 783.99, 659.25, 523.25, 392.00
+        // 8-Bit Space Adventure Theme - Full 1-Minute Composition (400 steps @ 150ms = 60.0s)
+        const N = {
+            R: 0,
+            C2: 65.41, D2: 73.42, E2: 82.41, F2: 87.31, G2: 98.00, A2: 110.00, B2: 123.47,
+            C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00, B3: 246.94,
+            C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, GS4: 415.30, A4: 440.00, B4: 493.88,
+            C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, GS5: 830.61, A5: 880.00, B5: 987.77,
+            C6: 1046.50, D6: 1174.66, E6: 1318.51, F6: 1396.91, G6: 1567.98, A6: 1760.00, B6: 1975.53
+        };
+
+        // Part 1: Cosmic Intro (64 steps, 0:00 - 0:09.6)
+        const leadIntro = [
+            N.C4, N.E4, N.G4, N.C5, N.G4, N.E4, N.C4, N.E4, N.C4, N.E4, N.G4, N.C5, N.E5, N.C5, N.G4, N.E4,
+            N.A3, N.C4, N.E4, N.A4, N.E4, N.C4, N.A3, N.C4, N.A3, N.C4, N.E4, N.A4, N.C5, N.A4, N.E4, N.C4,
+            N.F3, N.A3, N.C4, N.F4, N.C4, N.A3, N.F3, N.A3, N.F3, N.A3, N.C4, N.F4, N.A4, N.F4, N.C4, N.A3,
+            N.G3, N.B3, N.D4, N.G4, N.D4, N.B3, N.G3, N.B3, N.G3, N.B3, N.D4, N.G4, N.B4, N.D5, N.G5, N.R
         ];
-        const bassNotes = [
-            130.81, 130.81, 130.81, 130.81, 130.81, 130.81, 130.81, 130.81,
-            146.83, 146.83, 146.83, 146.83, 146.83, 146.83, 146.83, 146.83,
-            164.81, 164.81, 164.81, 164.81, 164.81, 164.81, 164.81, 164.81,
-            130.81, 130.81, 130.81, 130.81, 196.00, 196.00, 196.00, 196.00
+        const bassIntro = [
+            N.C3, N.R, N.C3, N.R, N.C3, N.R, N.C3, N.C3, N.C3, N.R, N.C3, N.R, N.C3, N.R, N.G3, N.R,
+            N.A2, N.R, N.A2, N.R, N.A2, N.R, N.A2, N.A2, N.A2, N.R, N.A2, N.R, N.A2, N.R, N.E3, N.R,
+            N.F2, N.R, N.F2, N.R, N.F2, N.R, N.F2, N.F2, N.F2, N.R, N.F2, N.R, N.F2, N.R, N.C3, N.R,
+            N.G2, N.R, N.G2, N.R, N.G2, N.R, N.G2, N.G2, N.G2, N.R, N.G2, N.R, N.G2, N.R, N.D3, N.R
         ];
+        const drumsIntro = [
+            0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+            0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+            3, 0, 1, 0, 0, 0, 1, 0, 3, 0, 1, 0, 0, 0, 1, 0,
+            3, 0, 1, 0, 0, 0, 1, 0, 3, 0, 1, 0, 2, 0, 2, 2
+        ];
+
+        // Part 2: Main Theme A (96 steps, 0:09.6 - 0:24.0)
+        const leadThemeA = [
+            N.C5, N.R, N.G4, N.C5, N.E5, N.R, N.D5, N.C5, N.D5, N.E5, N.D5, N.C5, N.G4, N.R, N.G4, N.B4,
+            N.C5, N.R, N.E5, N.A5, N.G5, N.E5, N.D5, N.C5, N.D5, N.C5, N.A4, N.G4, N.A4, N.C5, N.D5, N.E5,
+            N.F5, N.E5, N.D5, N.C5, N.A4, N.C5, N.F5, N.G5, N.A5, N.G5, N.F5, N.E5, N.D5, N.C5, N.D5, N.F5,
+            N.G5, N.F5, N.E5, N.D5, N.B4, N.D5, N.G5, N.A5, N.B5, N.A5, N.G5, N.F5, N.E5, N.D5, N.C5, N.D5,
+            N.E5, N.G5, N.B5, N.G5, N.E5, N.B4, N.G4, N.B4, N.C5, N.E5, N.A5, N.C6, N.B5, N.A5, N.G5, N.E5,
+            N.F5, N.A5, N.C6, N.A5, N.F5, N.D5, N.C5, N.A4, N.B4, N.D5, N.G5, N.B5, N.D6, N.B5, N.G5, N.D5
+        ];
+        const bassThemeA = [
+            N.C3, N.C3, N.G3, N.C3, N.C3, N.C3, N.G3, N.C3, N.C3, N.C3, N.G3, N.C3, N.C3, N.C3, N.G3, N.C3,
+            N.A2, N.A2, N.E3, N.A2, N.A2, N.A2, N.E3, N.A2, N.A2, N.A2, N.E3, N.A2, N.A2, N.A2, N.E3, N.A2,
+            N.F2, N.F2, N.C3, N.F2, N.F2, N.F2, N.C3, N.F2, N.F2, N.F2, N.C3, N.F2, N.F2, N.F2, N.C3, N.F2,
+            N.G2, N.G2, N.D3, N.G2, N.G2, N.G2, N.D3, N.G2, N.G2, N.G2, N.D3, N.G2, N.G2, N.G2, N.D3, N.G2,
+            N.E2, N.E2, N.B2, N.E2, N.E2, N.E2, N.B2, N.E2, N.A2, N.A2, N.E3, N.A2, N.A2, N.A2, N.E3, N.A2,
+            N.F2, N.F2, N.C3, N.F2, N.F2, N.F2, N.C3, N.F2, N.G2, N.G2, N.D3, N.G2, N.G2, N.G2, N.D3, N.G2
+        ];
+        const drumBarA = [3, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0];
+        const drumsThemeA = [
+            ...drumBarA, ...drumBarA, ...drumBarA, ...drumBarA, ...drumBarA,
+            3, 0, 1, 0, 2, 0, 1, 0, 3, 2, 3, 2, 2, 2, 2, 2
+        ];
+
+        // Part 3: Variation Theme B (96 steps, 0:24.0 - 0:38.4)
+        const leadThemeB = [
+            N.A5, N.R, N.E5, N.R, N.A5, N.B5, N.C6, N.B5, N.A5, N.G5, N.E5, N.D5, N.E5, N.R, N.G5, N.R,
+            N.F5, N.R, N.C5, N.R, N.F5, N.G5, N.A5, N.G5, N.F5, N.E5, N.C5, N.D5, N.E5, N.R, N.F5, N.R,
+            N.D5, N.R, N.F5, N.R, N.A5, N.R, N.D6, N.R, N.C6, N.B5, N.A5, N.G5, N.F5, N.E5, N.D5, N.R,
+            N.E5, N.GS4, N.B4, N.E5, N.GS5, N.E5, N.B4, N.GS4, N.E5, N.B4, N.E5, N.GS5, N.B5, N.R, N.B5, N.R,
+            N.C6, N.B5, N.A5, N.G5, N.A5, N.R, N.E5, N.R, N.G5, N.F5, N.E5, N.D5, N.E5, N.R, N.G4, N.R,
+            N.A4, N.C5, N.F5, N.A5, N.C6, N.A5, N.F5, N.C5, N.B4, N.D5, N.G5, N.B5, N.D6, N.B5, N.G5, N.D5
+        ];
+        const bassThemeB = [
+            N.A2, N.R, N.A2, N.A3, N.A2, N.R, N.A2, N.A3, N.A2, N.R, N.A2, N.A3, N.A2, N.R, N.A2, N.E3,
+            N.F2, N.R, N.F2, N.F3, N.F2, N.R, N.F2, N.F3, N.F2, N.R, N.F2, N.F3, N.F2, N.R, N.F2, N.C3,
+            N.D2, N.R, N.D2, N.D3, N.D2, N.R, N.D2, N.D3, N.D2, N.R, N.D2, N.D3, N.D2, N.R, N.D2, N.A2,
+            N.E2, N.R, N.E2, N.E3, N.E2, N.R, N.E2, N.E3, N.E2, N.R, N.E2, N.E3, N.E2, N.R, N.E2, N.B2,
+            N.A2, N.R, N.A2, N.A3, N.A2, N.R, N.A2, N.A3, N.G2, N.R, N.G2, N.G3, N.G2, N.R, N.G2, N.D3,
+            N.F2, N.R, N.F2, N.F3, N.F2, N.R, N.F2, N.F3, N.G2, N.R, N.G2, N.G3, N.G2, N.R, N.G2, N.D3
+        ];
+        const drumBarB = [3, 0, 1, 3, 2, 0, 1, 0, 3, 1, 3, 0, 2, 0, 1, 2];
+        const drumsThemeB = [
+            ...drumBarB, ...drumBarB, ...drumBarB, ...drumBarB, ...drumBarB,
+            3, 0, 1, 3, 2, 0, 2, 0, 3, 2, 3, 2, 2, 2, 2, 2
+        ];
+
+        // Part 4: Bridge / Cosmic Breakdown (64 steps, 0:38.4 - 0:48.0)
+        const leadBridge = [
+            N.C6, N.R, N.R, N.R, N.G5, N.R, N.R, N.R, N.E5, N.R, N.R, N.R, N.B4, N.R, N.C5, N.R,
+            N.A5, N.R, N.R, N.R, N.F5, N.R, N.R, N.R, N.C5, N.R, N.R, N.R, N.E5, N.R, N.D5, N.R,
+            N.F5, N.R, N.R, N.R, N.D5, N.R, N.R, N.R, N.A4, N.R, N.R, N.R, N.C5, N.R, N.B4, N.R,
+            N.G4, N.B4, N.D5, N.G5, N.A4, N.C5, N.E5, N.A5, N.B4, N.D5, N.G5, N.B5, N.C5, N.E5, N.G5, N.C6
+        ];
+        const bassBridge = [
+            N.C2, N.R, N.R, N.R, N.C3, N.R, N.R, N.R, N.C2, N.R, N.R, N.R, N.G2, N.R, N.C3, N.R,
+            N.F2, N.R, N.R, N.R, N.F3, N.R, N.R, N.R, N.F2, N.R, N.R, N.R, N.C3, N.R, N.F2, N.R,
+            N.D2, N.R, N.R, N.R, N.D3, N.R, N.R, N.R, N.D2, N.R, N.R, N.R, N.A2, N.R, N.D2, N.R,
+            N.G2, N.G2, N.G2, N.G2, N.G2, N.G2, N.G2, N.G2, N.G2, N.G2, N.G2, N.G2, N.G2, N.G2, N.G2, N.G2
+        ];
+        const drumsBridge = [
+            3, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+            3, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+            3, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+            2, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+        ];
+
+        // Part 5: Climax & Finale Loop (80 steps, 0:48.0 - 1:00.0)
+        const leadClimax = [
+            N.C5, N.E5, N.G5, N.C6, N.E6, N.C6, N.G5, N.E5, N.C5, N.G4, N.C5, N.E5, N.G5, N.C6, N.E6, N.G6,
+            N.A5, N.E5, N.C5, N.A4, N.E5, N.A5, N.C6, N.E6, N.A6, N.E6, N.C6, N.A5, N.E5, N.C5, N.A4, N.C5,
+            N.F5, N.A5, N.C6, N.F6, N.E6, N.D6, N.C6, N.A5, N.F5, N.C5, N.F5, N.A5, N.C6, N.D6, N.E6, N.F6,
+            N.G6, N.F6, N.D6, N.B5, N.G5, N.D5, N.B4, N.G4, N.G5, N.B5, N.D6, N.F6, N.G6, N.B6, N.D6, N.B5,
+            N.C6, N.R, N.G5, N.R, N.E5, N.R, N.C5, N.R, N.G4, N.R, N.E4, N.R, N.C4, N.R, N.R, N.R
+        ];
+        const bassClimax = [
+            N.C3, N.G3, N.C4, N.G3, N.C3, N.G3, N.C4, N.G3, N.C3, N.G3, N.C4, N.G3, N.C3, N.G3, N.C4, N.G3,
+            N.A2, N.E3, N.A3, N.E3, N.A2, N.E3, N.A3, N.E3, N.A2, N.E3, N.A3, N.E3, N.A2, N.E3, N.A3, N.E3,
+            N.F2, N.C3, N.F3, N.C3, N.F2, N.C3, N.F3, N.C3, N.F2, N.C3, N.F3, N.C3, N.F2, N.C3, N.F3, N.C3,
+            N.G2, N.D3, N.G3, N.D3, N.G2, N.D3, N.G3, N.D3, N.G2, N.D3, N.G3, N.D3, N.G2, N.D3, N.G3, N.D3,
+            N.C3, N.R, N.G2, N.R, N.E2, N.R, N.C2, N.R, N.C3, N.R, N.C3, N.R, N.C3, N.R, N.R, N.R
+        ];
+        const drumBarClimax = [3, 1, 3, 1, 2, 1, 3, 1, 3, 1, 3, 1, 2, 1, 2, 1];
+        const drumsClimax = [
+            ...drumBarClimax, ...drumBarClimax, ...drumBarClimax, ...drumBarClimax,
+            3, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0
+        ];
+
+        // Combined 400 steps (60.0s total at 150ms per step)
+        const leadNotes = [...leadIntro, ...leadThemeA, ...leadThemeB, ...leadBridge, ...leadClimax];
+        const bassNotes = [...bassIntro, ...bassThemeA, ...bassThemeB, ...bassBridge, ...bassClimax];
+        const drumHits = [...drumsIntro, ...drumsThemeA, ...drumsThemeB, ...drumsBridge, ...drumsClimax];
+
         let step = 0;
 
         const tick = () => {
@@ -3632,53 +3741,91 @@ const bgmManager = {
             const idx = step % leadNotes.length;
             step++;
 
-            // 1. Lead Chiptune (Square Wave)
-            const leadOsc = this.audioCtx.createOscillator();
-            const leadGain = this.audioCtx.createGain();
-            leadOsc.type = 'square';
-            leadOsc.frequency.setValueAtTime(leadNotes[idx], now);
+            // 1. Lead Melody (Square Wave)
+            const leadFreq = leadNotes[idx];
+            if (leadFreq > 0) {
+                const leadOsc = this.audioCtx.createOscillator();
+                const leadGain = this.audioCtx.createGain();
+                leadOsc.type = 'square';
+                leadOsc.frequency.setValueAtTime(leadFreq, now);
 
-            leadGain.gain.setValueAtTime(0.035, now);
-            leadGain.gain.exponentialRampToValueAtTime(0.0005, now + 0.14);
+                leadGain.gain.setValueAtTime(0.035, now);
+                leadGain.gain.exponentialRampToValueAtTime(0.0005, now + 0.13);
 
-            leadOsc.connect(leadGain);
-            leadGain.connect(this.synthGain);
-            leadOsc.start(now);
-            leadOsc.stop(now + 0.16);
+                leadOsc.connect(leadGain);
+                leadGain.connect(this.synthGain);
+                leadOsc.start(now);
+                leadOsc.stop(now + 0.14);
+            }
 
-            // 2. Chiptune Bassline (Triangle Wave, every step)
-            const bassOsc = this.audioCtx.createOscillator();
-            const bassGain = this.audioCtx.createGain();
-            bassOsc.type = 'triangle';
-            bassOsc.frequency.setValueAtTime(bassNotes[idx], now);
+            // 2. Chiptune Bassline (Triangle Wave)
+            const bassFreq = bassNotes[idx];
+            if (bassFreq > 0) {
+                const bassOsc = this.audioCtx.createOscillator();
+                const bassGain = this.audioCtx.createGain();
+                bassOsc.type = 'triangle';
+                bassOsc.frequency.setValueAtTime(bassFreq, now);
 
-            bassGain.gain.setValueAtTime(0.06, now);
-            bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                bassGain.gain.setValueAtTime(0.065, now);
+                bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
 
-            bassOsc.connect(bassGain);
-            bassGain.connect(this.synthGain);
-            bassOsc.start(now);
-            bassOsc.stop(now + 0.17);
+                bassOsc.connect(bassGain);
+                bassGain.connect(this.synthGain);
+                bassOsc.start(now);
+                bassOsc.stop(now + 0.15);
+            }
 
-            // 3. 8-Bit Hi-hat / Snare click on beats
-            if (idx % 2 === 0) {
-                const noise = this.audioCtx.createOscillator();
-                const nGain = this.audioCtx.createGain();
-                noise.type = idx % 4 === 2 ? 'sawtooth' : 'square';
-                noise.frequency.setValueAtTime(idx % 4 === 2 ? 180 : 800, now);
+            // 3. Rhythm & Percussion (Kick, Snare, Hi-hat)
+            const drum = drumHits[idx];
+            if (drum === 3) {
+                // Kick
+                const kickOsc = this.audioCtx.createOscillator();
+                const kickGain = this.audioCtx.createGain();
+                kickOsc.type = 'triangle';
+                kickOsc.frequency.setValueAtTime(130, now);
+                kickOsc.frequency.exponentialRampToValueAtTime(32, now + 0.08);
 
-                nGain.gain.setValueAtTime(idx % 4 === 2 ? 0.03 : 0.015, now);
-                nGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+                kickGain.gain.setValueAtTime(0.07, now);
+                kickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
 
-                noise.connect(nGain);
-                nGain.connect(this.synthGain);
-                noise.start(now);
-                noise.stop(now + 0.06);
+                kickOsc.connect(kickGain);
+                kickGain.connect(this.synthGain);
+                kickOsc.start(now);
+                kickOsc.stop(now + 0.1);
+            } else if (drum === 2) {
+                // Snare
+                const snareOsc = this.audioCtx.createOscillator();
+                const snareGain = this.audioCtx.createGain();
+                snareOsc.type = 'sawtooth';
+                snareOsc.frequency.setValueAtTime(220, now);
+                snareOsc.frequency.exponentialRampToValueAtTime(70, now + 0.06);
+
+                snareGain.gain.setValueAtTime(0.035, now);
+                snareGain.gain.exponentialRampToValueAtTime(0.0005, now + 0.07);
+
+                snareOsc.connect(snareGain);
+                snareGain.connect(this.synthGain);
+                snareOsc.start(now);
+                snareOsc.stop(now + 0.08);
+            } else if (drum === 1) {
+                // Hi-Hat Click
+                const hatOsc = this.audioCtx.createOscillator();
+                const hatGain = this.audioCtx.createGain();
+                hatOsc.type = 'square';
+                hatOsc.frequency.setValueAtTime(1100, now);
+
+                hatGain.gain.setValueAtTime(0.012, now);
+                hatGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+
+                hatOsc.connect(hatGain);
+                hatGain.connect(this.synthGain);
+                hatOsc.start(now);
+                hatOsc.stop(now + 0.04);
             }
         };
 
         tick();
-        this.synthInterval = setInterval(tick, 160); // 160ms = fast chiptune tempo!
+        this.synthInterval = setInterval(tick, 150); // 150ms per step * 400 = 60s total loop
     },
 
     stopSynths() {
