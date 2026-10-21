@@ -72,7 +72,7 @@ const constellationData = [
         name: 'Cosmic Battery',
         desc: 'Start with +10% Max Energy after Rebirth',
         maxLevel: 10,
-        baseCost: 15,
+        baseCost: 10,
         costGrowth: 2.0,
         requires: [],
         effect: (level) => level * 0.1
@@ -2188,11 +2188,13 @@ function formatTime(sec) {
     return `${m}m ${s}s`;
 }
 
+const REBIRTH_MIN_REQ = 1000000; // 1,000,000 (1M) Raibos (초반 진입장벽 대폭 완화)
+
 function getPointsToEarn(total) {
-    if (total < 5000000000) return 0; // 최소 요구치 50억 Raibos로 상향 (하드코어 난이도)
-    // Formula: (Total / 5B) ^ 0.18 (가혹하고 도전적인 RP 획득 곡선)
-    let base = total / 5000000000;
-    let points = Math.pow(base, 0.18);
+    if (total < REBIRTH_MIN_REQ) return 0;
+    // 1M -> 10 RP, 10M -> 28 RP, 100M -> 79 RP, 1B -> 223 RP, 100B -> 1,778 RP, 1T -> 5,011 RP...
+    let base = total / REBIRTH_MIN_REQ;
+    let points = 10 * Math.pow(base, 0.45);
     return Math.floor(points);
 }
 
@@ -2643,14 +2645,25 @@ function updateRebirthUI() {
     let pointsToEarn = getPointsToEarn(gameState.totalRaibos);
     document.getElementById('current-rp').innerText = formatNumber(gameState.rebirthPoints);
     document.getElementById('earn-rp').innerText = "+" + formatNumber(pointsToEarn);
+
+    const reqDisp = document.getElementById('rebirth-req-disp');
+    if (reqDisp) {
+        reqDisp.innerText = `${formatNumber(REBIRTH_MIN_REQ)} Raibos`;
+    }
     
     const btn = document.getElementById('rebirth-btn');
     if (pointsToEarn > 0) {
         btn.disabled = false;
         btn.innerText = `ASCEND (+${formatNumber(pointsToEarn)} RP)`;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
     } else {
         btn.disabled = true;
-        btn.innerText = `NEED MORE RAIBOS`;
+        const currentTotal = gameState.totalRaibos || 0;
+        const progressPct = Math.min(99.9, ((currentTotal / REBIRTH_MIN_REQ) * 100)).toFixed(1);
+        btn.innerText = `NEED ${formatNumber(REBIRTH_MIN_REQ)} RAIBOS (${progressPct}%)`;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
     }
 }
 
@@ -2663,18 +2676,22 @@ document.getElementById('rebirth-btn').addEventListener('click', () => {
         const rpMult = (getConstellationEffect('c_rp') || 1) * (getConstellationEffect('c_t9_rp_overflow') || 1) * (getConstellationEffect('c_t12_singularity_harvester') || 1) * (getConstellationEffect('c_t18_omniverse_warp') || 1) * (getConstellationEffect('c_t19_godhead_harvest') || 1) * astBuffs.rp;
         const regionBonus = getConstellationEffect('c_region_rp') || 0;
         const regionBonusRP = regionBonus * (gameState.invasion.conqueredRegions.length || 0);
-        gameState.rebirthPoints += Math.floor((earned + regionBonusRP) * rpMult);
+        const totalEarnedRP = Math.floor((earned + regionBonusRP) * rpMult);
+        gameState.rebirthPoints += totalEarnedRP;
+        gameState.rebirthCount = (gameState.rebirthCount || 0) + 1;
+
         const startE = gameState.invasion.energyMax * getConstellationEffect('c_energy_start');
         const headStartFraction = getConstellationEffect('c_rebirth_head_start') || 0;
+        let startingRaibos = 0;
         if (headStartFraction > 0) {
             const prevTotal = gameState.totalRaibos || 0;
-            gameState.raibos = Math.max(gameState.raibos, prevTotal * headStartFraction);
+            startingRaibos = Math.floor(prevTotal * headStartFraction);
         }
         gameState.invasion.energy = startE;
         
-        // Reset everything else
-        gameState.raibos = 0;
-        gameState.totalRaibos = 0;
+        // Reset everything else (applying startingRaibos from head start if unlocked)
+        gameState.raibos = startingRaibos;
+        gameState.totalRaibos = startingRaibos;
         gameState.upgradeLevels = {};
         
         syncRaibosRankings(); 
@@ -2685,6 +2702,7 @@ document.getElementById('rebirth-btn').addEventListener('click', () => {
         // Visual effect
         document.body.style.background = 'white';
         setTimeout(() => { document.body.style.background = ''; }, 500);
+        showToast('Ascension Complete!', `You earned +${formatNumber(totalEarnedRP)} RP! Cosmic power grows.`);
     }
 });
 
