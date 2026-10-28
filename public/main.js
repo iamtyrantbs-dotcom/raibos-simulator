@@ -193,7 +193,7 @@ const constellationData = [
         baseCost: 2500,
         costGrowth: 2.5,
         requires: ['c_global'],
-        effect: (level) => 0.05 + (level * 0.001)
+        effect: (level) => 0.001 + (level * 0.0001)
     },
     {
         id: 'c_timeskip',
@@ -3427,7 +3427,7 @@ function getAsteroidBuffs() {
 // Core Logic
 function getGlobalMultiplier() {
     let mult = 1.0;
-    const rpRate = getConstellationEffect('c_rp_mult_decay') || 0.05;
+    const rpRate = getConstellationEffect('c_rp_mult_decay') || 0.001;
     mult += gameState.rebirthPoints * rpRate;
     mult += getConstellationEffect('c_global'); // Nebula Amplifier
     const chainBonus = getConstellationEffect('c_conquest_chain') || 0;
