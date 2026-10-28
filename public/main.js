@@ -4714,7 +4714,7 @@ async function syncRaibosRankings() {
             raibos_rp: { value: gameState.rebirthPoints || 0 },
             raibos_clicks: { value: gameState.totalClicks || 0 },
             raibos_achievements: { value: (gameState.achievements || []).length },
-            raibos_invasions: { value: gameState.invasionCount || 0 },
+            raibos_invasions: { value: gameState.multiverse || 1 },
             raibos_admin_tokens: { value: 0 } // Honeypot
         };
 
@@ -4772,7 +4772,11 @@ function renderRaibosLeaderboard(list, category) {
         div.className = 'rank-item';
         
         let displayValue = item.value.toLocaleString();
-        if (category === 'raibos_raibos') displayValue = formatNumber(item.value);
+        if (category === 'raibos_raibos') {
+            displayValue = formatNumber(item.value);
+        } else if (category === 'raibos_invasions') {
+            displayValue = `MV ${item.value.toLocaleString()}`;
+        }
         
         div.innerHTML = `
             <div class="rank-num">${index + 1}</div>
