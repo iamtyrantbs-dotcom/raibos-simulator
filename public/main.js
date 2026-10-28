@@ -354,12 +354,12 @@ const constellationData = [
     {
         id: 'c_buff_nerf_shield',
         name: 'Dimensional Anchor',
-        desc: 'Mitigates Multiverse non-energy buff nerf by +2% per level',
+        desc: '+20% Regional Multiplier power per level in Multiverse',
         maxLevel: 10,
         baseCost: 500000,
         costGrowth: 2.5,
         requires: ['c_multiverse_power'],
-        effect: (level) => level * 0.02
+        effect: (level) => 1 + (level * 0.20)
     },
 
     // Tier 8 (Base Cost ~1,000,000 RP)
@@ -3063,7 +3063,7 @@ const i18n = {
         'c_conquest_energy_mastery': { name: '정복 에너지 마스터리', desc: '에너지 효율 극대화' },
         'c_multiverse_power': { name: '멀티버스 시너지', desc: '멀티버스당 전역 파워 배수 +50%' },
         'c_multiverse_cost_mitigation': { name: '차원 안정화', desc: '멀티버스 침략 비용 증가 대폭 완화' },
-        'c_buff_nerf_shield': { name: '차원 방벽', desc: '버프 감소 효과 방어' },
+        'c_buff_nerf_shield': { name: '차원 방벽', desc: '레벨당 멀티버스 지역 정복 버프 효과 +20%' },
         'c_t8_click_fury': { name: '항성 분노', desc: '클릭 파워 x2' },
         'c_t8_idle_reactor': { name: '항성 노심', desc: '초당 생산량 x2' },
         'c_t9_energy_overload': { name: '에너지 과부하', desc: '최대 에너지 용량 2배' },
@@ -3348,15 +3348,19 @@ function getUpgradeCost(upg) {
     // Global Cost Reduction from Regions (scaled by Multiverse)
     let costReduction = 0;
     const allConquered = Array.from(new Set([...(gameState.invasion.conqueredRegions || []), ...(gameState.invasion.retainedConqueredRegions || [])]));
-    const multiverseScale = 1 + 0.5 * ((gameState.multiverse || 1) - 1);
+    const dimAnchor = getConstellationEffect('c_buff_nerf_shield') || 1;
+    const multiverseScale = (1 + 0.5 * ((gameState.multiverse || 1) - 1)) * dimAnchor;
     allConquered.forEach(regionId => {
         const region = getAllRegions().find(r => r.id === regionId);
         if (region && region.type === 'cost') costReduction += region.value * multiverseScale;
     });
     
+    // Constellation Cost Reduction (c_cost & c_t13_quantum_god)
+    const constelCostMult = (getConstellationEffect('c_cost') || 1) * (getConstellationEffect('c_t13_quantum_god') || 1);
+
     scaling = Math.max(1.05, scaling - costReduction);
     
-    return Math.floor(upg.baseCost * Math.pow(scaling, level));
+    return Math.floor(upg.baseCost * Math.pow(scaling, level) * constelCostMult);
 }
 
 function getAllRegions() {
@@ -3456,8 +3460,17 @@ function getGlobalMultiplier() {
     mult *= (getConstellationEffect('c_t20_absolute_apex') || 1);
     mult *= astBuffs.globalScale;
 
+    // Warp Fabrication (c_upgrade_speed: +3% production per total upgrade levels owned)
+    const upgBonusRate = getConstellationEffect('c_upgrade_speed') || 0;
+    if (upgBonusRate > 0) {
+        let totalUpgLevels = 0;
+        Object.values(gameState.upgradeLevels || {}).forEach(lvl => { totalUpgLevels += lvl; });
+        mult *= (1 + totalUpgLevels * upgBonusRate);
+    }
+
     // Multiverse scaling for region rewards (Multiverse 2부터 50%씩 증가: MV1=1.0, MV2=1.5, MV3=2.0...)
-    const multiverseScale = 1 + 0.5 * ((gameState.multiverse || 1) - 1);
+    const dimAnchor = getConstellationEffect('c_buff_nerf_shield') || 1;
+    const multiverseScale = (1 + 0.5 * ((gameState.multiverse || 1) - 1)) * dimAnchor;
 
     // Regional Multipliers (Current Multiverse conquered + Past Multiverse retained non-energy)
     const currentConquered = gameState.invasion.conqueredRegions || [];
@@ -3493,12 +3506,13 @@ function recalculatePowers() {
     
     // Apply Super Click & Super Idle & High-tier Skills & Asteroid Buffs
     const astBuffs = getAsteroidBuffs();
-    const superClick = (getConstellationEffect('c_super_click') || 1) * (getConstellationEffect('c_t8_click_fury') || 1) * (getConstellationEffect('c_t12_stellar_fusion') || 1) * (getConstellationEffect('c_t17_transcendence') || 1) * astBuffs.click;
-    const superIdle = (getConstellationEffect('c_super_idle') || 1) * (getConstellationEffect('c_t8_idle_reactor') || 1) * (getConstellationEffect('c_t12_stellar_fusion') || 1) * (getConstellationEffect('c_t17_transcendence') || 1) * astBuffs.idle;
-    cp *= superClick;
-    ip *= superIdle;
+    const clickBoost = (getConstellationEffect('c_click') || 1) * (getConstellationEffect('c_super_click') || 1) * (getConstellationEffect('c_t8_click_fury') || 1) * (getConstellationEffect('c_t12_stellar_fusion') || 1) * (getConstellationEffect('c_t17_transcendence') || 1) * astBuffs.click;
+    const idleBoost = (getConstellationEffect('c_idle') || 1) * (getConstellationEffect('c_super_idle') || 1) * (getConstellationEffect('c_t8_idle_reactor') || 1) * (getConstellationEffect('c_t12_stellar_fusion') || 1) * (getConstellationEffect('c_t17_transcendence') || 1) * astBuffs.idle;
+    cp *= clickBoost;
+    ip *= idleBoost;
 
-    const multiverseScale = 1 + 0.5 * ((gameState.multiverse || 1) - 1);
+    const dimAnchor = getConstellationEffect('c_buff_nerf_shield') || 1;
+    const multiverseScale = (1 + 0.5 * ((gameState.multiverse || 1) - 1)) * dimAnchor;
     const currentConquered = gameState.invasion.conqueredRegions || [];
     const retainedConquered = gameState.invasion.retainedConqueredRegions || [];
     const allConquered = Array.from(new Set([...currentConquered, ...retainedConquered]));
@@ -4227,6 +4241,12 @@ function buyUpgradeMax(upg) {
 elements.btn.addEventListener('mousedown', (e) => {
     let earned = gameState.clickPower;
 
+    // Nova Burst (c_click_multiplier_spike: chance to double click power)
+    const spikeChance = getConstellationEffect('c_click_multiplier_spike') || 0;
+    if (spikeChance > 0 && Math.random() < spikeChance) {
+        earned *= 2;
+    }
+
     // Active Skill Effects on Click
     if (isSkillEffectActive('sk_overcharge')) {
         earned *= 4; // +300% (total 4x)
@@ -4380,7 +4400,13 @@ document.getElementById('rebirth-btn').addEventListener('click', () => {
         // Reset everything else (applying startingRaibos from head start if unlocked)
         gameState.raibos = startingRaibos;
         gameState.totalRaibos = startingRaibos;
+        
+        // Void Anchor (c_idle_floor: retains a baseline level for initial idle upgrades)
+        const idleFloorLevel = getConstellationEffect('c_idle_floor') || 0;
         gameState.upgradeLevels = {};
+        if (idleFloorLevel > 0) {
+            gameState.upgradeLevels['i1'] = idleFloorLevel;
+        }
         
         syncRaibosRankings(); 
         recalculatePowers();
@@ -4489,7 +4515,7 @@ function gameLoop(currentTime) {
     const darkEnergyBoost = (getConstellationEffect('c_t9_energy_overload') || 1) * (getConstellationEffect('c_t10_cosmic_battery_overcharge') || 1) * (getConstellationEffect('c_t16_dark_energy_hyperdrive') || 1) * (getConstellationEffect('c_t20_infinity_overlord') || 1);
     const maxE = Math.floor(rawMax * (getConstellationEffect('c_energy_max') || 1) * darkEnergyBoost * astBuffs.energyMax);
     const regenMultiplier = (getConstellationEffect('c_energy_regen_mult') || 1) * darkEnergyBoost * astBuffs.energyRegen;
-    const baseRegen = ((currentPlanetData ? currentPlanetData.energyRegen : 25) + getConstellationEffect('c_regen')) * regenMultiplier;
+    const baseRegen = ((currentPlanetData ? currentPlanetData.energyRegen : 25) + getConstellationEffect('c_regen') + (getConstellationEffect('c_conquest_energy_mastery') || 0)) * regenMultiplier;
     gameState.invasion.energyMax = maxE;       // enforce to fix legacy saves
     gameState.invasion.energyRegen = baseRegen; // enforce to fix legacy saves
 
@@ -4611,7 +4637,8 @@ function loadGame() {
         recalculatePowers();
         
         if (offlineSecs > 60 && gameState.idlePower > 0) {
-            const gain = gameState.idlePower * offlineSecs;
+            const offlineMult = getConstellationEffect('c_offline') || 1;
+            const gain = gameState.idlePower * offlineSecs * offlineMult;
             gameState.raibos += gain;
             gameState.totalRaibos += gain;
             
@@ -4937,7 +4964,7 @@ function updateInvasionUI() {
                 div.classList.add('selected');
             }
             
-            const invasionCostMult = getConstellationEffect('c_invasion_cost') || 1;
+            const invasionCostMult = (getConstellationEffect('c_invasion_cost') || 1) * (getConstellationEffect('c_t13_hyper_conquest_efficiency') || 1);
             const actualCost = Math.floor(r.cost * invasionCostMult * multiverseScale);
             const rName = i18n.getRegionName(r);
             const rStatus = isConquered ? i18n.t('region_conquered') : i18n.t('region_cost').replace('{0}', actualCost);
@@ -4965,7 +4992,7 @@ function updateInvasionUI() {
             
             const btn = document.getElementById('start-invasion-btn');
             const isConquered = gameState.invasion.conqueredRegions.includes(region.id);
-            const invasionCostMult = getConstellationEffect('c_invasion_cost') || 1;
+            const invasionCostMult = (getConstellationEffect('c_invasion_cost') || 1) * (getConstellationEffect('c_t13_hyper_conquest_efficiency') || 1);
             const actualCost = Math.floor(region.cost * invasionCostMult * multiverseScale);
             
             if (isConquered) {
@@ -4988,7 +5015,7 @@ function updateInvasionUI() {
                 if (!rData) return;
                 
                 const mScale = getMultiverseEnergyScale();
-                const invCostM = getConstellationEffect('c_invasion_cost') || 1;
+                const invCostM = (getConstellationEffect('c_invasion_cost') || 1) * (getConstellationEffect('c_t13_hyper_conquest_efficiency') || 1);
                 const actCost = Math.floor(rData.cost * invCostM * mScale);
                 
                 if (gameState.invasion.energy < actCost) return;
@@ -4998,7 +5025,9 @@ function updateInvasionUI() {
                 
                 let progress = gameState.invasion.regionProgress[rData.id] || 0;
                 const conquestBoost = getConstellationEffect('c_t11_conquest_frenzy') || 1;
-                const progressGain = Math.floor((Math.floor(Math.random() * 30) + 1) * conquestBoost);
+                const minFloor = getConstellationEffect('c_invasion_progress') || 0;
+                const rawRoll = Math.floor(Math.random() * (30 - Math.min(29, minFloor))) + Math.min(29, minFloor) + 1;
+                const progressGain = Math.floor(rawRoll * conquestBoost);
                 progress += progressGain;
                 if (progress > 100) progress = 100;
                 if (progress >= 100) {
@@ -5006,6 +5035,14 @@ function updateInvasionUI() {
                     if (!gameState.invasion.conqueredRegions.includes(rData.id)) {
                         gameState.invasion.conqueredRegions.push(rData.id);
                         showToast('Region Conquered!', `${rData.name} has fallen. Buff applied: ${rData.buff}`);
+                        
+                        // Spoils of War (c_energy_on_conquest: restores % Max Energy on region conquer)
+                        const energyRestoreFrac = getConstellationEffect('c_energy_on_conquest') || 0;
+                        if (energyRestoreFrac > 0) {
+                            const restoredE = Math.floor(gameState.invasion.energyMax * energyRestoreFrac);
+                            gameState.invasion.energy = Math.min(gameState.invasion.energyMax, gameState.invasion.energy + restoredE);
+                        }
+
                         recalculatePowers();
                         updateUI();
                         updateInvasionUI();
@@ -5109,8 +5146,8 @@ if (crBtn) {
             return;
         }
         
-        // Base 5 min + c_timeskip + c_t11_temporal_mastery
-        const extraSeconds = (getConstellationEffect('c_timeskip') || 0) + (getConstellationEffect('c_t11_temporal_mastery') || 0);
+        // Base 5 min + c_timeskip + c_t11_temporal_mastery + c_t15_infinity_time_nexus
+        const extraSeconds = (getConstellationEffect('c_timeskip') || 0) + (getConstellationEffect('c_t11_temporal_mastery') || 0) + (getConstellationEffect('c_t15_infinity_time_nexus') || 0);
         const seconds = 300 + extraSeconds; 
         const gain = gameState.idlePower * seconds;
         
